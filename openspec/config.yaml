@@ -1,0 +1,53 @@
+schema: spec-driven
+
+context: |
+  Project: bimai, an open-source (MIT) distribution that turns an AI coding harness
+  (Claude Code first) into a process-aware BIM team. Pre-alpha.
+
+  Sources of truth:
+  - ARCHITECTURE.md is the long-term design (the "why" and the target). It is NOT a spec.
+  - openspec/specs/ describes what is actually built and tested today.
+  - A change moves one small, usable slice from ARCHITECTURE.md into specs + code.
+
+  Stack:
+  - Python 3.11+ for everything that runs (CLI, packs, scripts). Dependencies kept minimal:
+    pyyaml, jsonschema; stdlib first. Tests with pytest.
+  - docs/ is a Fumadocs (Next.js) static site, published to docs.bimai.nl.
+  - Cross-platform: Windows, macOS, Linux. pathlib only, no shell scripts in the product.
+
+  Principles that constrain every change:
+  - Configure the harness, don't rebuild it.
+  - Files are the source of truth (YAML/Markdown in git).
+  - Agents reason, scripts decide: anything checkable is deterministic code, JSON in -> JSON out.
+  - Read by default; every write goes through a human gate.
+  - Every claim has evidence.
+  - Packs require capabilities, never specific vendors/connectors.
+  - Documented, or it isn't done: user-facing changes ship with their docs page (scripts/check_docs.py).
+
+  Simplicity: prefer the smallest change that is usable on its own. No speculative
+  abstractions, plugin systems or config options that no current requirement needs.
+
+rules:
+  proposal:
+    - Keep proposals under 400 words.
+    - Always include a "Non-goals" section.
+    - Name the ARCHITECTURE.md section(s) the change implements, if any.
+  specs:
+    - Describe observable behavior (CLI output, files written, exit codes), not internals.
+    - Every requirement has at least one scenario that a pytest test can check.
+  design:
+    - Only write a design when there is a real decision to record; keep it short.
+    - List any new dependency with a one-line justification.
+  tasks:
+    - Tasks are small (under ~1 hour each) and ordered so tests come with the code.
+    - Include a task for the docs page when the change is user-facing.
+    - End with "pytest passes, openspec validate --all --strict passes, check_docs passes".
+
+operations:
+  apply:
+    guidance:
+      - Write or update tests alongside each task; run pytest before ticking a task.
+      - Do not implement anything beyond the change's specs; propose a new change instead.
+  archive:
+    guidance:
+      - Archive only after the change's tests pass in CI.
