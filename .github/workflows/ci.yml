@@ -26,8 +26,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pyyaml jsonschema pytest python-docx
+      - run: pip install -e ".[dev]"
       - run: python -m pytest -q
+      - name: The example project is a valid workspace
+        run: bimai validate packs/project-site/examples/knooppunt-oost
 
   specs:
     runs-on: ubuntu-latest

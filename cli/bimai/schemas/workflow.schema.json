@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bimai.nl/schemas/workflow.schema.json",
+  "title": ".bimai/workflows/<id>.yaml",
+  "type": "object",
+  "required": [
+    "id",
+    "steps"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "object"
+    },
+    "steps": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "needs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          },
+          "script": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "agent": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "workflow": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "gate": {
+            "enum": [
+              "approval",
+              "input"
+            ]
+          },
+          "with": {
+            "type": "object"
+          },
+          "foreach": {
+            "type": "string"
+          },
+          "max_parallel": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "model": {
+            "enum": [
+              "haiku",
+              "sonnet",
+              "opus"
+            ]
+          },
+          "pack": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "if": {
+            "type": "string"
+          },
+          "show": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          },
+          "ask": {
+            "type": "string"
+          },
+          "retry_with_answers": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "retry": {
+            "type": "object",
+            "properties": {
+              "max": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "backoff": {
+                "enum": [
+                  "fixed",
+                  "exponential"
+                ]
+              }
+            }
+          },
+          "timeout": {
+            "type": "string",
+            "pattern": "^[0-9]+[smh]$"
+          },
+          "on_failure": {
+            "enum": [
+              "stop",
+              "continue",
+              "skip-dependents"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

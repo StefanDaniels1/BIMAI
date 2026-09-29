@@ -3,7 +3,7 @@ title: Commands
 description: Every bimai command, in the terminal and in a Claude Code session.
 ---
 
-<Status state="planned" />
+<Status state="planned">Already available: <code>bimai validate</code> (see [Checking your files](#checking-your-files)).</Status>
 
 ## In a session (Claude Code)
 
@@ -92,8 +92,38 @@ You can also just ask in plain language; the Coordinator picks the right workflo
 | `bimai auth login` · `status` · `rotate` · `logout` | Manage logins (stored in the OS keychain) |
 | `bimai connector new` · `record` · `test` | Build and test connectors |
 | `bimai graph team` · `workflow` · `connectors` · `project` · `projects` | Draw diagrams |
-| `bimai validate` | Check every bimai file |
+| `bimai validate` | Check every bimai file (available now) |
 | `bimai upgrade` | Update bimai files; never touches your decisions or history |
 | `bimai nap` | Compact agent learnings and archive or anonymize old logs (retention) |
 | `bimai lint` | Check that outputs cite evidence and decisions are logged (runs automatically) |
 | `bimai hook <name>` | Used by Claude Code hooks; not for everyday use |
+
+## Checking your files
+
+`bimai validate` checks every file in a project's `.bimai/` folder: that each one has the right
+fields, that the people and positions they mention exist, and that workflows have no missing steps
+or loops. It never changes anything.
+
+```bash
+pip install -e .            # from a clone of the bimai repository, for now
+bimai validate              # the project in the current folder
+bimai validate ../bridge-3  # or another project
+```
+
+When something is wrong, each problem is one line: the file, where in the file, and what's wrong.
+
+```
+.bimai/ownership.yaml: cover.0.until: '9 oktober' is not a 'date'
+.bimai/project.yaml: 'id' is a required property
+.bimai/workflows/weekly-coordination.yaml: steps.cluster.needs: step 'fetch-isues' does not exist
+3 problems found
+```
+
+| Exit code | Means |
+|---|---|
+| 0 | Everything is valid |
+| 1 | Problems were found |
+| 2 | No bimai project in that folder |
+
+Add `--json` to get the result as `{"valid": …, "problems": [{"file", "location", "message"}]}`,
+for scripts and CI.
