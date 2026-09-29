@@ -1,0 +1,36 @@
+# Tools and data a project can use, and the capabilities each provides (ARCHITECTURE.md §7, §13).
+# A role joins a team only when every capability it `requires` is provided by one of these.
+goals: [requirements, risks, planning, reporting, issues, model-checks, delivery, meetings]
+
+tools:
+  revit:      { label: Revit, provides: [model.query] }
+  civil3d:    { label: Civil 3D, provides: [model.query] }
+  openroads:  { label: OpenRoads Designer, provides: [model.query] }
+  navisworks: { label: Navisworks, provides: [model.query, clashes.read] }
+  bonsai:     { label: Blender / Bonsai, provides: [model.query] }
+  ifc:        { label: IFC models, provides: [model.query] }
+  autocad:    { label: AutoCAD drawings, provides: [drawing.query] }
+  acc:        { label: ACC / Forma, provides: [issues.read, documents.read] }
+  bcf:        { label: BCF issues, provides: [issues.read] }
+  ids:        { label: IDS requirements, provides: [requirements.check] }
+  bep:        { label: BEP / EIR documents, provides: [documents.read] }
+  relatics:   { label: Relatics export, provides: [requirements.read, risks.read] }
+  primavera:  { label: Primavera P6 planning, provides: [schedule.read] }
+  msproject:  { label: MS Project planning, provides: [schedule.read] }
+
+# Which tool a scanned file suggests, by extension (or detected format for planning XML).
+suggests:
+  .ifc: ifc
+  .rvt: revit
+  .nwd: navisworks
+  .nwc: navisworks
+  .dgn: openroads
+  .dwg: autocad
+  .bcf: bcf
+  .bcfzip: bcf
+  .ids: ids
+  .xer: primavera
+  p6-xml: primavera
+  mspdi-xml: msproject
+  bep: bep
+  relatics: relatics

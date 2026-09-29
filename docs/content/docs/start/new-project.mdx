@@ -47,3 +47,63 @@ bimai invite anna@company.nl
 
 If you're allowed to give access on the git host, bimai does it. Otherwise it tells you what to ask
 IT. Colleagues then [join the project](/docs/start/join).
+
+## Already have a project folder?
+
+<Status state="available">`bimai init` works today, for one person per project. Reading the BEP and inviting colleagues come later.</Status>
+
+Run `bimai init` in the folder where your project lives, new or existing. bimai looks at what's
+already there, asks a few questions, and proposes your team.
+
+```bash
+pip install -e .        # from a clone of the bimai repository, for now
+cd ~/projects/knooppunt
+bimai init
+```
+
+```
+Looking at /Users/lotte/projects/knooppunt
+  bep                     1  context/BEP-Knooppunt-Oost-v3.pdf
+  transcripts             1  coordination-teams.vtt
+
+Project name [knooppunt]:
+Your name [Lotte de Graaf]:
+Your role on this project (Design coordinator, BIM coordinator, BIM modeller, Information manager): informatiemanager
+What do you want help with? [delivery,meetings]:
+  Found in this folder:
+    BEP / EIR documents      context/BEP-Knooppunt-Oost-v3.pdf
+Tools and data used [bep]:
+Are you new to VS Code? (y/N) [n]:
+Output language (en/nl) [en]: nl
+
+Proposed team (3 of max 5):
+  Coordinator                  Always   [sonnet]
+  Information Manager          Goal: delivery · Data: BEP / EIR documents   [sonnet]
+  Scribe                       Goal: meetings   [sonnet]
+  · Model Checker would join with: Revit or Civil 3D or OpenRoads Designer or Navisworks or Blender / Bonsai or IFC models
+```
+
+What it looks for: models (IFC, Revit, Navisworks, DGN, DWG), BCF issues, IDS files, the BEP or EIR
+(by file name), Primavera and MS Project planning exports, Relatics exports and meeting transcripts.
+It only reads file names, and the first line of XML files; it changes nothing.
+
+After you confirm, it writes:
+
+| File | What |
+|---|---|
+| `.bimai/` | The project, you, your position and your seat with your team |
+| `.claude/agents/` | One file per team member, each on its own model tier (see [costs](/docs/why/costs)) |
+| `CLAUDE.md` | The Coordinator's instructions, in a marked block. Your own text in this file is kept |
+| `.claude/settings.json` | The main session on sonnet, unless you already chose a model |
+| `.gitignore` | Keeps machine files and raw data exports out of git |
+
+It never overwrites a file you already have. Then open Claude Code in the folder (`claude`) and your
+team is there.
+
+**Useful options:** `--dry-run` shows everything without writing. `--role`, `--goals`, `--tools`,
+`--language` and `--yes` answer the questions up front, so Claude Code or a script can run it for
+you:
+
+```bash
+bimai init --role "BIM coordinator" --goals issues,meetings --tools acc --yes
+```

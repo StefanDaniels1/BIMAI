@@ -25,9 +25,10 @@ package-dir = { "" = "cli" }
 
 [tool.setuptools.packages.find]
 where = ["cli"]
+include = ["bimai*"]
 
 [tool.setuptools.package-data]
-bimai = ["schemas/*.json"]
+bimai = ["schemas/*.json", "catalogue/*.yaml", "catalogue/roles/*.md", "catalogue/presets/*.yaml"]
 
 [tool.setuptools.dynamic]
 version = { attr = "bimai.__version__" }

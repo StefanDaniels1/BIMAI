@@ -1,0 +1,5 @@
+id: design-coordinator
+label: Design coordinator
+matches: [design coordinator, design manager, ontwerpcoordinator, ontwerpmanager]
+team: [coordinator, requirements-risk-manager, planning-analyst, scribe]
+goals: [requirements, risks, planning, reporting]
