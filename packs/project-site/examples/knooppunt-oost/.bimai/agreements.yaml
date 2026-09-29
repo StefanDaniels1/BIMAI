@@ -1,0 +1,33 @@
+source_documents:
+  - { id: bep-v3, title: BIM execution plan v3, file: context/bep/BEP-Knooppunt-Oost-v3.pdf, date: 2026-06-12 }
+software:
+  - { app: Revit, version: "2025", used_for: structures, source: { doc: bep-v3, page: 14, section: "4.2 Software" }, confidence: high }
+  - { app: Civil 3D, version: "2025", used_for: roads and drainage, source: { doc: bep-v3, page: 14, section: "4.2 Software" }, confidence: high }
+  - { app: OpenRoads Designer, version: "2023", used_for: alignment design by the client's engineer, source: { doc: bep-v3, page: 15, section: "4.3 Client software" }, confidence: medium }
+cde:
+  platform: ACC
+  statuses: ["S0 Work in progress", "S1 Shared for coordination", "S3 For review", "A1 Accepted"]
+  source: { doc: bep-v3, page: 18, section: "5.1 CDE" }
+naming:
+  files: "KNO-<originator>-<zone>-<level>-<type>-<role>-<number>"
+  source: { doc: bep-v3, page: 21, section: "6.1 Naming" }
+coordinates:
+  system: RD New (EPSG:28992)
+  height: NAP
+  source: { doc: bep-v3, page: 23, section: "6.4 Coordinates" }
+exchange:
+  formats: [IFC 4.3, BCF 3.0]
+  source: { doc: bep-v3, page: 24, section: "7 Exchange" }
+classification:
+  systems: [NL-SfB, OTL (IMBOR)]
+  source: { doc: bep-v3, page: 26, section: "8 Classification" }
+coordination:
+  description: Clash coordination session every other Tuesday; clash tolerance 20 mm
+  interval_days: 14
+  source: { doc: bep-v3, page: 30, section: "9.2 Coordination rhythm" }
+milestones:
+  - { name: DO-freeze, date: 2027-03-01, source: { doc: bep-v3, page: 33, section: "10 Milestones" } }
+  - { name: Permit application, date: 2027-04-15, source: { doc: bep-v3, page: 33, section: "10 Milestones" } }
+  - { name: UO delivery, date: 2027-09-01, source: { doc: bep-v3, page: 33, section: "10 Milestones" } }
+open_questions:
+  - Section 4.3 mentions both OpenRoads 2023 and 2024 for the client's engineer. Which one is leading?

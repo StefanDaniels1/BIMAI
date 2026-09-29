@@ -1,0 +1,22 @@
+people:
+  - id: steve
+    name: Steve Daniëls
+    aliases: [Steve, S. Daniëls]
+    seat: steve
+  - id: anna
+    name: Anna de Wit
+    aliases: [Anna]
+    seat: anna
+  - id: fatima
+    name: Fatima El Amrani
+    seat: fatima
+  - id: jan-devries
+    name: Jan de Vries
+    seat: jan
+  - id: jan-bakker
+    name: Jan Bakker
+    organization: MEP contractor
+    external: true
+  - id: sam
+    name: Sam Jansen
+    seat: sam

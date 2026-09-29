@@ -1,0 +1,26 @@
+id: project-site
+version: 0.1.0
+maturity: experimental
+description: Generate a private documentation site per project, for people who don't open VS Code
+requires:
+  capabilities: []                    # reads the project's own files only
+reads:
+  - .bimai/project.yaml
+  - .bimai/agreements.yaml
+  - .bimai/people.yaml
+  - .bimai/ownership.yaml
+  - .bimai/seats/*/seat.yaml
+  - .bimai/seats/*/tasks.yaml
+  - .bimai/seats/*/journal/          # private sessions are shown only as "a private session"
+  - .bimai/positions/*/handoffs/
+  - .bimai/decisions/
+  - .bimai/meetings/*/minutes.md     # applied meetings only; raw transcripts are never read
+  - .bimai/workflows/
+  - .bimai/automations/
+  - .bimai/context/bep/              # copied for download only when listed in agreements.yaml
+never_reads: [desk, data/raw, meetings/*/transcript.*, secrets]
+writes:
+  - .bimai/site/                     # git-ignored build folder
+scripts: [scripts/generate_site.py]
+workflows: [workflows/site-build.yaml]
+languages: [en, nl]

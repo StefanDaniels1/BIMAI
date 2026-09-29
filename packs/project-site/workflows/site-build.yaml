@@ -1,0 +1,13 @@
+id: site-build
+version: 1
+description: Generate the project site from the project files and build it as a static site
+steps:
+  generate:
+    script: project-site/generate_site.py
+    with: { project_root: ".", out: .bimai/site/content/docs, public_dir: .bimai/site/public/project-files }
+  build:
+    needs: [generate]
+    tool: bimai.site_build            # copies the site shell and runs the static build into .bimai/site/out
+  check:
+    needs: [build]
+    tool: bimai.site_check            # link check; confirms nothing outside the shared project files was included

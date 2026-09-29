@@ -1,0 +1,7 @@
+id: h-001
+date: 2026-09-24
+from: { seat: sanne, role: issue-manager }
+to: modeller-structure
+title: Fix the wall types in the structural model
+status: done
+evidence: meeting:3f9a1c2b7d10 00:20:10

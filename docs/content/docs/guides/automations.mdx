@@ -1,0 +1,30 @@
+---
+title: Automations
+description: Run any workflow on a schedule, for example a daily issue digest.
+---
+
+<Status state="planned" />
+
+An automation is a workflow with a schedule:
+
+```yaml
+# .bimai/automations/daily-triage.yaml
+workflow: acc-issue-triage
+schedule: "45 7 * * 1-5"      # weekdays at 07:45
+timezone: Europe/Amsterdam
+mode: read-only
+budget: { max_turns: 40, timeout_minutes: 20 }
+deliver:
+  - file: outputs/triage/{date}.md
+```
+
+```bash
+bimai run daily-triage                 # run it now
+bimai schedule install daily-triage    # run it on schedule (Windows Task Scheduler, macOS launchd)
+bimai schedule export --github         # or run it as a scheduled GitHub Actions job
+```
+
+**Scheduled runs never change anything.** When a run thinks something should change, it leaves a
+proposal; you approve it later with `/bimai:approve`.
+
+Ready-made: daily triage, weekly coordination pack, delivery watch, morning plan, Friday review.

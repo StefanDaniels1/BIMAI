@@ -1,0 +1,46 @@
+---
+title: Files and folders
+description: Where bimai keeps things, and who can see them.
+---
+
+## On your computer
+
+```
+~/bimai/
+├── desk/                      private to you, backed up to your own remote
+│   ├── projects.yaml          your projects
+│   ├── tasks.yaml             tasks that belong to no project
+│   ├── plans/                 day and week plans
+│   └── preferences.yaml       working hours, language
+└── projects/
+    └── a2-knooppunt/          a project, shared with its team
+```
+
+## In a project
+
+```
+.bimai/
+├── project.yaml               project settings, bimai version, language, write mode
+├── agreements.yaml            agreements from the BEP, with page references
+├── conventions.md             house rules every agent follows
+├── ownership.yaml             positions, scopes, who holds and covers them
+├── people.yaml                project members and external parties
+├── workflows/  automations/   the project's workflows and schedules
+├── context/                   BEP, EIR, checklists (edited by people only)
+├── data/                      Relatics and planning exports (raw files not shared by default)
+├── decisions/                 one file per decision
+├── meetings/                  minutes per meeting (raw transcripts not shared by default)
+├── positions/<id>/            per job: what the agents learned, incoming handoffs
+├── seats/<name>/              per person: team, tasks, journal, runs
+└── outputs/<name>/            documents produced for each person
+```
+
+## Who sees what
+
+| What | Who |
+|---|---|
+| Rules, agreements, decisions, positions, minutes | Everyone on the project |
+| Your team, project tasks, journal and outputs | Everyone on the project |
+| Raw exports and transcripts | Only your computer, unless the project opts in |
+| Your desk | Only you |
+| Passwords and tokens | Nobody, not even the agents |

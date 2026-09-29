@@ -1,0 +1,63 @@
+---
+title: Meetings to tasks
+description: Turn a coordination meeting transcript into minutes, decisions and everyone's tasks.
+---
+
+<Status state="design">The scripts that parse transcripts, match names and route items are built and tested (the meeting-intake pack). The surrounding bimai commands are planned for v0.1.</Status>
+
+## Use it
+
+Drop the transcript (Teams or Zoom `.vtt`, `.srt`, a Teams `.docx` download, or plain text) into a
+session and say "process this coordination meeting", or:
+
+```bash
+bimai meeting import coordination-2026-09-24.vtt
+```
+
+## What comes out
+
+| Found in the meeting | Where it goes |
+|---|---|
+| A decision | The project's decision log |
+| An action for a named colleague | That person's task list |
+| An action for a role ("the structural modellers") | The inbox of that position |
+| An action for an outside party | "External actions" in the minutes, plus a follow-up task for you |
+| A risk or issue | The minutes and the risk review list |
+| A change to the project's rules | A change request for the rule owners |
+| An open question | The parking lot in the minutes |
+| Someone's absence | A suggestion to arrange cover. Nothing is stored about the person. |
+| Private remarks | Left out entirely |
+
+## bimai asks, it doesn't guess
+
+You uploaded the transcript, so you get the questions. For example:
+
+```
+3 questions about "Coordination session 24 Sep":
+
+1. "Jan will look at the abutment clash" [00:14:32]
+   → Which Jan?   (a) Jan de Vries, modeller-structure   (b) Jan Bakker, external (MEP contractor)
+
+2. "We'll go with the thicker deck slab" [00:31:05]
+   → Was this decided, or only proposed?   (a) decided   (b) proposed, decide later
+
+3. "Update the naming for the new zones" [00:47:50]
+   → Project rule change or a personal action for Steve?
+```
+
+bimai asks when a name matches nobody or more than one person, when there's no deadline it can work
+out, when it can't tell a decision from a discussion, when an item conflicts with an earlier decision
+or the BEP, or when it isn't confident. Unanswered items are never applied.
+
+"Before the next session" is calculated from the coordination rhythm in the BEP.
+
+## For the people who get tasks
+
+New tasks appear at the start of their next session and in their morning plan, with the quote and
+timestamp they came from. They can accept, reassign or decline them; a decline goes back to you.
+
+## Privacy
+
+The raw transcript stays out of the shared project history by default; the minutes are shared.
+Recording and transcribing a meeting remains the organizer's responsibility, including asking the
+participants.

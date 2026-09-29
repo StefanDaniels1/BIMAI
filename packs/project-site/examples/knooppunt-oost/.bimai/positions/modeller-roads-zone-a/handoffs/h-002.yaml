@@ -1,0 +1,7 @@
+id: h-002
+date: 2026-09-25
+from: { seat: daan, role: requirements-risk-manager }
+to: modeller-roads-zone-a
+title: Add the verification property to the drainage elements in zone A
+status: open
+evidence: relatics snapshot 2026-09-25, requirement R-114

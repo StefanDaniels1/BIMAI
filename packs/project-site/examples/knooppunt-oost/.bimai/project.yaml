@@ -1,0 +1,18 @@
+format_version: 1
+id: knooppunt-oost
+name: Knooppunt Oost
+demo: true                       # fictional project: all people and data are made up
+client: Demo Client
+contract: UAV-GC design and construct
+phase: Final design (DO)
+goal: >
+  Replace the interchange with a new viaduct, two slip roads and a new drainage system,
+  while traffic keeps flowing during construction.
+language: en
+write_mode: gated-write
+journal: true
+rule_owners: [lotte]
+links:
+  - { title: ACC project, url: "https://acc.autodesk.com/", description: "Models, issues and documents" }
+  - { title: Teams channel, url: "https://teams.microsoft.com/", description: Day-to-day communication }
+  - { title: Project planning, url: "https://example.com/planning", description: "Primavera P6, read-only viewer" }

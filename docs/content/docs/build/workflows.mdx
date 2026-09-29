@@ -1,0 +1,21 @@
+---
+title: Write a workflow
+description: Chain scripts, tools, agents, sub-workflows and human gates.
+---
+
+<Status state="planned" />
+
+| Step | Runs | Uses AI? |
+|---|---|---|
+| `script:` | A pack script | No |
+| `tool:` | A connector tool, by capability or name | No |
+| `agent:` | A role, optionally with a pack | Yes |
+| `workflow:` | Another workflow | Only if it has agent steps |
+| `gate:` | A person: approval or input | No |
+
+Per step: `needs`, `if`, `foreach` with `max_parallel`, `retry`, `timeout` and `on_failure`.
+Expressions stay simple (`${{ steps.x.output }}`); anything complex belongs in a script.
+
+`bimai validate` checks the file, the order (no loops) and that every pack and capability exists.
+`bimai workflow plan` shows the parallel lanes and expected cost before you run it. See the
+meeting-intake workflow in `packs/meeting-intake/workflows/` for a complete example.

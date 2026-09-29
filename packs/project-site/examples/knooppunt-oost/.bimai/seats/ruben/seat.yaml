@@ -1,0 +1,6 @@
+person: ruben
+positions: [modeller-structure]
+team:
+  - { role: coordinator, why: Always }
+  - { role: model-checker, why: "Goal: model checks · Data: Revit, Civil 3D" }
+  - { role: mentor, why: "New to VS Code" }

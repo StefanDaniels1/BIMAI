@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* bimai brand: amber phosphor on warm dark, matching the logo */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --color-bimai-amber: #ffb000;
+  --color-bimai-amber-dim: #7a5400;
+  --color-bimai-crt: #14100b;
+}
+
+:root {
+  --color-fd-primary: #b36b00;
+  --color-fd-primary-foreground: #ffffff;
+}
+
+.dark {
+  --color-fd-background: #14100b;
+  --color-fd-card: #1d1710;
+  --color-fd-popover: #1d1710;
+  --color-fd-secondary: #241c12;
+  --color-fd-muted: #241c12;
+  --color-fd-border: #3a2e1d;
+  --color-fd-primary: #ffb000;
+  --color-fd-primary-foreground: #14100b;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+.crt {
+  background:
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.22) 0 2px, transparent 2px 4px),
+    radial-gradient(ellipse at 50% 40%, #1d1710, #14100b 75%);
+  color: var(--color-bimai-amber);
+  text-shadow: 0 0 6px rgb(255 176 0 / 0.45);
+}

@@ -1,0 +1,7 @@
+person: sanne
+positions: [bim-coordinator]
+team:
+  - { role: coordinator, why: Always }
+  - { role: issue-manager, why: "Goal: issues · Data: ACC" }
+  - { role: model-checker, why: "Goal: model checks · Data: Revit, Civil 3D" }
+  - { role: scribe, why: "Goal: meetings and minutes" }

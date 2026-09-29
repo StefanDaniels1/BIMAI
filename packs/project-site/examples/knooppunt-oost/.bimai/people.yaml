@@ -1,0 +1,9 @@
+people:
+  - { id: sanne, name: Sanne Visser, title: BIM coordinator, organization: Contractor, seat: sanne }
+  - { id: daan, name: Daan Mulder, title: Design coordinator, organization: Contractor, seat: daan }
+  - { id: lotte, name: Lotte de Graaf, title: Information manager, organization: Contractor, seat: lotte }
+  - { id: eva, name: Eva Kok, title: BIM modeller, organization: Contractor, seat: eva }
+  - { id: ruben, name: Ruben Smit, title: BIM modeller, organization: Contractor, seat: ruben }
+  - { id: mila, name: Mila Peters, title: BIM modeller, organization: Contractor, seat: mila }
+  - { id: tom, name: Tom Hendriks, title: MEP engineer, organization: Installatiebedrijf Noord (demo), external: true }
+  - { id: ingrid, name: Ingrid Vos, title: BIM manager, organization: Demo Client, external: true }

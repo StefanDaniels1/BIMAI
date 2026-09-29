@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bimai.nl/schemas/meeting-items.json",
+  "title": "Meeting items",
+  "description": "Items the Scribe extracts from a transcript; input for route_items.py",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "text", "confidence", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z]+-\\d+$" },
+          "type": {
+            "enum": ["summary", "decision", "action", "risk", "issue", "agreement_change",
+                     "open_question", "availability", "private"]
+          },
+          "text": { "type": "string", "minLength": 1 },
+          "level": { "enum": ["project", "personal", "unclear"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "owner": { "type": "string", "description": "The owner as said in the meeting; never resolved by the model" },
+          "owner_kind": { "enum": ["person", "role", "external", "none"] },
+          "role": { "type": "string", "description": "Role id when owner_kind is role, e.g. bim-modeller" },
+          "scope": { "type": "object", "additionalProperties": { "type": "string" } },
+          "due": {
+            "type": "string",
+            "description": "ISO date, or next_session, end_of_week or none. Omit when not said.",
+            "anyOf": [
+              { "format": "date" },
+              { "enum": ["next_session", "end_of_week", "none"] }
+            ]
+          },
+          "status": { "enum": ["decided", "proposed", "unclear"] },
+          "contradicts": { "type": "array", "items": { "type": "string" } },
+          "evidence": {
+            "type": "object",
+            "required": ["quote"],
+            "properties": {
+              "start": { "type": ["string", "null"], "pattern": "^\\d{2}:\\d{2}:\\d{2}$" },
+              "quote": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

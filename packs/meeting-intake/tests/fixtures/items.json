@@ -1,0 +1,68 @@
+{
+  "items": [
+    {
+      "id": "i-01", "type": "summary", "level": "project", "confidence": 0.95,
+      "text": "Twelve new clashes since last session; focus on structure versus drainage.",
+      "evidence": { "start": "00:00:03", "quote": "We have twelve new ones since last session." }
+    },
+    {
+      "id": "i-02", "type": "action", "level": "personal", "confidence": 0.9,
+      "text": "Check the abutment clash with the drainage pipes",
+      "owner": "Jan", "owner_kind": "person", "due": "next_session",
+      "scope": { "discipline": "structure" },
+      "evidence": { "start": "00:14:32", "quote": "Jan will look at the abutment clash with the drainage pipes." }
+    },
+    {
+      "id": "i-03", "type": "decision", "level": "project", "status": "unclear", "confidence": 0.85,
+      "text": "Use a 450 mm deck slab",
+      "evidence": { "start": "00:31:05", "quote": "We'll go with the thicker deck slab, 450 millimetres." }
+    },
+    {
+      "id": "i-04", "type": "action", "level": "unclear", "confidence": 0.85,
+      "text": "Update the naming for the new zones",
+      "owner": "Steve", "owner_kind": "person", "due": "next_session",
+      "evidence": { "start": "00:47:50", "quote": "Update the naming for the new zones before the next session." }
+    },
+    {
+      "id": "i-05", "type": "action", "level": "project", "confidence": 0.9,
+      "text": "Fix the wall types in the structural model",
+      "owner": "the structural modellers", "owner_kind": "role", "role": "bim-modeller",
+      "scope": { "discipline": "structure" }, "due": "2026-10-01",
+      "evidence": { "start": "00:20:10", "quote": "The structural modellers need to fix the wall types by the first." }
+    },
+    {
+      "id": "i-06", "type": "risk", "level": "project", "confidence": 0.9,
+      "text": "Late MEP input could delay the DO-freeze",
+      "evidence": { "start": "00:25:40", "quote": "If the MEP input is late again we won't make the DO-freeze." }
+    },
+    {
+      "id": "i-07", "type": "availability", "level": "personal", "confidence": 0.9,
+      "text": "Anna is away next week",
+      "owner": "Anna", "owner_kind": "person",
+      "evidence": { "start": "00:52:00", "quote": "I'm away next week, by the way." }
+    },
+    {
+      "id": "i-08", "type": "private", "level": "personal", "confidence": 0.95,
+      "text": "Personal remark",
+      "evidence": { "start": "00:53:10", "quote": "…" }
+    },
+    {
+      "id": "i-09", "type": "action", "level": "personal", "confidence": 0.6,
+      "text": "Send the updated clash report to the client",
+      "owner": "Sam", "owner_kind": "person", "due": "end_of_week",
+      "evidence": { "start": "00:55:30", "quote": "Maybe Sam can send the report to the client?" }
+    },
+    {
+      "id": "i-10", "type": "action", "level": "project", "confidence": 0.9,
+      "text": "Deliver revised drainage routing",
+      "owner": "Jan Bakker", "owner_kind": "person", "due": "2026-10-03",
+      "evidence": { "start": "00:15:02", "quote": "We'll send the revised drainage routing by Friday next week." }
+    },
+    {
+      "id": "i-11", "type": "action", "level": "personal", "confidence": 0.9,
+      "text": "Book the room for the model review",
+      "owner": "Fatima", "owner_kind": "person",
+      "evidence": { "start": "00:58:00", "quote": "Fatima, can you book a room for the model review?" }
+    }
+  ]
+}

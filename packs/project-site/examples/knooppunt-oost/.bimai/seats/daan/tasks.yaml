@@ -1,0 +1,2 @@
+- { id: t-102, title: Send the updated clash report to the client, due: 2026-09-26, position: design-coordinator, status: done, source: "meeting:3f9a1c2b7d10" }
+- { id: t-103, title: Propose a mitigation owner for the late MEP input risk, due: 2026-10-02, position: design-coordinator, status: open }

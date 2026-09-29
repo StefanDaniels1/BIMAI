@@ -1,0 +1,6 @@
+person: mila
+positions: [modeller-roads-zone-a]
+team:
+  - { role: coordinator, why: Always }
+  - { role: model-checker, why: "Goal: model checks · Data: Civil 3D" }
+  - { role: mentor, why: "New to VS Code" }

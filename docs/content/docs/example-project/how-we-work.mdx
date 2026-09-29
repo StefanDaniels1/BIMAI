@@ -1,0 +1,77 @@
+---
+title: "How we work"
+description: "Approvals · Workflows · Automations"
+---
+
+How a request flows through a team:
+
+```mermaid
+flowchart LR
+  U(["People"]) --> C["🧭 Coordinator"]
+  C --> W["Workflows"]
+  W --> T["🔌 ACC · Revit · Civil 3D · files"]
+  W --> G{"✋ Approvals"}
+  G --> U
+```
+
+## Approvals
+
+- **Changes to models and ACC:** Agents propose changes; a person approves each one first.
+- **Changes to shared rules are approved by:** Lotte de Graaf
+
+## Coordination rhythm
+
+Clash coordination session every other Tuesday; clash tolerance 20 mm
+
+Source: BIM execution plan v3 · p. 30 · §9.2 Coordination rhythm
+
+## Workflows
+
+### meeting-intake
+
+Transcript → minutes, decisions, tasks and handoffs; the uploader answers every uncertainty
+
+```mermaid
+flowchart TB
+  W_parse["parse<br/>🧮 script"]
+  W_speakers["speakers<br/>🧮 script"]
+  W_parse --> W_speakers
+  W_chunk["chunk<br/>🧮 script"]
+  W_speakers --> W_chunk
+  W_extract(["extract ×n<br/>✍️ Scribe"])
+  W_chunk --> W_extract
+  W_consolidate(["consolidate<br/>✍️ Scribe"])
+  W_extract --> W_consolidate
+  W_route["route<br/>🧮 script"]
+  W_consolidate --> W_route
+  W_review{"✋ review"}
+  W_route --> W_review
+  W_apply["apply<br/>🔌 bimai.meeting_apply"]
+  W_review --> W_apply
+```
+
+### weekly-coordination
+
+Collect issues and model status, check models, review, write the agenda
+
+```mermaid
+flowchart LR
+  W_fetch_issues["fetch-issues<br/>🔌 issues.list"]
+  W_fetch_models["fetch-models<br/>🔌 model.list_published"]
+  W_cluster["cluster<br/>🧮 script"]
+  W_fetch_issues --> W_cluster
+  W_check_models[["check-models ×n<br/>↪ delivery-check"]]
+  W_fetch_models --> W_check_models
+  W_review{"✋ review"}
+  W_cluster --> W_review
+  W_check_models --> W_review
+  W_agenda(["agenda<br/>✍️ Scribe"])
+  W_review --> W_agenda
+```
+
+## Automations
+
+| Automations | Schedule | Owner | Mode |
+|---|---|---|---|
+| `daily-triage` | Weekdays 07:45 | `bim-coordinator` | read-only |
+| `weekly-design-report` | Fridays 08:00 | `design-coordinator` | read-only |

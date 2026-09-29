@@ -1,0 +1,99 @@
+---
+title: Commands
+description: Every bimai command, in the terminal and in a Claude Code session.
+---
+
+<Status state="planned" />
+
+## In a session (Claude Code)
+
+| Command | Does |
+|---|---|
+| `/bimai:onboard` | Run or re-run the onboarding interview |
+| `/bimai:plan` | Plan my day across all projects |
+| `/bimai:meeting` | Process a meeting transcript into minutes and tasks |
+| `/bimai:meeting-prep` | Build a coordination meeting agenda |
+| `/bimai:triage` | Triage open ACC issues |
+| `/bimai:report` | Weekly design progress report |
+| `/bimai:delivery-check` | Check a model against the delivery checklist |
+| `/bimai:approve` | Review changes and proposals waiting for approval |
+| `/bimai:private` | Leave this session out of the shared journal |
+| `/bimai:new-connector` · `new-pack` · `new-workflow` · `new-automation` | Build on bimai |
+| `/bimai:certify` · `/bimai:register` | Test and register what you built |
+
+You can also just ask in plain language; the Coordinator picks the right workflow.
+
+## Getting started
+
+| Command | Does |
+|---|---|
+| `bimai setup` | Install check, sign-in, create your desk (once per computer) |
+| `bimai new <name>` | Start a project: repository, onboarding, BEP |
+| `bimai new --demo` | Create the demo project |
+| `bimai init` | Add bimai to an existing folder or repository |
+| `bimai join <link>` | Join a colleague's project |
+| `bimai invite <email>` | Give a colleague access |
+| `bimai open [project]` | Open your desk or a project in VS Code |
+| `bimai doctor` | Check the setup and explain what's wrong |
+| `bimai status` | Workflows running, approvals waiting, connector health |
+
+## Team, positions and people
+
+| Command | Does |
+|---|---|
+| `bimai team review` | Suggest adding or removing team members |
+| `bimai onboard --update` | Re-run the interview after a role or phase change |
+| `bimai position add <id>` | Add a position, e.g. a modeller for zone B |
+| `bimai position assign <id> --to <person>` | Give a position to someone |
+| `bimai cover <id> --by <person> --until <date>` | Temporary cover for absence |
+| `bimai transfer <id> --to <person>` | Permanent handover |
+| `bimai seat leave` | Leave a project |
+| `bimai activity --since <day>` | What the team did, from the session journals |
+
+## Project knowledge
+
+| Command | Does |
+|---|---|
+| `bimai bep import <file>` · `bimai bep diff` | Read a BEP (revision) into agreements |
+| `bimai data import <file>` · `list` · `diff` | Relatics and planning exports |
+| `bimai meeting import <file>` | Process a meeting transcript |
+| `bimai learn promote` | Propose a learning as a shared rule |
+| `bimai site build` · `open` · `publish` | Build, open or privately publish the project site |
+
+## Tasks and projects
+
+| Command | Does |
+|---|---|
+| `bimai tasks add` · `done` · `list` | Manage tasks |
+| `bimai tasks due --days 7` | Upcoming and overdue work |
+| `bimai tasks plan --day` | Fit tasks into your day |
+| `bimai tasks assign` | Give someone a task (used by meeting intake) |
+| `bimai projects list` · `status` · `set` | Your projects |
+
+## Saving and history
+
+| Command | Does |
+|---|---|
+| `bimai save` · `bimai sync` · `bimai restore` | Run automatically; available if you want them |
+| `bimai desk backup --remote <url>` | Back up your desk |
+
+## Workflows and automations
+
+| Command | Does |
+|---|---|
+| `bimai workflow run` · `plan` · `status` · `resume` | Run and inspect workflows |
+| `bimai run <automation>` | Run an automation now |
+| `bimai schedule install` · `export --github` | Schedule it |
+
+## Connections and security
+
+| Command | Does |
+|---|---|
+| `bimai auth login` · `status` · `rotate` · `logout` | Manage logins (stored in the OS keychain) |
+| `bimai connector new` · `record` · `test` | Build and test connectors |
+| `bimai graph team` · `workflow` · `connectors` · `project` · `projects` | Draw diagrams |
+| `bimai validate` | Check every bimai file |
+| `bimai upgrade` | Update bimai files; never touches your decisions or history |
+| `bimai nap` | Compact agent learnings and archive or anonymize old logs (retention) |
+| `bimai lint` | Check that outputs cite evidence and decisions are logged (runs automatically) |
+| `bimai hook <name>` | Used by Claude Code hooks; not for everyday use |

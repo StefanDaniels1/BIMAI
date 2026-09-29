@@ -1,0 +1,23 @@
+---
+title: Costs
+description: What you pay for when using bimai, and how it keeps AI costs low.
+---
+
+## What it costs
+
+- **bimai itself is free.** It's open source under the MIT license, including for commercial use.
+- **AI usage** is paid to the model provider through your organization's Claude account.
+- **Your existing licences** (Autodesk, Bentley, Microsoft 365) stay as they are; bimai uses them, it
+  doesn't replace them.
+
+## How bimai keeps AI costs low
+
+| Measure | Effect |
+|---|---|
+| Smaller models by default | Most roles (Issue Manager, Model Checker, Planning Analyst) run on the cheapest tier; the most capable model is only used when needed and allowed |
+| Scripts do the counting | Parsing, checking, clustering and scheduling are done by ordinary code that costs nothing to run |
+| Small teams | A team has at most five members, so no tokens are spent on agents nobody needs |
+| Only relevant tools | Each project only exposes the connections it uses, which keeps every request small |
+| Budgets per automation | Scheduled runs have hard limits on length and cost |
+
+Every run records its cost per role, so you can see where the money goes.

@@ -1,0 +1,26 @@
+---
+title: Write a pack
+description: A skill with its scripts, templates and tests. Use meeting-intake as the reference.
+---
+
+<Status state="available">The meeting-intake pack is the working reference: <code>packs/meeting-intake/</code>.</Status>
+
+```
+packs/meeting-intake/
+├── SKILL.md          instructions for the agent: when to use it, what to produce
+├── pack.yaml         version, capabilities it needs, what it reads and writes
+├── workflows/        the workflow that runs it
+├── scripts/          deterministic code: JSON in, JSON out
+├── schemas/          the data contract between the agent and the scripts
+├── templates/        output templates, e.g. minutes
+└── tests/            fixtures and tests
+```
+
+## Rules
+
+1. **Scripts never call APIs.** They receive data from connectors and return JSON, so the same script
+   works whichever tool provided the data.
+2. **Packs need capabilities, not connectors.** `issues.read` can come from ACC or BCF.
+3. **Agents reason, scripts decide.** In meeting-intake, the agent extracts and classifies meeting items;
+   a script decides where each goes and turns every uncertainty into a question.
+4. **Every pack ships tests** and at least one evaluation scenario, and a documentation page.

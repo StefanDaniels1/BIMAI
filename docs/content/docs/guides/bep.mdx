@@ -1,0 +1,43 @@
+---
+title: Your BEP becomes the rules
+description: How bimai reads the BIM execution plan and turns it into the project's configuration.
+---
+
+<Status state="planned" />
+
+The BIM execution plan is where a project's agreements live. bimai reads it at the start of the
+project so the agents follow what was actually agreed.
+
+## What it picks out
+
+| Topic | Example | Used for |
+|---|---|---|
+| Roles and responsibilities | The BIM coordinator owns clash coordination | Positions and who owns what |
+| Software and versions | Revit 2025, Civil 3D 2025, OpenRoads Designer 2023 | Connections and version checks |
+| CDE and statuses | ACC, status codes S0–S4 | Delivery checks |
+| Naming | `<project>-<originator>-<zone>-<level>-<type>-<role>-<number>` | Naming checks |
+| Model breakdown | Federated models per discipline and zone | Who owns which part |
+| Exchange formats | IFC 4.3, BCF | Export checks |
+| Classification and LOD/LOI | NL-SfB, OTL, LOD per phase | Model checks |
+| Coordinates | RD New, NAP | Model checks |
+| Coordination rhythm | Clash session every other Tuesday | Workflows and deadlines |
+| Milestones | DO-freeze 1 March | Planning and reminders |
+
+## You check it first
+
+Every extracted agreement comes with the **page and section** it came from and how sure bimai is.
+Anything unclear becomes a question instead of a guess:
+
+```
+The BEP names two versions of Civil 3D (2024 and 2025). Which one is leading?
+```
+
+Nothing is applied until you've reviewed it.
+
+## After that
+
+- **The BEP is the baseline.** Deviating from it needs a logged decision that refers to the section.
+- **New BEP revision?** `bimai bep import` reads it; `bimai bep diff` shows what changed and proposes
+  updates for the rule owners to approve.
+- **Wrong software version?** `bimai doctor` warns when your installed Revit differs from the agreed one,
+  before you save a model in the wrong version.

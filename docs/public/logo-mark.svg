@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="bimai">
+  <rect width="64" height="64" rx="12" fill="#14100b"/>
+  <g stroke="#ffb000" stroke-width="2.5" stroke-linejoin="round">
+    <polygon points="32,11 50,21.5 32,32 14,21.5" fill="#ffb000"/>
+    <polygon points="14,21.5 32,32 32,53 14,42.5" fill="#ffb000" fill-opacity="0.55"/>
+    <polygon points="32,32 50,21.5 50,42.5 32,53" fill="#ffb000" fill-opacity="0.25"/>
+  </g>
+</svg>

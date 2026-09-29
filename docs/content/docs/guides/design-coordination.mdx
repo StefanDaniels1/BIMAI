@@ -1,0 +1,41 @@
+---
+title: Design coordination
+description: Requirements, risks and planning from your Relatics and Primavera or MS Project exports.
+---
+
+<Status state="planned" />
+
+No live connection to Relatics or Primavera is needed. You export the files as you do today and give
+them to bimai.
+
+## Add your exports
+
+```bash
+bimai data import exports/relatics-2026-09-26.json
+bimai data import planning/DO-planning-v14.xml
+```
+
+Or drop them into the project's inbox folder. Supported: Relatics JSON exports, Primavera P6 XML and
+MS Project XML. The first time, bimai proposes how the Relatics fields map to requirements, risks and
+verifications; you confirm it once.
+
+Every import is kept as a dated **snapshot**, so bimai can show trends and answer "what changed since
+last week?" (`bimai data diff relatics --since last-week`).
+
+## What you can ask
+
+- "Which requirements for the viaduct aren't verified yet and are due before DO-freeze?"
+- "What risks could hit the permit milestone?"
+- "Draft this week's design progress report."
+
+## Ready-made reports
+
+| Report | What it shows |
+|---|---|
+| Requirements status | Verification coverage per discipline and phase; requirements without a method or owner |
+| Risk review | Top risks, overdue mitigations, risks tied to upcoming milestones |
+| Schedule health | Critical path, slipping milestones, deliverables due in the next four weeks |
+| Design progress report | The three above in one weekly report, with trends |
+| Cross-check | Deliverables due soon whose requirements have no verification plan |
+
+Reports always state how old the data is, and you're reminded when an export is out of date.

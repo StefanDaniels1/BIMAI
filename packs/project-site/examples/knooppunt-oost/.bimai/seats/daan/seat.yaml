@@ -1,0 +1,7 @@
+person: daan
+positions: [design-coordinator]
+team:
+  - { role: coordinator, why: Always }
+  - { role: requirements-risk-manager, why: "Goals: requirements, risks · Data: Relatics export" }
+  - { role: planning-analyst, why: "Goal: planning · Data: Primavera XML" }
+  - { role: scribe, why: "Goal: design progress reporting" }

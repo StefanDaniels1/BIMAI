@@ -1,0 +1,72 @@
+---
+title: Install bimai
+description: Install once per computer. About five minutes, no programming knowledge needed.
+---
+
+<Status state="planned" />
+
+## What you need
+
+- A Windows or Mac computer. (Revit, Civil 3D and OpenRoads connections only work on Windows,
+  because those programs only run on Windows.)
+- A Claude account from your organization.
+- An account on your company's git host, usually GitHub or Azure DevOps. IT can arrange this;
+  you'll never have to use git yourself.
+
+## Install
+
+<Steps>
+<Step>
+
+### Install the bimai program
+
+```bash
+pipx install bimai
+```
+
+</Step>
+<Step>
+
+### Run the setup
+
+```bash
+bimai setup
+```
+
+Setup checks that git and Claude Code are installed (and installs them if they're missing), signs
+you in to your git host once, and asks two questions: your language (Dutch or English) and your
+working hours.
+
+</Step>
+<Step>
+
+### Check that everything works
+
+```bash
+bimai doctor
+```
+
+Everything should be green. If something isn't, the message says what to do.
+
+</Step>
+</Steps>
+
+## Where your files are
+
+Everything bimai keeps is in one folder in your user folder, for example `C:\Users\anna\bimai`.
+It's deliberately **not** in Documents, because Documents is often synced by OneDrive, which doesn't
+work well with bimai's project history.
+
+```
+bimai/
+├── desk/          private to you: your projects, plans and preferences
+└── projects/      one folder per project, shared with that project's team
+```
+
+## Next
+
+<Cards>
+  <Card title="Try the demo" href="/docs/start/demo" description="A complete sample project, no accounts needed." />
+  <Card title="Start a project" href="/docs/start/new-project" description="For the first person on a project." />
+  <Card title="Join a project" href="/docs/start/join" description="When a colleague already started it." />
+</Cards>

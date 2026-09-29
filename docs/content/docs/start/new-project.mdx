@@ -1,0 +1,49 @@
+---
+title: Start a project
+description: For the first person on a project, usually the BIM coordinator or information manager.
+---
+
+<Status state="planned" />
+
+```bash
+bimai new a2-knooppunt
+```
+
+This creates the shared project on your company's git host, puts it in `bimai/projects/`, and starts
+the onboarding interview.
+
+## The interview
+
+About three minutes. Answers the BEP already gives are filled in for you to confirm.
+
+1. **Your role on this project.** For example design coordinator, BIM coordinator or BIM modeller.
+2. **The BIM execution plan.** Drop the Word or PDF file. bimai reads it and fills in most of the
+   remaining questions. See [Your BEP becomes the rules](/docs/guides/bep).
+3. **The project goal and phase.**
+4. **What you want help with.** Requirements, risks, planning, reporting, issues, model checks,
+   deliveries, meetings.
+5. **Which tools and data are used.** Software and versions, the CDE, Relatics, the planning.
+6. **How familiar you are with VS Code.** If not, a Mentor joins your team to help.
+7. **Output language.** Dutch or English.
+
+bimai then proposes your team, for example:
+
+```
+Proposed team (4 of max 5):
+🧭 Coordinator                    always
+📐 Requirements & Risk Manager    goals: requirements, risks · data: Relatics
+📅 Planning Analyst               goal: planning · data: Primavera XML
+✍️  Scribe                         goal: progress reporting
+```
+
+As the first person you also confirm the **rule owners**: the people who approve changes to the
+project's shared rules (for example the information manager).
+
+## Invite colleagues
+
+```bash
+bimai invite anna@company.nl
+```
+
+If you're allowed to give access on the git host, bimai does it. Otherwise it tells you what to ask
+IT. Colleagues then [join the project](/docs/start/join).

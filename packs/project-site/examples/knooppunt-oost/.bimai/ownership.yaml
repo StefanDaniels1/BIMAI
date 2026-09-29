@@ -1,0 +1,26 @@
+positions:
+  bim-coordinator:
+    role: bim-coordinator
+    responsibilities: [issue-triage, clash-coordination, coordination-meetings]
+    held_by: [sanne]
+  design-coordinator:
+    role: design-coordinator
+    responsibilities: [requirements, risks, design-progress-reporting]
+    held_by: [daan]
+  information-manager:
+    role: information-manager
+    responsibilities: [bep-compliance, delivery-checks, naming]
+    held_by: [lotte]
+  modeller-structure:
+    role: bim-modeller
+    scope: { discipline: structure }
+    responsibilities: [model-corrections]
+    held_by: [eva, ruben]
+    lead: eva
+  modeller-roads-zone-a:
+    role: bim-modeller
+    scope: { discipline: roads, zone: A }
+    responsibilities: [model-corrections]
+    held_by: [mila]
+cover:
+  - { position: modeller-roads-zone-a, by: ruben, from: 2026-09-28, until: 2026-10-09, reason: absence }

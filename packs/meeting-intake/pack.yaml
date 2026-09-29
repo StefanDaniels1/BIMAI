@@ -1,0 +1,30 @@
+id: meeting-intake
+version: 0.1.0
+maturity: experimental
+description: Meeting transcript → minutes, decisions, tasks, handoffs, with questions to the uploader when unsure
+requires:
+  capabilities: []                      # works on uploaded files only
+optional:
+  capabilities: [meetings.transcripts.read]   # e.g. Microsoft Graph, to fetch Teams transcripts directly
+reads:
+  - .bimai/people.yaml
+  - .bimai/ownership.yaml
+  - .bimai/agreements.yaml             # coordination rhythm, for "before the next session"
+  - .bimai/decisions/
+writes:
+  - .bimai/meetings/<date>-<slug>/
+  - .bimai/decisions/
+  - .bimai/positions/<id>/handoffs/
+  - .bimai/seats/<name>/tasks.yaml     # only through `bimai tasks assign`
+outputs: [.bimai/meetings/<date>-<slug>/minutes.md]
+roles: [scribe]
+workflows: [workflows/meeting-intake.yaml]
+scripts:
+  - scripts/parse_transcript.py
+  - scripts/resolve_speakers.py
+  - scripts/chunk.py
+  - scripts/route_items.py
+schemas: [schemas/items.schema.json]
+settings:
+  ask_below: 0.8                        # confidence below this always asks the uploader
+  commit_transcripts: false             # raw transcripts stay out of git by default

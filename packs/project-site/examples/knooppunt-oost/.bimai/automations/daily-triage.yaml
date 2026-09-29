@@ -1,0 +1,6 @@
+id: daily-triage
+workflow: acc-issue-triage
+schedule: "45 7 * * 1-5"
+timezone: Europe/Amsterdam
+owner: bim-coordinator
+mode: read-only

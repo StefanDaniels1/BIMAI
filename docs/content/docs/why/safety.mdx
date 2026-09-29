@@ -1,0 +1,40 @@
+---
+title: Safety and privacy
+description: How bimai keeps people in control, protects secrets and handles confidential project data.
+---
+
+## People approve every change
+
+- New projects start **read-only**.
+- Every change to a model, ACC or a shared project rule is shown first and needs a person's approval.
+- Scheduled runs (for example a daily issue digest) never change anything. They leave proposals that a
+  person approves later.
+- Every statement in a report links to the evidence it's based on, so it can be checked.
+
+## The agents never see passwords
+
+Logins for ACC, Microsoft 365 and other systems are kept in the computer's own secure storage (the
+Windows Credential Manager or macOS Keychain). The tools that connect to those systems use them; the AI
+agents never see them. Even if someone hides instructions in an issue or a document, there is no
+password to steal, and nothing changes without approval.
+
+## Confidential project data
+
+- Everything stays in **your own** project repositories on **your own** git host (for example GitHub
+  or Azure DevOps).
+- Raw exports (Relatics, planning) and meeting transcripts are kept out of the shared project history
+  by default. Only the results (minutes, reports) are shared with the project team.
+- Your personal desk, which spans projects for different clients, is private to you.
+- Project sites are **private by default** and are never published without a deliberate choice.
+
+## Visibility of work and works councils
+
+bimai keeps a short journal of what each session did, so colleagues can pick up where someone left
+off. It describes **work and outcomes**, never time spent or productivity scores. Some organizations
+(in the Netherlands, the works council) will want to agree on this before rollout; the journal can be
+switched off per project.
+
+## Which AI model is used
+
+bimai runs on Claude through Claude Code, under your organization's own account and data agreements.
+Most work runs on smaller, cheaper models; see [Costs](/docs/why/costs).

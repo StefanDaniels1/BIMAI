@@ -1,0 +1,6 @@
+person: lotte
+positions: [information-manager]
+team:
+  - { role: coordinator, why: Always }
+  - { role: information-manager, why: "Goals: BEP compliance, deliveries · Data: ACC documents" }
+  - { role: model-checker, why: "Goal: delivery checks · Data: AEC Data Model" }

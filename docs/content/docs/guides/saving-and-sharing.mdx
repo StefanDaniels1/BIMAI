@@ -1,0 +1,21 @@
+---
+title: Saving and sharing
+description: bimai saves and shares your work for you. No git knowledge needed.
+---
+
+<Status state="planned" />
+
+bimai uses git underneath for history and safety, but you never see a git command.
+
+| You see | What happens |
+|---|---|
+| A session opens | Your colleagues' latest work is fetched |
+| "Saved and shared with the team ✓" | Your changes are saved and shared, after every task |
+| "Restore the agenda from yesterday" | That version comes back as a new change; nothing is lost |
+| "Anna proposes a new naming rule. Approve?" | A change to shared rules waits for a rule owner |
+
+- **Conflicts are designed out:** you only write to your own seat, and decisions, tasks and handoffs
+  are one small file each.
+- **Nothing is ever lost:** your work is saved before any update. If two versions really conflict,
+  you're asked which to keep.
+- **Offline is fine:** saves wait and are shared when you're back online.

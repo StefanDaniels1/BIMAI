@@ -1,0 +1,59 @@
+id: meeting-intake
+version: 1
+description: Turn a meeting transcript into minutes, decisions, tasks and handoffs; ask the uploader when unsure
+inputs:
+  file: { type: path }
+  meeting_type: { type: string, default: coordination }
+
+steps:
+  parse:
+    script: meeting-intake/parse_transcript.py
+    with: { file: "${{ inputs.file }}" }
+
+  speakers:
+    needs: [parse]
+    script: meeting-intake/resolve_speakers.py
+    with: { parsed: "${{ steps.parse.output }}", people: .bimai/people.yaml }
+
+  chunk:
+    needs: [speakers]
+    script: meeting-intake/chunk.py
+    with: { resolved: "${{ steps.speakers.output }}" }
+
+  extract:                                   # one cheap extraction per chunk, in parallel
+    needs: [chunk]
+    foreach: "${{ steps.chunk.output }}"
+    max_parallel: 4
+    agent: scribe
+    model: haiku
+    pack: meeting-intake
+    with: { chunk: "${{ item }}", mode: extract }
+
+  consolidate:
+    needs: [extract]
+    agent: scribe
+    pack: meeting-intake
+    with: { candidates: "${{ steps.extract.output }}", speakers: "${{ steps.speakers.output }}", mode: consolidate }
+
+  route:
+    needs: [consolidate]
+    script: meeting-intake/route_items.py
+    with:
+      items: "${{ steps.consolidate.output }}"
+      people: .bimai/people.yaml
+      ownership: .bimai/ownership.yaml
+      meeting: "${{ run.meeting }}"          # id, date, type, uploader, settings (from project.yaml + agreements)
+    retry_with_answers: review               # re-routes with the answers from the review gate
+
+  review:
+    needs: [route]
+    gate: input
+    ask: uploader
+    if: "${{ steps.route.output.status == 'needs_answers' }}"
+    show: [route]
+
+  apply:
+    needs: [review]
+    if: "${{ steps.route.output.status == 'ready' }}"
+    tool: bimai.meeting_apply
+    with: { plan: "${{ steps.route.output }}" }

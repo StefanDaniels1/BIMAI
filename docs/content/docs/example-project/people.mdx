@@ -1,0 +1,66 @@
+---
+title: "People"
+description: "Positions · Who owns what"
+---
+
+A **position** is a job on the project. People hold positions; what the AI agents learn in a job stays with the position, so whoever takes over starts with everything.
+
+## Positions
+
+| Position | Role | Scope | Held by | Cover |
+|---|---|---|---|---|
+| `bim-coordinator` | bim-coordinator | — | Sanne Visser | — |
+| `design-coordinator` | design-coordinator | — | Daan Mulder | — |
+| `information-manager` | information-manager | — | Lotte de Graaf | — |
+| `modeller-structure` | bim-modeller | discipline: structure | Eva Kok (lead), Ruben Smit | — |
+| `modeller-roads-zone-a` | bim-modeller | discipline: roads, zone: A | Mila Peters | Ruben Smit → 2026-10-09 |
+
+```mermaid
+flowchart LR
+  P_bim_coordinator["bim-coordinator"]
+  U_sanne(["Sanne Visser"]) --- P_bim_coordinator
+  P_design_coordinator["design-coordinator"]
+  U_daan(["Daan Mulder"]) --- P_design_coordinator
+  P_information_manager["information-manager"]
+  U_lotte(["Lotte de Graaf"]) --- P_information_manager
+  P_modeller_structure["modeller-structure"]
+  U_eva(["Eva Kok"]) --- P_modeller_structure
+  U_ruben(["Ruben Smit"]) --- P_modeller_structure
+  P_modeller_roads_zone_a["modeller-roads-zone-a"]
+  U_mila(["Mila Peters"]) --- P_modeller_roads_zone_a
+  U_ruben -.->|"covers modeller-roads-zone-a until 2026-10-09"| P_modeller_roads_zone_a
+```
+
+## Who owns what
+
+| Responsibility | Position |
+|---|---|
+| issue triage | `bim-coordinator` |
+| clash coordination | `bim-coordinator` |
+| coordination meetings | `bim-coordinator` |
+| requirements | `design-coordinator` |
+| risks | `design-coordinator` |
+| design progress reporting | `design-coordinator` |
+| bep compliance | `information-manager` |
+| delivery checks | `information-manager` |
+| naming | `information-manager` |
+| model corrections | `modeller-structure` |
+| model corrections | `modeller-roads-zone-a` |
+
+## People
+
+| Name | Title | Organization |
+|---|---|---|
+| Sanne Visser | BIM coordinator | Contractor |
+| Daan Mulder | Design coordinator | Contractor |
+| Lotte de Graaf | Information manager | Contractor |
+| Eva Kok | BIM modeller | Contractor |
+| Ruben Smit | BIM modeller | Contractor |
+| Mila Peters | BIM modeller | Contractor |
+
+## External parties
+
+| Name | Title | Organization |
+|---|---|---|
+| Tom Hendriks | MEP engineer | Installatiebedrijf Noord (demo) |
+| Ingrid Vos | BIM manager | Demo Client |

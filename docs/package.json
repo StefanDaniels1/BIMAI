@@ -1,0 +1,39 @@
+{
+  "name": "bimai-docs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "serve out",
+    "types:check": "next typegen && tsc --noEmit",
+    "example": "python3 ../packs/project-site/scripts/generate_site.py ../packs/project-site/examples/knooppunt-oost content/docs/example-project --public-dir public/project-files/knooppunt-oost --base-url /docs/example-project --today 2026-09-26",
+    "check": "python3 ../scripts/check_docs.py --links"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "cn": "^0.3.0",
+    "fumadocs-core": "16.15.14",
+    "fumadocs-mdx": "15.4.5",
+    "fumadocs-ui": "npm:@fumadocs/base-ui@16.15.14",
+    "lucide-react": "^1.47.0",
+    "mermaid": "^12.0.0",
+    "next": "16.3.5",
+    "next-themes": "^0.4.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/mdx": "^2.0.14",
+    "@types/node": "^26.6.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "postcss": "^8.5.28",
+    "serve": "^14.2.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2"
+  },
+  "description": "bimai documentation site (docs.bimai.nl)"
+}

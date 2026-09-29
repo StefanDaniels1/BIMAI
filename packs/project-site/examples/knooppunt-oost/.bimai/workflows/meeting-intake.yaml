@@ -1,0 +1,11 @@
+id: meeting-intake
+description: Transcript → minutes, decisions, tasks and handoffs; the uploader answers every uncertainty
+steps:
+  parse:       { script: meeting-intake/parse_transcript.py }
+  speakers:    { needs: [parse], script: meeting-intake/resolve_speakers.py }
+  chunk:       { needs: [speakers], script: meeting-intake/chunk.py }
+  extract:     { needs: [chunk], foreach: "${{ steps.chunk.output }}", agent: scribe, model: haiku }
+  consolidate: { needs: [extract], agent: scribe }
+  route:       { needs: [consolidate], script: meeting-intake/route_items.py }
+  review:      { needs: [route], gate: input }
+  apply:       { needs: [review], tool: bimai.meeting_apply }

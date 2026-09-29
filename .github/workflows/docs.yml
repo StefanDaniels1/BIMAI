@@ -1,0 +1,77 @@
+# Builds the documentation site and publishes it to GitHub Pages (docs.bimai.nl).
+# Pull requests get the same checks without publishing: documentation is part of done.
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**", "packs/**", "ARCHITECTURE.md", "scripts/check_docs.py", ".github/workflows/docs.yml"]
+  pull_request:
+    paths: ["docs/**", "packs/**", "ARCHITECTURE.md", "scripts/check_docs.py", ".github/workflows/docs.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml pytest python-docx jsonschema
+
+      - name: Pack tests
+        run: python -m pytest packs -q
+
+      - name: Generate the example project site
+        run: >
+          python packs/project-site/scripts/generate_site.py
+          packs/project-site/examples/knooppunt-oost docs/content/docs/example-project
+          --public-dir docs/public/project-files/knooppunt-oost
+          --base-url /docs/example-project --today 2026-09-26
+
+      - name: Every command and pack has a page
+        run: python scripts/check_docs.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - run: npm ci
+        working-directory: docs
+      - run: npm run build
+        working-directory: docs
+        env:
+          NEXT_PUBLIC_SITE_URL: https://docs.bimai.nl
+          BIMAI_GITHUB_REPO: ${{ github.repository }}
+
+      - name: No broken internal links
+        run: python scripts/check_docs.py --links
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: docs/out
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,38 @@
+---
+title: Working together
+description: Several people, each with their own team, on one project without getting in each other's way.
+---
+
+<Status state="planned" />
+
+## Shared rules, personal teams
+
+Everyone on a project shares its agreements, decisions and knowledge. Each person has their own
+**seat**: their team, tasks, journal and outputs.
+
+## Positions: jobs, not people
+
+A **position** is a job on the project, for example `modeller-structure` or `bim-coordinator`.
+People hold positions. What the agents learn in a job stays with the position, so a colleague who takes
+over starts with everything that was done.
+
+- **More modellers or coordinators?** Add positions split by discipline, zone or model.
+- **Someone ill or on holiday?** `bimai cover modeller-structure --by bob --until 2026-10-14`. Work
+  goes to Bob and switches back automatically.
+- **Someone leaves?** `bimai transfer modeller-structure --to fatima`. Fatima inherits the job.
+
+## Every responsibility has one owner
+
+Each responsibility belongs to exactly one position. Other teams can read it but not act on it. When an
+agent finds work in someone else's area, it **hands it over**: the work appears in that person's tasks
+with the evidence attached.
+
+## Nobody loses context
+
+After every session a short journal entry is written: what was asked, what was done, decisions and
+handoffs, and what's still open. Ask "what did the team do this week on the viaduct?" and you get the
+answer with links. The journal describes work, never time spent.
+
+```bash
+bimai graph project      # all positions, who holds them, each person's team, open handoffs
+```

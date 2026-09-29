@@ -1,0 +1,9 @@
+id: weekly-coordination
+description: Collect issues and model status, check models, review, write the agenda
+steps:
+  fetch-issues:  { tool: issues.list, with: { status: open } }
+  fetch-models:  { tool: model.list_published }
+  cluster:       { needs: [fetch-issues], script: acc-issue-triage/cluster.py }
+  check-models:  { needs: [fetch-models], foreach: "${{ steps.fetch-models.output }}", max_parallel: 3, workflow: delivery-check }
+  review:        { needs: [cluster, check-models], gate: approval }
+  agenda:        { needs: [review], agent: scribe, pack: coordination-meeting }

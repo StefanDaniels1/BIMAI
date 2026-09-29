@@ -1,0 +1,50 @@
+---
+title: Build a connector
+description: Connect a cloud API, a desktop app, a file format or an existing MCP server.
+---
+
+<Status state="planned" />
+
+## The recipe
+
+<Steps>
+<Step>
+### Pick the type
+Cloud API, desktop bridge, file, or an existing MCP server.
+</Step>
+<Step>
+### Scaffold
+`/bimai:new-connector` creates the folder and the manifest from a template.
+</Step>
+<Step>
+### Define tools
+Read tools first. Write tools always support a dry run and are safe to retry.
+</Step>
+<Step>
+### Declare capabilities
+So existing packs can use your connector.
+</Step>
+<Step>
+### Implement and record test data
+Against a real project, recorded so tests run without accounts.
+</Step>
+<Step>
+### Certify and register
+`/bimai:certify`, then `/bimai:register`, read-only first. Add a documentation page.
+</Step>
+</Steps>
+
+## The contract
+
+- Tool names: `<connector>_<resource>_<verb>`, e.g. `revit_elements_query`.
+- Every result carries an evidence ID and its source.
+- Errors use a shared list: `auth_expired`, `forbidden`, `not_found`, `rate_limited`, `invalid_input`,
+  `app_unavailable`, `upstream_unavailable`, `conflict`.
+- Secrets live in the OS keychain and never appear in results or logs.
+
+## Desktop bridges (Revit, Civil 3D, OpenRoads, Bonsai)
+
+- Every call runs in the app's safe context (for Revit, `ExternalEvent`).
+- Every approved change is one undo step in the app.
+- When the app isn't running, the connector says so clearly (`app_unavailable`).
+- Declare the platforms: Revit, Civil 3D and OpenRoads bridges are Windows-only.

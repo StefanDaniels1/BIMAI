@@ -1,0 +1,26 @@
+---
+title: BIM coordination
+description: Issue triage, coordination meetings and delivery checks.
+---
+
+<Status state="planned" />
+
+## Issue triage
+
+`/bimai:triage` reads the open ACC issues, clusters related ones, and flags overdue and unassigned
+issues. It proposes assignments; nothing changes in ACC until you approve.
+
+## Coordination meetings
+
+`/bimai:meeting-prep` builds the agenda from open issues, model checks and open decisions. After the
+meeting, `/bimai:meeting` turns the transcript into minutes and tasks (see [Meetings to tasks](/docs/guides/meetings)).
+
+## Delivery checks
+
+`/bimai:delivery-check` checks a model against the delivery checklist and the BEP agreements (naming,
+properties, classification, coordinates) and reports pass or fail per rule, with the elements involved.
+
+## Models without opening Revit
+
+Through Autodesk's AEC Data Model, agents can read cloud models, quantities and differences between
+versions without Revit running. That also makes these checks usable in scheduled runs.

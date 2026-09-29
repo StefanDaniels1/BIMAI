@@ -1,0 +1,6 @@
+id: weekly-design-report
+workflow: weekly-design-report
+schedule: "0 8 * * 5"
+timezone: Europe/Amsterdam
+owner: design-coordinator
+mode: read-only

@@ -1,0 +1,50 @@
+---
+title: Your team
+description: Which agents are on your team, why they're there, and how to change it.
+---
+
+<Status state="planned" />
+
+## Roles
+
+bimai has a catalogue of roles. Your team is a small selection from it, never all of them.
+
+| Role | What it does for you |
+|---|---|
+| **Coordinator** | Runs the team, follows the project's workflows, talks to you. Always on the team. |
+| **Requirements & Risk Manager** | Requirements, verification status, risks and mitigations. Needs a Relatics export or similar. |
+| **Planning Analyst** | Milestones, critical path, slipping deliverables. Needs a Primavera or MS Project planning. |
+| **Information Manager** | BEP and EIR compliance, naming, status codes, delivery readiness. |
+| **Model Checker** | Queries models and checks them against the agreements. |
+| **Issue Manager** | Triages, clusters and follows up issues. |
+| **Scribe** | Minutes, reports and the decision log. |
+| **Mentor** | Explains VS Code and what bimai does, if you're new to it. |
+| **Builder** | Adds new tools to bimai. Only for people who build. |
+
+## How your team is chosen
+
+A role only joins if it serves something you asked help with **and** the data it needs exists.
+No Relatics export and no interest in requirements means no Requirements & Risk Manager. A team has at
+most five members. Your team file records why each member is there:
+
+| Member | Why |
+|---|---|
+| Coordinator | Always |
+| Requirements & Risk Manager | Goals: requirements, risks · Data: Relatics export |
+| Planning Analyst | Goal: planning · Data: Primavera XML |
+| Scribe | Goals: meetings, design progress reporting |
+
+## Changing your team
+
+- `bimai team review` suggests removing members you haven't used for four weeks, and adding one when
+  new data or goals appear. Nothing changes without your confirmation.
+- `bimai onboard --update` re-runs the interview when your role or the project phase changes.
+- Removing a member keeps what it learned, so adding it back later restores it.
+
+## See your team
+
+```bash
+bimai graph team
+```
+
+draws your team, their models and the tools each may use, as a diagram in VS Code.

@@ -1,0 +1,41 @@
+---
+title: Your project site
+description: A private website per project that explains the people, their AI teams, the agreements and current work.
+---
+
+<Status state="design">A working prototype generates the [example project](/docs/example-project) on this site. The `bimai site` commands are planned.</Status>
+
+Every bimai project can have its own documentation site, generated from the project's files. It's
+written for people who don't open VS Code: a new colleague on their first day, a project manager, a
+director or the client's BIM manager.
+
+## What's on it
+
+| Page | Content |
+|---|---|
+| Overview | Goal, phase, next milestones, key links (ACC, Teams, CDE) |
+| People | Who holds which position, who covers for whom |
+| AI teams | Each person's agents and how the teams hand work to each other |
+| How we work | The workflows, the coordination rhythm, what needs approval |
+| Agreements | The BEP agreements with page references, and the BEP itself |
+| Decisions | The decision log, newest first |
+| Meetings | Minutes of every processed meeting |
+| This week | Highlights from the session journals |
+
+Everything is generated from the project's files, so the site is always up to date and nobody has to
+maintain it. The generator is the `project-site` pack: plain code, no AI, so the site only ever shows what is in
+the project files.
+
+## Private by default
+
+A project site contains confidential project information, so it's **never public by default**.
+
+```bash
+bimai site build         # generate and build it
+bimai site open          # build it and open it on your own computer
+bimai site publish       # publish it to a private location your organization chose
+```
+
+Publishing options are chosen per organization: for example Azure Static Web Apps behind Microsoft
+sign-in (so only colleagues with a company account can open it), an internal web server, or a zip file
+to hand over. See the example: [Example project](/docs/example-project).

@@ -1,0 +1,23 @@
+---
+title: Evidence and approvals
+description: Every claim can be checked, and every change needs a person's approval.
+---
+
+## Evidence
+
+Every call an agent makes to a tool is recorded with an evidence ID. Reports, minutes and checks cite
+those IDs, so any statement ("9 issues are overdue", "requirement R-114 has no verification method")
+can be traced back to the exact data it came from.
+
+## Approvals
+
+| Situation | What happens |
+|---|---|
+| Reading anything | Allowed |
+| Writing to a model, ACC or another system | Shown as a dry run; a person approves it first |
+| Changing shared project rules | A change request for the rule owners |
+| Scheduled runs | Never write; they leave proposals to approve later |
+| A new project | Starts read-only |
+
+These rules are enforced by bimai itself, not by the AI's good behavior: even an agent that was
+misled by instructions hidden in a document can't change anything without approval.
