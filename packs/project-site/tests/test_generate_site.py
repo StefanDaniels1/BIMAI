@@ -67,7 +67,7 @@ def test_demo_generates_every_page(project, tmp_path):
     expected = {"index.mdx", "people.mdx", "ai-teams.mdx", "how-we-work.mdx", "agreements.mdx",
                 "decisions.mdx", "this-week.mdx", "meta.json", "meetings/index.mdx",
                 "meetings/meta.json", "meetings/2026-09-22-coordination.mdx"}
-    assert expected <= {str(p.relative_to(out)) for p in out.rglob("*") if p.is_file()}
+    assert expected <= {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file()}
 
 
 def test_overview_counts_and_links(project, tmp_path):

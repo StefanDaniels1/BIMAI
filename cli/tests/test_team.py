@@ -81,16 +81,16 @@ def test_routing_is_deterministic():
 def test_histories_are_created_on_init(project):
     positions = project / ".bimai" / "positions" / "bim-coordinator" / "agents"
     assert sorted(p.name for p in positions.iterdir()) == ["coordinator", "issue-manager", "model-checker", "scribe"]
-    text = (positions / "model-checker" / "history.md").read_text()
+    text = (positions / "model-checker" / "history.md").read_text(encoding="utf-8")
     assert "Model Checker" in text and "bim-coordinator" in text and "## Learnings" in text
 
 
 def test_existing_history_is_kept(project):
     history = project / history_path("bim-coordinator", "model-checker")
-    history.write_text(history.read_text() + "- 2026-09-30: Zone A models use RD New (source: BEP §4)\n")
-    before = history.read_text()
+    history.write_text(history.read_text(encoding="utf-8") + "- 2026-09-30: Zone A models use RD New (source: BEP §4)\n")
+    before = history.read_text(encoding="utf-8")
     assert team(project) == 0
-    assert history.read_text() == before
+    assert history.read_text(encoding="utf-8") == before
 
 
 def test_subagent_names_its_history_and_the_rules():
@@ -111,7 +111,7 @@ def test_several_positions_list_every_history():
 
 
 def test_coordinator_memory_is_in_the_block(project):
-    text = (project / "CLAUDE.md").read_text()
+    text = (project / "CLAUDE.md").read_text(encoding="utf-8")
     assert "## Your memory" in text and "agents/coordinator/history.md" in text
 
 
@@ -126,8 +126,8 @@ def test_member_added_by_hand(project):
     edit_team(project, lambda t: t.append({"role": "planning-analyst"}))
     assert team(project) == 0
     assert (project / ".claude" / "agents" / "planning-analyst.md").exists()
-    assert "Planning Analyst (`planning-analyst`)" in (project / "CLAUDE.md").read_text()
-    assert "| Planning Analyst | Added by hand |" in (project / ".bimai" / "seats" / "anna" / "team.md").read_text()
+    assert "Planning Analyst (`planning-analyst`)" in (project / "CLAUDE.md").read_text(encoding="utf-8")
+    assert "| Planning Analyst | Added by hand |" in (project / ".bimai" / "seats" / "anna" / "team.md").read_text(encoding="utf-8")
     assert (project / history_path("bim-coordinator", "planning-analyst")).exists()
 
 
@@ -136,15 +136,15 @@ def test_member_removed(project):
     assert team(project) == 0
     assert not (project / ".claude" / "agents" / "scribe.md").exists()
     assert (project / history_path("bim-coordinator", "scribe")).exists()
-    block = (project / "CLAUDE.md").read_text()
+    block = (project / "CLAUDE.md").read_text(encoding="utf-8")
     assert "Scribe (`scribe`)" not in block and "recorded by the Scribe" not in block
 
 
 def test_users_own_agent_file_is_left_alone(project, capsys):
     own = project / ".claude" / "agents" / "scribe.md"
-    own.write_text("---\nname: scribe\ndescription: my scribe\n---\nMine.\n")
+    own.write_text("---\nname: scribe\ndescription: my scribe\n---\nMine.\n", encoding="utf-8")
     assert team(project) == 0
-    assert own.read_text() == "---\nname: scribe\ndescription: my scribe\n---\nMine.\n"
+    assert own.read_text(encoding="utf-8") == "---\nname: scribe\ndescription: my scribe\n---\nMine.\n"
     assert "conflict  .claude/agents/scribe.md" in capsys.readouterr().out
     # ... and not deleted when the member is removed.
     edit_team(project, lambda t: t.remove(next(m for m in t if m["role"] == "scribe")))
@@ -154,17 +154,17 @@ def test_users_own_agent_file_is_left_alone(project, capsys):
 
 def test_generated_agent_is_updated(project):
     agent = project / ".claude" / "agents" / "model-checker.md"
-    agent.write_text(agent.read_text().replace("You are the **Model Checker**", "Old text"))
+    agent.write_text(agent.read_text(encoding="utf-8").replace("You are the **Model Checker**", "Old text"))
     assert team(project) == 0
-    assert "You are the **Model Checker**" in agent.read_text()
+    assert "You are the **Model Checker**" in agent.read_text(encoding="utf-8")
 
 
 def test_user_text_in_claude_md_is_kept(project):
     claude_md = project / "CLAUDE.md"
-    claude_md.write_text("# Our rules\n\n" + claude_md.read_text() + "\n## After\n")
+    claude_md.write_text("# Our rules\n\n" + claude_md.read_text(encoding="utf-8") + "\n## After\n")
     edit_team(project, lambda t: t.append({"role": "planning-analyst"}))
     assert team(project) == 0
-    text = claude_md.read_text()
+    text = claude_md.read_text(encoding="utf-8")
     assert text.startswith("# Our rules\n\n") and text.rstrip().endswith("## After")
     assert text.count("<!-- bimai:start -->") == 1
 
@@ -172,7 +172,7 @@ def test_user_text_in_claude_md_is_kept(project):
 def test_missing_coordinator_is_added_first(project):
     edit_team(project, lambda t: t.remove(next(m for m in t if m["role"] == "coordinator")))
     assert team(project) == 0
-    rows = (project / ".bimai" / "seats" / "anna" / "team.md").read_text().splitlines()
+    rows = (project / ".bimai" / "seats" / "anna" / "team.md").read_text(encoding="utf-8").splitlines()
     assert rows[5] == "| Coordinator | Always |"
 
 
@@ -204,7 +204,7 @@ def test_no_workspace(tmp_path):
 
 
 def test_team_md_footer(project):
-    text = (project / ".bimai" / "seats" / "anna" / "team.md").read_text()
+    text = (project / ".bimai" / "seats" / "anna" / "team.md").read_text(encoding="utf-8")
     assert text.rstrip().endswith("Edit the `team` list in seat.yaml, then run `bimai team`.")
 
 

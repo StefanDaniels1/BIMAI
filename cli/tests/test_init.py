@@ -192,26 +192,26 @@ def test_written_workspace_is_valid(tmp_path):
     write(tmp_path)
     assert validate(tmp_path) == []
     b = tmp_path / ".bimai"
-    assert yaml.safe_load((b / "project.yaml").read_text())["id"] == "knooppunt-oost"
-    seat = yaml.safe_load((b / "seats" / "anna" / "seat.yaml").read_text())
+    assert yaml.safe_load((b / "project.yaml").read_text(encoding="utf-8"))["id"] == "knooppunt-oost"
+    seat = yaml.safe_load((b / "seats" / "anna" / "seat.yaml").read_text(encoding="utf-8"))
     assert seat["preset"] == "bim-coordinator" and seat["positions"] == ["bim-coordinator"]
     assert [m["role"] for m in seat["team"]] == ["coordinator", "issue-manager", "model-checker", "scribe"]
-    assert "| Issue Manager | Goal: issues · Data: ACC / Forma |" in (b / "seats" / "anna" / "team.md").read_text()
+    assert "| Issue Manager | Goal: issues · Data: ACC / Forma |" in (b / "seats" / "anna" / "team.md").read_text(encoding="utf-8")
 
 
 def test_subagents_and_models(tmp_path):
     write(tmp_path)
     agents = tmp_path / ".claude" / "agents"
     assert sorted(p.name for p in agents.iterdir()) == ["issue-manager.md", "model-checker.md", "scribe.md"]
-    meta = yaml.safe_load((agents / "model-checker.md").read_text().split("---\n")[1])
+    meta = yaml.safe_load((agents / "model-checker.md").read_text(encoding="utf-8").split("---\n")[1])
     assert meta["model"] == "haiku" and meta["name"] == "model-checker" and meta["description"]
-    assert json.loads((tmp_path / ".claude" / "settings.json").read_text()) == {"model": "sonnet"}
+    assert json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")) == {"model": "sonnet"}
 
 
 def test_existing_claude_md_is_kept_and_block_is_replaced_not_duplicated(tmp_path):
     touch(tmp_path, "CLAUDE.md", "# Our rules\n\nUse metric units.\n")
     write(tmp_path)
-    text = (tmp_path / "CLAUDE.md").read_text()
+    text = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
     assert text.startswith("# Our rules\n\nUse metric units.\n\n" + BLOCK_START)
     assert "| Issue Manager (`issue-manager`) |" in text
     # A later regeneration replaces only the block and keeps text after it.
@@ -220,7 +220,7 @@ def test_existing_claude_md_is_kept_and_block_is_replaced_not_duplicated(tmp_pat
         if p.is_file():
             p.unlink()
     write(tmp_path, answers(goals=["issues"]))
-    text = (tmp_path / "CLAUDE.md").read_text()
+    text = (tmp_path / "CLAUDE.md").read_text(encoding="utf-8")
     assert text.count(BLOCK_START) == 1 and text.count(BLOCK_END) == 1
     assert "Use metric units." in text and "## After" in text and "Scribe (`scribe`)" not in text
 
@@ -229,28 +229,28 @@ def test_existing_settings_are_kept(tmp_path):
     settings = {"model": "opus", "permissions": {"allow": ["Bash(npm test)"]}}
     touch(tmp_path, ".claude/settings.json", json.dumps(settings))
     plan = write(tmp_path)
-    assert json.loads((tmp_path / ".claude" / "settings.json").read_text()) == settings
+    assert json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")) == settings
     assert next(f for f in plan if f.path == ".claude/settings.json").action == "unchanged"
 
 
 def test_settings_without_model_get_sonnet_and_keep_the_rest(tmp_path):
     touch(tmp_path, ".claude/settings.json", json.dumps({"permissions": {"allow": ["Read"]}}))
     write(tmp_path)
-    assert json.loads((tmp_path / ".claude" / "settings.json").read_text()) == {
+    assert json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")) == {
         "permissions": {"allow": ["Read"]}, "model": "sonnet"}
 
 
 def test_invalid_settings_are_left_alone(tmp_path):
     touch(tmp_path, ".claude/settings.json", "{ not json")
     plan = write(tmp_path)
-    assert (tmp_path / ".claude" / "settings.json").read_text() == "{ not json"
+    assert (tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8") == "{ not json"
     assert next(f for f in plan if f.path == ".claude/settings.json").action == "conflict"
 
 
 def test_gitignore_lines_are_added_once(tmp_path):
     touch(tmp_path, ".gitignore", "node_modules/\n.bimai/state/\n")
     write(tmp_path)
-    text = (tmp_path / ".gitignore").read_text()
+    text = (tmp_path / ".gitignore").read_text(encoding="utf-8")
     assert text.startswith("node_modules/\n.bimai/state/\n")
     assert text.count(".bimai/state/") == 1 and ".bimai/site/" in text and ".bimai/data/" in text
 
@@ -259,8 +259,8 @@ def test_changed_subagent_and_stray_files_are_never_overwritten(tmp_path):
     touch(tmp_path, ".claude/agents/scribe.md", "my own scribe\n")
     touch(tmp_path, ".bimai/people.yaml", "people: []\n")
     plan = write(tmp_path)
-    assert (tmp_path / ".claude" / "agents" / "scribe.md").read_text() == "my own scribe\n"
-    assert (tmp_path / ".bimai" / "people.yaml").read_text() == "people: []\n"
+    assert (tmp_path / ".claude" / "agents" / "scribe.md").read_text(encoding="utf-8") == "my own scribe\n"
+    assert (tmp_path / ".bimai" / "people.yaml").read_text(encoding="utf-8") == "people: []\n"
     conflicts = {f.path for f in plan if f.action == "conflict"}
     assert conflicts == {".claude/agents/scribe.md", ".bimai/people.yaml"}
 
