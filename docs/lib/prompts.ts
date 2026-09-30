@@ -3,7 +3,7 @@
  * so they can never drift apart. Keep them in plain language: readers paste them unchanged.
  */
 
-/** "Start with Claude": installs bimai and runs the onboarding interview (docs/start/with-claude). */
+/** The start prompt: installs bimai and runs the onboarding interview (docs/start/install, landing page). */
 export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project folder for me. Follow these steps in order and
 don't skip the confirmation.
 

@@ -1,11 +1,50 @@
 ---
 title: Install bimai
-description: Install once per computer. About five minutes, no programming knowledge needed.
+description: Copy one prompt into Claude Code and it installs bimai and sets up your team.
 ---
 
-<Status state="planned" />
+## Start here
 
-## What you need
+<Status state="available">This works today: installing bimai and setting up your team with <code>bimai init</code>.</Status>
+
+Open your project folder in VS Code, start Claude Code, and paste this prompt. Claude installs bimai,
+asks you a few questions, shows you the team it proposes, and only writes files after you say yes.
+
+**What you need:** VS Code with [Claude Code](https://claude.com/claude-code), and Python 3.11 or
+newer. Claude checks Python for you and tells you if it's missing.
+
+<StartPrompt />
+
+### What happens
+
+1. **Claude installs bimai** and checks that it works.
+2. **It looks at your folder** and asks the questions from the [interview](/docs/start/new-project).
+   Everything it finds (a BEP, Revit models, a planning export) is suggested as an answer.
+3. **You see your team before anything is written:** who is on it, why, and which files bimai would
+   create. Say no, and nothing changes.
+4. **After your yes,** bimai writes your project files (`.bimai/`), your team (`.claude/agents/`)
+   and the Coordinator's instructions (`CLAUDE.md`). It never overwrites files you already have.
+5. **Start a new session** and your team is there. Ask it something, for example "who is on my
+   team?"
+
+Want to change your team later? See [Your team](/docs/guides/your-team).
+
+### Prefer to type it yourself?
+
+```bash
+pip install "git+https://github.com/StefanDaniels1/BIMAI.git"
+cd your-project-folder
+bimai init
+```
+
+`bimai init` asks the same questions in the terminal. See
+[Start a project](/docs/start/new-project#already-have-a-project-folder).
+
+## Coming in v0.1: the full installer
+
+<Status state="planned">The steps below describe the finished installer. Until then, use the prompt above.</Status>
+
+### What you need
 
 - A Windows or Mac computer. (Revit, Civil 3D and OpenRoads connections only work on Windows,
   because those programs only run on Windows.)
@@ -13,12 +52,12 @@ description: Install once per computer. About five minutes, no programming knowl
 - An account on your company's git host, usually GitHub or Azure DevOps. IT can arrange this;
   you'll never have to use git yourself.
 
-## Install
+### Install
 
 <Steps>
 <Step>
 
-### Install the bimai program
+#### Install the bimai program
 
 ```bash
 pipx install bimai
@@ -27,7 +66,7 @@ pipx install bimai
 </Step>
 <Step>
 
-### Run the setup
+#### Run the setup
 
 ```bash
 bimai setup
@@ -40,7 +79,7 @@ working hours.
 </Step>
 <Step>
 
-### Check that everything works
+#### Check that everything works
 
 ```bash
 bimai doctor
@@ -51,7 +90,7 @@ Everything should be green. If something isn't, the message says what to do.
 </Step>
 </Steps>
 
-## Where your files are
+### Where your files are
 
 Everything bimai keeps is in one folder in your user folder, for example `C:\Users\anna\bimai`.
 It's deliberately **not** in Documents, because Documents is often synced by OneDrive, which doesn't

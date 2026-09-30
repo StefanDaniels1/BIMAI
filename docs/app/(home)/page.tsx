@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { StartPrompt } from '@/components/mdx/copy-prompt';
 
 const audiences = [
   {
@@ -41,8 +42,9 @@ export default function HomePage() {
             An open-source BIM team that lives in your editor. It coordinates, tracks requirements and risks,
             turns meetings into tasks and plans your week, and it asks before it changes anything.
           </p>
+          <StartPrompt variant="hero" />
           <div className="flex flex-wrap justify-center gap-3" style={{ textShadow: 'none' }}>
-            <Link href="/docs/start/install" className="rounded-md bg-[#ffb000] px-5 py-2.5 font-semibold text-[#14100b]">
+            <Link href="/docs/start/install" className="rounded-md border border-[#ffb000] px-5 py-2.5 font-semibold text-[#ffb000]">
               Get started
             </Link>
             <Link href="/docs/example-project" className="rounded-md border border-[#ffb000] px-5 py-2.5 font-semibold text-[#ffb000]">
