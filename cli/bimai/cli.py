@@ -55,7 +55,8 @@ def _split(value: str) -> list[str]:
 def _git_user(root: Path) -> str:
     try:
         cwd = root if root.exists() else Path.cwd()
-        out = subprocess.run(["git", "config", "user.name"], cwd=cwd, capture_output=True, text=True, timeout=5)
+        out = subprocess.run(["git", "config", "user.name"], cwd=cwd, capture_output=True, timeout=5,
+                             encoding="utf-8", errors="replace")
         return out.stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return ""

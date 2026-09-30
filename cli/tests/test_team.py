@@ -87,7 +87,7 @@ def test_histories_are_created_on_init(project):
 
 def test_existing_history_is_kept(project):
     history = project / history_path("bim-coordinator", "model-checker")
-    history.write_text(history.read_text(encoding="utf-8") + "- 2026-09-30: Zone A models use RD New (source: BEP §4)\n")
+    history.write_text(history.read_text(encoding="utf-8") + "- 2026-09-30: Zone A models use RD New (source: BEP §4)\n", encoding="utf-8")
     before = history.read_text(encoding="utf-8")
     assert team(project) == 0
     assert history.read_text(encoding="utf-8") == before
@@ -154,14 +154,14 @@ def test_users_own_agent_file_is_left_alone(project, capsys):
 
 def test_generated_agent_is_updated(project):
     agent = project / ".claude" / "agents" / "model-checker.md"
-    agent.write_text(agent.read_text(encoding="utf-8").replace("You are the **Model Checker**", "Old text"))
+    agent.write_text(agent.read_text(encoding="utf-8").replace("You are the **Model Checker**", "Old text"), encoding="utf-8")
     assert team(project) == 0
     assert "You are the **Model Checker**" in agent.read_text(encoding="utf-8")
 
 
 def test_user_text_in_claude_md_is_kept(project):
     claude_md = project / "CLAUDE.md"
-    claude_md.write_text("# Our rules\n\n" + claude_md.read_text(encoding="utf-8") + "\n## After\n")
+    claude_md.write_text("# Our rules\n\n" + claude_md.read_text(encoding="utf-8") + "\n## After\n", encoding="utf-8")
     edit_team(project, lambda t: t.append({"role": "planning-analyst"}))
     assert team(project) == 0
     text = claude_md.read_text(encoding="utf-8")

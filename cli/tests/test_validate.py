@@ -51,7 +51,7 @@ def test_version(capsys):
 
 
 def test_runs_as_a_module():
-    out = subprocess.run([sys.executable, "-m", "bimai", "--version"], capture_output=True, text=True, check=True)
+    out = subprocess.run([sys.executable, "-m", "bimai", "--version"], capture_output=True, encoding="utf-8", check=True)
     assert __version__ in out.stdout
 
 
