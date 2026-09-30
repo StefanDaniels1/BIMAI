@@ -26,8 +26,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pyyaml jsonschema pytest python-docx
-      - run: python -m pytest -q
+      - run: pip install -e ".[dev]"
+      - name: Tests (any file access without an explicit encoding fails, as it would on Windows)
+        run: python -X warn_default_encoding -m pytest -q -W error::EncodingWarning
+      - name: The example project is a valid workspace
+        run: bimai validate packs/project-site/examples/knooppunt-oost
 
   specs:
     runs-on: ubuntu-latest

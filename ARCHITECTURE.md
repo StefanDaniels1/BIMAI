@@ -317,6 +317,15 @@ Tier choices are proven, not guessed: the eval suite runs each role on its defau
 
 `bimai init` starts with a short interview, so the team fits the person instead of the other way round. It can run in the terminal or conversationally in Claude Code (`/bimai:onboard`).
 
+#### First: look at the folder
+
+Before asking anything, `bimai init` scans the folder it runs in (a script, no model, nothing is
+changed): models (IFC, RVT, NWD/NWC, DGN, DWG), BCF issues, IDS files, BEP/EIR documents (by file
+name), Primavera and MS Project exports (by their XML root element), Relatics exports and meeting
+transcripts. What it finds pre-fills the interview, shown with the file that suggested it
+("Revit: models/bridge.rvt"), and counts as available data for the team rules below. The user can
+always correct or add to it.
+
 #### The interview (about 3 minutes)
 
 1. **What's your role on this project?** e.g. design coordinator, BIM coordinator, BIM modeller, information manager (free text allowed)
@@ -1320,18 +1329,19 @@ The IFC/USD enrichment engine with assertion provenance becomes a file connector
 
 Build order (each step usable on its own):
 
-1. CLI core: workspace, schemas + `bimai validate`, workflow engine (sequential, parallel, fan-out, gates, resume), evidence, lint, `bimai graph`; CI on Windows, macOS and Linux
-2. Documentation site ✅ started: Fumadocs site, docs CI checks, publishing to docs.bimai.nl; project-site generator ✅ prototype
-3. Plugin: role catalogue, hooks, ceremony commands
-4. Onboarding: interview, presets, team rules, `bimai team review`
-5. BEP intake: Word/PDF conversion, extraction into `agreements.yaml` with sources, review, apply, `bimai bep diff`, version checks in `bimai doctor`
-6. Setup, seats, positions and git without git: `bimai setup/new/join/invite/open`, `save/sync/restore`, shared seat tasks and journal, positions and scopes, cover and transfer, handoffs, reviewed shared-rule changes
-7. Kit: contract, envelope, errors, auth, conformance suite, `api` and `file` templates
-8. Data drops: `relatics-export` and `planning-xml` connectors, snapshots, mappings, `bimai data diff`
-9. First API connector: `acc-issues` (proves the contract)
-10. Gateway: policy, namespacing, capability routing; register Autodesk upstreams
-11. First packs (meeting intake ✅ started, design coordination, BIM coordination) + eval suite + sandbox (`bimai new --demo`)
-12. Runner, run records, proposals, `bimai schedule`
-13. Desk and Planner: desk with project registry and private backup, `bimai tasks` across seats and desk, morning plan and meeting-action import
-14. Builder role + `desktop-bridge` template (§9)
-15. Registry and a contributor guide: "add a BIM tool in an afternoon"
+1. CLI core: workspace, schemas + `bimai validate` ✅, workflow engine (sequential, parallel, fan-out, gates, resume), evidence, lint, `bimai graph`; CI on Windows, macOS and Linux
+2. First install loop ✅ started: `bimai init` scans the folder, runs a short interview, picks a preset, applies the team rules and writes the workspace and the Claude Code team (one seat, no BEP reading yet); steps 4–7 deepen it
+3. Documentation site ✅ started: Fumadocs site, docs CI checks, publishing to docs.bimai.nl; project-site generator ✅ prototype
+4. Plugin: role catalogue, hooks, ceremony commands
+5. Onboarding: interview, presets, team rules, `bimai team review`
+6. BEP intake: Word/PDF conversion, extraction into `agreements.yaml` with sources, review, apply, `bimai bep diff`, version checks in `bimai doctor`
+7. Setup, seats, positions and git without git: `bimai setup/new/join/invite/open`, `save/sync/restore`, shared seat tasks and journal, positions and scopes, cover and transfer, handoffs, reviewed shared-rule changes
+8. Kit: contract, envelope, errors, auth, conformance suite, `api` and `file` templates
+9. Data drops: `relatics-export` and `planning-xml` connectors, snapshots, mappings, `bimai data diff`
+10. First API connector: `acc-issues` (proves the contract)
+11. Gateway: policy, namespacing, capability routing; register Autodesk upstreams
+12. First packs (meeting intake ✅ started, design coordination, BIM coordination) + eval suite + sandbox (`bimai new --demo`)
+13. Runner, run records, proposals, `bimai schedule`
+14. Desk and Planner: desk with project registry and private backup, `bimai tasks` across seats and desk, morning plan and meeting-action import
+15. Builder role + `desktop-bridge` template (§9)
+16. Registry and a contributor guide: "add a BIM tool in an afternoon"

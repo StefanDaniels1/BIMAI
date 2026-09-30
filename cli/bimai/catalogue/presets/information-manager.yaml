@@ -1,0 +1,5 @@
+id: information-manager
+label: Information manager
+matches: [information manager, informatiemanager, bim manager]
+team: [coordinator, information-manager, model-checker, scribe]
+goals: [delivery, meetings]

@@ -1,0 +1,5 @@
+id: bim-modeller
+label: BIM modeller
+matches: [bim modeller, bim modeler, modeller, modeler, bim modelleur, modelleur, tekenaar, bim tekenaar]
+team: [coordinator, model-checker]
+goals: [model-checks]

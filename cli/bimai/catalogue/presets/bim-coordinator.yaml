@@ -1,0 +1,5 @@
+id: bim-coordinator
+label: BIM coordinator
+matches: [bim coordinator]
+team: [coordinator, issue-manager, model-checker, scribe]
+goals: [issues, model-checks, meetings]

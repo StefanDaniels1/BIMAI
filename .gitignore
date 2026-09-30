@@ -6,3 +6,6 @@ __pycache__/
 node_modules/
 docs/.next/
 docs/out/
+*.egg-info/
+build/
+dist/

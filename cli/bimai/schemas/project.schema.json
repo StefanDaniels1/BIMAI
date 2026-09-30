@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bimai.nl/schemas/project.schema.json",
+  "title": ".bimai/project.yaml",
+  "type": "object",
+  "required": [
+    "format_version",
+    "id"
+  ],
+  "properties": {
+    "format_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "demo": {
+      "type": "boolean"
+    },
+    "client": {
+      "type": "string"
+    },
+    "contract": {
+      "type": "string"
+    },
+    "phase": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "language": {
+      "enum": [
+        "en",
+        "nl"
+      ]
+    },
+    "write_mode": {
+      "enum": [
+        "read-only",
+        "gated-write"
+      ]
+    },
+    "journal": {
+      "type": "boolean"
+    },
+    "rule_owners": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "url"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
