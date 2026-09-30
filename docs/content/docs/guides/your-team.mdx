@@ -34,7 +34,55 @@ most five members. Your team file records why each member is there:
 | Planning Analyst | Goal: planning · Data: Primavera XML |
 | Scribe | Goals: meetings, design progress reporting |
 
+## Who handles what
+
+<Status state="available">Routing, history and <code>bimai team</code> work today.</Status>
+
+The Coordinator follows a routing table that bimai writes into `CLAUDE.md` for your team. Each row
+says what work a member handles, with two example requests:
+
+| Work | Who | For example |
+|---|---|---|
+| Quick facts from the project files, and anything no team member covers | Coordinator | "who holds the structure position?" |
+| Model contents, model checks and version comparisons | Model Checker | "which walls have no fire rating?" |
+| Minutes, reports and recording decisions | Scribe | "here is the transcript of today's meeting" |
+
+And a few rules: quick facts are answered directly, every task has exactly one member responsible
+(bimai tells you who), and work nobody on the team covers is done by the Coordinator, which says so.
+
+## What your team remembers
+
+Every member keeps a history in `.bimai/positions/<position>/agents/<role>/history.md`. It belongs to
+the **position**, not the person: when a colleague takes over the job, the agents still know what
+they learned there.
+
+Agents read their history before they start and add only confirmed, lasting things: conventions,
+preferences, where things are. One dated line each, with where it came from. Never requests or
+guesses, never personal remarks, never secrets. Decisions go to `.bimai/decisions/`, not into
+history. The files are plain text, so you can read and correct them yourself.
+
 ## Changing your team
+
+Edit the `team` list in your `seat.yaml`, then run:
+
+```bash
+bimai team            # or: bimai team --dry-run to see what would change
+```
+
+```yaml
+# .bimai/seats/anna/seat.yaml
+team:
+  - { role: coordinator, why: Always }
+  - { role: model-checker, why: "Goal: model-checks · Data: Revit" }
+  - { role: planning-analyst }          # added by hand
+```
+
+bimai updates the team files in `.claude/agents/`, the routing table in `CLAUDE.md` and your
+`team.md`. A member you remove loses its file in `.claude/agents/` but keeps its history. bimai only
+touches files it wrote itself: an agent file you wrote by hand is never changed or deleted.
+`bimai validate` catches unknown roles, a role listed twice, and teams over five.
+
+Coming later:
 
 - `bimai team review` suggests removing members you haven't used for four weeks, and adding one when
   new data or goals appear. Nothing changes without your confirmation.

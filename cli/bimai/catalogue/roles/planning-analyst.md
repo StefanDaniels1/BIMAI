@@ -3,6 +3,10 @@ name: planning-analyst
 label: Planning Analyst
 description: Reads the project planning for milestones, critical path, float and slipping design deliverables. Use for questions about deadlines and schedule.
 model: haiku
+handles: Milestones, deadlines, critical path and slipping deliverables
+examples:
+  - "what is due before the design freeze?"
+  - "which deliverables are slipping?"
 requires: [schedule.read]
 serves: [planning, reporting]
 ---

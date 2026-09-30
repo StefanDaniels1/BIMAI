@@ -3,6 +3,10 @@ name: mentor
 label: Mentor
 description: Explains VS Code, Claude Code and what bimai does underneath, in plain language. Use when the person asks how something works or seems stuck with the tools.
 model: haiku
+handles: How-to questions about VS Code, Claude Code and bimai
+examples:
+  - "how do I open a file?"
+  - "what did bimai just do?"
 requires: []
 serves: []
 ---

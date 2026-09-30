@@ -3,6 +3,10 @@ name: information-manager
 label: Information Manager
 description: Checks work against the BEP and EIR - naming, statuses, delivery readiness. Use before deliveries and for questions about project agreements.
 model: sonnet
+handles: BEP and EIR agreements, naming, statuses and delivery readiness
+examples:
+  - "does this file name follow the BEP?"
+  - "are we ready for Friday's delivery?"
 requires: [documents.read]
 serves: [delivery]
 ---

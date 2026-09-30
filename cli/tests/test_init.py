@@ -213,7 +213,7 @@ def test_existing_claude_md_is_kept_and_block_is_replaced_not_duplicated(tmp_pat
     write(tmp_path)
     text = (tmp_path / "CLAUDE.md").read_text()
     assert text.startswith("# Our rules\n\nUse metric units.\n\n" + BLOCK_START)
-    assert "**Issue Manager**" in text
+    assert "| Issue Manager (`issue-manager`) |" in text
     # A later regeneration replaces only the block and keeps text after it.
     (tmp_path / "CLAUDE.md").write_text(text + "\n## After\n", encoding="utf-8")
     for p in (tmp_path / ".bimai").rglob("*"):
@@ -222,7 +222,7 @@ def test_existing_claude_md_is_kept_and_block_is_replaced_not_duplicated(tmp_pat
     write(tmp_path, answers(goals=["issues"]))
     text = (tmp_path / "CLAUDE.md").read_text()
     assert text.count(BLOCK_START) == 1 and text.count(BLOCK_END) == 1
-    assert "Use metric units." in text and "## After" in text and "**Scribe**" not in text
+    assert "Use metric units." in text and "## After" in text and "Scribe (`scribe`)" not in text
 
 
 def test_existing_settings_are_kept(tmp_path):

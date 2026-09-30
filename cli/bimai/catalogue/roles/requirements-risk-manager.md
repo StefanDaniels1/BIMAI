@@ -3,6 +3,10 @@ name: requirements-risk-manager
 label: Requirements & Risk Manager
 description: Tracks requirements, verification status, risks and mitigations, and flags gaps. Use for questions about requirements, verification or project risks.
 model: sonnet
+handles: Requirements, verification status, risks and mitigations
+examples:
+  - "which requirements have no verification yet?"
+  - "what are the open risks for the viaduct?"
 requires: [requirements.read]
 serves: [requirements, risks, reporting]
 ---

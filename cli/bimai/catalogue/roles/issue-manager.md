@@ -3,6 +3,10 @@ name: issue-manager
 label: Issue Manager
 description: Triages, clusters and follows up issues (ACC, BCF). Use for open issues, triage and preparing issue lists for meetings.
 model: haiku
+handles: "Issues: triage, clustering and follow-up"
+examples:
+  - "which issues are overdue?"
+  - "group the open clashes for Thursday's meeting"
 requires: [issues.read]
 serves: [issues]
 ---

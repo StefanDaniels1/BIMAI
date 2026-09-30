@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 
 from bimai import __version__
+from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
+from bimai.files import apply as apply_plan
 from bimai.init import AlreadyInitialised, Answers, apply, check_not_initialised, plan_files, suggested_tools
 from bimai.scan import scan
 from bimai.team import UnknownRole, load_catalogue, match_preset, propose
@@ -145,8 +147,7 @@ def _print_proposal(team, plan) -> None:
     for hint in team.hints:
         print(f"  · {hint}")
     print("\nFiles:")
-    for fw in plan:
-        print(f"  {fw.action:<9} {fw.path}{f'  ({fw.note})' if fw.note else ''}")
+    _print_files(plan)
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -197,6 +198,46 @@ def cmd_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _print_files(plan) -> None:
+    for fw in plan:
+        print(f"  {fw.action:<9} {fw.path}{f'  ({fw.note})' if fw.note else ''}")
+
+
+def cmd_team(args: argparse.Namespace) -> int:
+    root = args.path.resolve()
+    try:
+        problems = validate(root)
+        seat = find_seat(root, args.seat)
+    except (NoWorkspace, SeatError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    seat_file = f".bimai/seats/{seat}/seat.yaml"
+    seat_problems = [p for p in problems if p.file == seat_file]
+    if seat_problems:
+        for p in seat_problems:
+            print(p)
+        print("Fix seat.yaml first; nothing was written.")
+        return 1
+    ctx = load_seat_context(root, seat)
+    plan = plan_claude_files(root, ctx)
+    changes = [f for f in plan if f.action != "unchanged"]
+    print(f"Team for seat {seat}: " + ", ".join(m.role for m in ctx.team))
+    _print_files(changes or [])
+    if not changes:
+        print("  Everything is up to date.")
+    if args.dry_run:
+        print("Dry run: nothing was written.")
+        return 0
+    changed = apply_plan(root, plan)
+    print(f"Changed {len(changed)} file{'s' if len(changed) != 1 else ''}.")
+    remaining = validate(root)
+    for p in remaining:
+        print(f"  ✗ {p}")
+    if not remaining:
+        print("✓ workspace is valid")
+    return 1 if remaining else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bimai", description="An open-source BIM team that lives in your editor.")
     parser.add_argument("--version", action="version", version=f"bimai {__version__}")
@@ -221,6 +262,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dry-run", action="store_true", help="show what would happen; write nothing")
     p.add_argument("--json", action="store_true", help="with --dry-run: print the result as JSON")
     p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("team", help="update your Claude Code team after editing the team list in seat.yaml")
+    p.add_argument("path", nargs="?", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--seat", help="whose team (needed when the project has several seats)")
+    p.add_argument("--dry-run", action="store_true", help="show what would change; write nothing")
+    p.set_defaults(func=cmd_team)
     return parser
 
 

@@ -3,6 +3,10 @@ name: scribe
 label: Scribe
 description: Writes minutes from meeting transcripts, progress reports and the decision log. Use when a transcript is uploaded or a report needs writing.
 model: sonnet
+handles: Minutes, reports and recording decisions
+examples:
+  - "here is the transcript of today's meeting"
+  - "write the weekly progress report"
 requires: []
 serves: [meetings, reporting]
 ---

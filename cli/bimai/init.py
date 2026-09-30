@@ -1,7 +1,8 @@
 """`bimai init`: scan a folder, ask a short interview, propose a team, write the workspace.
 
 `plan_files()` is pure and returns every file with its final content; `apply()` writes them.
-The interview and printing live in cli.py.
+The Claude Code files come from the shared generator in claude.py; the interview and printing
+live in cli.py.
 """
 from __future__ import annotations
 
@@ -13,10 +14,11 @@ from pathlib import Path
 
 import yaml
 
+from bimai.claude import SeatContext, plan_claude_files
+from bimai.files import BLOCK_END, BLOCK_START, FileWrite, apply, plan_write  # noqa: F401 (re-exported)
 from bimai.scan import Scan
 from bimai.team import Catalogue, Team, load_catalogue
 
-BLOCK_START, BLOCK_END = "<!-- bimai:start -->", "<!-- bimai:end -->"
 GITIGNORE = (".bimai/state/", ".bimai/site/", ".bimai/data/")
 
 
@@ -46,14 +48,6 @@ class Answers:
         return dict(asdict(self), project_id=self.project_id, person_id=self.person_id)
 
 
-@dataclass
-class FileWrite:
-    path: str               # relative to the project root, posix
-    content: str
-    action: str             # create | update | unchanged | conflict
-    note: str = ""
-
-
 def slug(text: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
     return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
@@ -79,23 +73,9 @@ def _yaml(data) -> str:
     return yaml.safe_dump(data, sort_keys=False, allow_unicode=True, width=100)
 
 
-def _plan(root: Path, rel: str, content: str, *, merge_note: str = "") -> FileWrite:
-    """Only files we merge into (merge_note given) may be updated; anything else is never overwritten."""
-    path = root / rel
-    if not path.exists():
-        return FileWrite(rel, content, "create")
-    current = path.read_text(encoding="utf-8")
-    if current == content:
-        return FileWrite(rel, content, "unchanged")
-    if not merge_note:
-        return FileWrite(rel, content, "conflict", "exists with different content; left as is")
-    return FileWrite(rel, content, "update", merge_note)
-
-
 def _bimai_files(a: Answers, team: Team, cat: Catalogue) -> dict[str, str]:
     preset = cat.presets[team.preset]
     pid, me = a.project_id, a.person_id
-    team_rows = "\n".join(f"| {cat.roles[m.role].label} | {m.why} |" for m in team.members)
     return {
         ".bimai/project.yaml": _yaml({
             "format_version": 1, "id": pid, "name": a.name, "language": a.language,
@@ -107,62 +87,20 @@ def _bimai_files(a: Answers, team: Team, cat: Catalogue) -> dict[str, str]:
             "person": me, "role": a.role, "preset": preset.id, "goals": a.goals, "positions": [preset.id],
             "team": [{"role": m.role, "why": m.why} for m in team.members],
         }),
-        f".bimai/seats/{me}/team.md": (
-            f"# {a.person}'s team\n\n| Member | Why |\n|---|---|\n{team_rows}\n\n"
-            "Change it by editing seat.yaml, or run `bimai init` again in a new project.\n"
-        ),
     }
 
 
-def _subagent(role) -> str:
-    meta = yaml.safe_dump({"name": role.id, "description": role.description, "model": role.model},
-                          sort_keys=False, allow_unicode=True, width=10_000)
-    return f"---\n{meta}---\n{role.charter}"
-
-
-def _claude_block(a: Answers, team: Team, cat: Catalogue) -> str:
-    coordinator = cat.roles["coordinator"]
-    members = [m for m in team.members if m.role != "coordinator"]
-    rows = "\n".join(f"- **{cat.roles[m.role].label}** (subagent `{m.role}`): {cat.roles[m.role].description}"
-                     for m in members) or "- (no other members yet)"
-    return (
-        f"{BLOCK_START}\n"
-        "<!-- Written by `bimai init`. Edit outside this block; this block may be regenerated. -->\n"
-        f"# bimai: {a.name}\n\n"
-        f"{coordinator.charter}\n"
-        f"## Your team\n\n{rows}\n\n"
-        f"## This seat\n\n"
-        f"You work for **{a.person}** ({cat.presets[team.preset].label}), seat `.bimai/seats/{a.person_id}/`. "
-        f"Goals: {', '.join(a.goals) or 'none chosen'}. Write documents in "
-        f"{'Dutch' if a.language == 'nl' else 'English'}.\n"
-        f"{BLOCK_END}\n"
-    )
-
-
-def _with_block(current: str | None, block: str) -> str:
-    if current is None:
-        return block
-    if BLOCK_START in current and BLOCK_END in current:
-        before, rest = current.split(BLOCK_START, 1)
-        after = rest.split(BLOCK_END, 1)[1].lstrip("\n")
-        return before + block + (("\n" + after) if after else "")
-    return current.rstrip("\n") + "\n\n" + block
+def seat_context(a: Answers, team: Team, cat: Catalogue) -> SeatContext:
+    preset = cat.presets[team.preset]
+    return SeatContext(project_name=a.name, language=a.language, person_name=a.person, seat=a.person_id,
+                       title=preset.label, positions=[preset.id], goals=a.goals, team=team.members)
 
 
 def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None = None) -> list[FileWrite]:
     root = Path(root).resolve()
     cat = cat or load_catalogue()
-    plan = [_plan(root, rel, content) for rel, content in _bimai_files(a, team, cat).items()]
-
-    for m in team.members:
-        if m.role == "coordinator":
-            continue
-        plan.append(_plan(root, f".claude/agents/{m.role}.md", _subagent(cat.roles[m.role])))
-
-    claude_md = root / "CLAUDE.md"
-    current = claude_md.read_text(encoding="utf-8") if claude_md.exists() else None
-    plan.append(_plan(root, "CLAUDE.md", _with_block(current, _claude_block(a, team, cat)),
-                      merge_note="bimai block added or refreshed; your content is kept"))
+    plan = [plan_write(root, rel, content) for rel, content in _bimai_files(a, team, cat).items()]
+    plan += plan_claude_files(root, seat_context(a, team, cat), cat)
 
     settings = root / ".claude" / "settings.json"
     if settings.exists():
@@ -189,22 +127,8 @@ def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None =
     missing = [line for line in GITIGNORE if line not in present]
     if missing:
         prefix = (current.rstrip("\n") + "\n\n") if current.strip() else ""
-        plan.append(_plan(root, ".gitignore", prefix + "# bimai\n" + "\n".join(missing) + "\n",
+        plan.append(plan_write(root, ".gitignore", prefix + "# bimai\n" + "\n".join(missing) + "\n",
                           merge_note="bimai lines added"))
     else:
         plan.append(FileWrite(".gitignore", current, "unchanged"))
     return plan
-
-
-def apply(root: str | Path, plan: list[FileWrite]) -> list[FileWrite]:
-    """Write every create/update; returns what was written."""
-    root = Path(root).resolve()
-    written = []
-    for fw in plan:
-        if fw.action not in ("create", "update"):
-            continue
-        path = root / fw.path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(fw.content, encoding="utf-8", newline="\n")
-        written.append(fw)
-    return written

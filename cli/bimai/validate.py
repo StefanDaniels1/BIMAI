@@ -14,6 +14,8 @@ from pathlib import Path
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
 
+from bimai.team import load_catalogue
+
 STEP_TYPES = ("script", "tool", "agent", "workflow", "gate")
 
 
@@ -150,8 +152,30 @@ def _check_ownership(ws: _Workspace, path: Path, ownership: dict, positions: dic
             ws.report(path, f"cover.{i}.position", f"'{pos}' is not a position in ownership.yaml")
 
 
+MAX_TEAM = 5
+
+
+def _check_team(ws: _Workspace, path: Path, team) -> None:
+    if not isinstance(team, list):
+        return
+    known = load_catalogue().roles  # the roles this bimai version knows
+    seen: set[str] = set()
+    for i, member in enumerate(team):
+        role = member.get("role") if isinstance(member, dict) else None
+        if not isinstance(role, str):
+            continue
+        if role not in known:
+            ws.report(path, f"team.{i}.role", f"'{role}' is not a known role (known: {', '.join(sorted(known))})")
+        elif role in seen:
+            ws.report(path, f"team.{i}.role", f"'{role}' is on the team twice")
+        seen.add(role)
+    if len(team) > MAX_TEAM:
+        ws.report(path, "team", f"has {len(team)} members; the maximum is {MAX_TEAM}")
+
+
 def _check_seat(ws: _Workspace, path: Path, seat: dict, positions: dict, people: set | None,
                 has_ownership: bool) -> None:
+    _check_team(ws, path, seat.get("team"))
     person = seat.get("person")
     if people is not None and isinstance(person, str) and person not in people:
         ws.report(path, "person", f"'{person}' is not in people.yaml")

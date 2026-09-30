@@ -3,6 +3,10 @@ name: coordinator
 label: Coordinator
 description: Talks to you, starts workflows and hands work to the right team member.
 model: sonnet
+handles: Quick facts from the project files, and anything no team member covers
+examples:
+  - "who holds the structure position?"
+  - "what did we decide about the deck slab?"
 requires: []
 serves: []
 ---

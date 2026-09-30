@@ -3,6 +3,10 @@ name: model-checker
 label: Model Checker
 description: Queries models, runs model checks and reports findings with evidence. Use for model questions, checks and delivery checks.
 model: haiku
+handles: Model contents, model checks and version comparisons
+examples:
+  - "which walls have no fire rating?"
+  - "what changed in the structure model since last week?"
 requires: [model.query]
 serves: [model-checks, delivery]
 ---

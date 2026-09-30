@@ -26,6 +26,8 @@ class Role:
     label: str
     description: str
     model: str
+    handles: str
+    examples: tuple[str, ...]
     requires: tuple[str, ...]
     serves: tuple[str, ...]
     charter: str
@@ -83,6 +85,7 @@ def load_catalogue() -> Catalogue:
             continue
         meta, body = _front_matter(f.read_text(encoding="utf-8"))
         roles[meta["name"]] = Role(meta["name"], meta["label"], meta["description"], meta["model"],
+                                   meta["handles"], tuple(meta["examples"]),
                                    tuple(meta.get("requires") or ()), tuple(meta.get("serves") or ()), body)
     presets = {}
     for f in sorted(base.joinpath("presets").iterdir(), key=lambda f: f.name):
