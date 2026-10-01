@@ -12,4 +12,4 @@
 ## 3. Prompt and docs
 
 - [x] 3.1 Start prompt: `needs-install` question after writing; new-project page and Civil 3D guide. Verify: prompt test; site build.
-- [ ] 3.2 Final check: pytest (strict), openspec validate --all --strict, check_docs, CI green.
+- [x] 3.2 Final check: pytest (strict), openspec validate --all --strict, check_docs, CI green.
