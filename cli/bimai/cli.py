@@ -12,6 +12,7 @@ from pathlib import Path
 
 from bimai import __version__
 from bimai import bridges
+from bimai import interview as onboarding
 from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
@@ -169,6 +170,15 @@ def _print_proposal(team, plan) -> None:
 
 def cmd_init(args: argparse.Namespace) -> int:
     root = args.path.resolve()
+    if args.interview:
+        try:
+            check_not_initialised(root)
+            spec = onboarding.interview(root, role=args.role, git_user=_git_user(root) or None)
+        except (AlreadyInitialised, UnknownRole) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(json.dumps(spec, indent=2, ensure_ascii=False))
+        return 0
     if args.json and not args.dry_run:
         print("error: --json only works with --dry-run", file=sys.stderr)
         return 2
@@ -565,6 +575,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--yes", "-y", action="store_true", help="ask nothing; accept defaults and the proposal")
     p.add_argument("--dry-run", action="store_true", help="show what would happen; write nothing")
     p.add_argument("--json", action="store_true", help="with --dry-run: print the result as JSON")
+    p.add_argument("--interview", action="store_true",
+                   help="print the interview questions as JSON for Claude Code (with --role: step 2); writes nothing")
     p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("team", help="update your Claude Code team after editing the team list in seat.yaml")

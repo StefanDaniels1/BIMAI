@@ -4,6 +4,7 @@ Pure: every rule here is deterministic, so a proposal can be tested without touc
 """
 from __future__ import annotations
 
+import difflib
 import unicodedata
 from dataclasses import dataclass, field
 from functools import cache
@@ -41,6 +42,9 @@ class Preset:
     matches: tuple[str, ...]
     team: tuple[str, ...]
     goals: tuple[str, ...]
+    description: str = ""
+    goal_options: tuple[str, ...] = ()     # goals offered first in the onboarding interview
+    typical_tools: tuple[str, ...] = ()    # tools offered first when the folder scan finds none
 
 
 @dataclass(frozen=True)
@@ -51,6 +55,7 @@ class Catalogue:
     tools: dict[str, dict]          # id -> {label, provides}
     suggests: dict[str, str]        # scan suggestion key -> tool id
     capabilities: dict[str, str]    # capability -> words people understand
+    goal_labels: dict[str, dict]    # goal -> {label, description}
 
     def provided(self, tools) -> set[str]:
         return {cap for t in tools for cap in self.tools[t]["provides"]}
@@ -95,9 +100,12 @@ def load_catalogue() -> Catalogue:
         if not f.name.endswith(".yaml"):
             continue
         p = yaml.safe_load(f.read_text(encoding="utf-8"))
-        presets[p["id"]] = Preset(p["id"], p["label"], tuple(p["matches"]), tuple(p["team"]), tuple(p["goals"]))
+        presets[p["id"]] = Preset(p["id"], p["label"], tuple(p["matches"]), tuple(p["team"]), tuple(p["goals"]),
+                                  p.get("description", ""), tuple(p.get("goal_options") or ()),
+                                  tuple(p.get("typical_tools") or ()))
     tools = yaml.safe_load(base.joinpath("tools.yaml").read_text(encoding="utf-8"))
-    return Catalogue(roles, presets, tuple(tools["goals"]), tools["tools"], tools["suggests"], tools["capabilities"])
+    return Catalogue(roles, presets, tuple(tools["goals"]), tools["tools"], tools["suggests"], tools["capabilities"],
+                     tools["goal_labels"])
 
 
 def normalize(text: str) -> str:
@@ -108,11 +116,17 @@ def normalize(text: str) -> str:
 
 def match_preset(role: str, cat: Catalogue) -> Preset:
     wanted = normalize(role)
+    terms: dict[str, Preset] = {}
     for preset in cat.presets.values():
-        if wanted == normalize(preset.id) or wanted in {normalize(m) for m in preset.matches}:
-            return preset
+        for term in (preset.id, preset.label, *preset.matches):
+            terms[normalize(term)] = preset
+    if wanted in terms:
+        return terms[wanted]
+    close = difflib.get_close_matches(wanted, list(terms), n=3, cutoff=0.8)
+    suggestions = list(dict.fromkeys(terms[c].label for c in close))
+    hint = f" Did you mean: {' or '.join(suggestions)}?" if suggestions else ""
     options = ", ".join(p.label for p in cat.presets.values())
-    raise UnknownRole(f"no role preset matches '{role}'. Available roles: {options}")
+    raise UnknownRole(f"no role preset matches '{role}'.{hint} Available roles: {options}")
 
 
 def _names(items, labels) -> str:

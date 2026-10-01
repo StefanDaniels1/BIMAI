@@ -1,5 +1,8 @@
 id: information-manager
 label: Information manager
-matches: [information manager, informatiemanager, bim manager]
+description: Guards the BEP and EIR - naming, statuses and deliveries.
+matches: [information manager, informatiemanager, bim manager, informatiemanagement]
 team: [coordinator, information-manager, model-checker, scribe]
 goals: [delivery, meetings]
+goal_options: [delivery, meetings, model-checks, requirements]
+typical_tools: [bep, acc, ifc, revit]

@@ -1,5 +1,8 @@
 id: bim-modeller
 label: BIM modeller
-matches: [bim modeller, bim modeler, modeller, modeler, bim modelleur, modelleur, tekenaar, bim tekenaar]
+description: Builds and corrects the models, for example in Revit, Civil 3D or OpenRoads.
+matches: [bim modeller, bim modeler, modeller, modeler, bim modelleur, modelleur, tekenaar, bim tekenaar, bim engineer, revit modeller, civil 3d modeller]
 team: [coordinator, model-checker]
 goals: [model-checks]
+goal_options: [model-checks, issues, delivery, meetings]
+typical_tools: [revit, civil3d, openroads, ifc]

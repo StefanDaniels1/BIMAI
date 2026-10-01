@@ -18,8 +18,10 @@ installer brings everything else, without administrator rights.
 ### What happens
 
 1. **Claude installs bimai** and checks that it works.
-2. **It looks at your folder** and asks the questions from the [interview](/docs/start/new-project).
-   Everything it finds (a BEP, Revit models, a planning export) is suggested as an answer.
+2. **It asks the [interview](/docs/start/new-project) questions as clickable choices,** in two short
+   rounds. Each option says what it means, the best fit for you is marked *Recommended*, and you can always
+   pick *Other* and say it in your own words. What bimai finds in your folder (a BEP, Revit models, a
+   planning export) is offered first.
 3. **You see your team before anything is written:** who is on it, why, and which files bimai would
    create. Say no, and nothing changes.
 4. **After your yes,** bimai writes your project files (`.bimai/`), your team (`.claude/agents/`)
