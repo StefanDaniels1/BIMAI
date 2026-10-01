@@ -1,0 +1,70 @@
+# Publishes bimai to PyPI when a tag like v0.1.0 is pushed, using PyPI Trusted Publishing (no stored
+# passwords or tokens). One-time setup on pypi.org, see docs/content/docs/build/releasing.mdx:
+#   pending publisher: owner StefanDaniels1, repository BIMAI, workflow release-bimai.yml, environment pypi
+name: release-bimai
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]" build twine
+      - name: Tests
+        run: python -X warn_default_encoding -m pytest -q -W error::EncodingWarning
+      - name: Build
+        run: python -m build
+      - name: The tag matches the package version, and the package is complete
+        run: |
+          version=$(python -c "import bimai; print(bimai.__version__)")
+          test "${GITHUB_REF_NAME}" = "v${version}" || { echo "tag ${GITHUB_REF_NAME} does not match version ${version}"; exit 1; }
+          for f in bimai/catalogue/servers.yaml bimai/catalogue/tools.yaml bimai/schemas/project.schema.json bimai/catalogue/roles/coordinator.md; do
+            python -m zipfile -l dist/bimai-${version}-py3-none-any.whl | grep -q "$f" || { echo "missing $f in the wheel"; exit 1; }
+          done
+          twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/bimai/
+    permissions:
+      id-token: write          # Trusted Publishing: PyPI trusts this workflow, no token needed
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: GitHub release with the same files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
+            --title "bimai ${GITHUB_REF_NAME#v}" \
+            --notes "Install or update: see https://docs.bimai.nl/docs/start/install — or \`uv tool install bimai\`."

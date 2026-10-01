@@ -96,3 +96,40 @@ jobs:
         with:
           name: bimai-civil3d-bridge
           path: bridges/civil3d/dist/bimai-civil3d-bridge.zip
+
+  install:
+    # The one-line installers (docs/public/install.sh and install.ps1) on clean runners, installing the
+    # freshly built package; then bimai must work from a new shell, as it would for a user.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the package
+        shell: bash
+        run: |
+          pip install build --quiet
+          python -m build --wheel --outdir pkg
+          echo "WHEEL=$(ls pkg/*.whl)" >> "$GITHUB_ENV"
+      - name: Install with install.sh (macOS, Linux)
+        if: runner.os != 'Windows'
+        run: BIMAI_PACKAGE="$PWD/$WHEEL" sh docs/public/install.sh
+      - name: Install with install.ps1 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:BIMAI_PACKAGE = (Resolve-Path $env:WHEEL).Path
+          powershell -NoProfile -ExecutionPolicy Bypass -File docs/public/install.ps1
+      - name: bimai works from a new shell
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"   # Git Bash maps $HOME to %USERPROFILE% on Windows
+          bimai --version
+          mkdir -p "$RUNNER_TEMP/project"
+          bimai init "$RUNNER_TEMP/project" --person "CI" --role "bim modeller" --yes
+          bimai validate "$RUNNER_TEMP/project"

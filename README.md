@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="bimai — a BIM team at your command" width="720">
+  <img src="https://raw.githubusercontent.com/StefanDaniels1/BIMAI/main/assets/logo.svg" alt="bimai — a BIM team at your command" width="720">
 </p>
 
 <p align="center">
@@ -114,11 +114,27 @@ steps:
 
 The full design is in **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
+## Install
+
+One line, no Python, git or administrator rights needed:
+
+```powershell
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
+```
+
+```bash
+# macOS and Linux
+curl -LsSf https://docs.bimai.nl/install.sh | sh
+```
+
+Then run `bimai init` in your project folder. Update any time with `bimai update`.
+More: [Install bimai](https://docs.bimai.nl/docs/start/install).
+
 ## Quick start (target for v0.1)
 
 ```bash
-# 1. install once per computer: checks git and Claude Code, signs you in, creates your desk
-pipx install bimai
+# 1. once per computer (planned): checks git and Claude Code, signs you in, creates your desk
 bimai setup
 
 # try everything first with sample data, no accounts needed

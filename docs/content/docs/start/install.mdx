@@ -10,8 +10,8 @@ description: Copy one prompt into Claude Code and it installs bimai and sets up 
 Open your project folder in VS Code, start Claude Code, and paste this prompt. Claude installs bimai,
 asks you a few questions, shows you the team it proposes, and only writes files after you say yes.
 
-**What you need:** VS Code with [Claude Code](https://claude.com/claude-code), and Python 3.11 or
-newer. Claude checks Python for you and tells you if it's missing.
+**What you need:** VS Code with [Claude Code](https://claude.com/claude-code). That's all: bimai's
+installer brings everything else, without administrator rights.
 
 <StartPrompt />
 
@@ -31,14 +31,42 @@ Want to change your team later? See [Your team](/docs/guides/your-team).
 
 ### Prefer to type it yourself?
 
+Install bimai with one line. It needs no Python, git or administrator rights:
+
+<Tabs items={['Windows', 'macOS and Linux']}>
+<Tab value="Windows">
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
+```
+
+</Tab>
+<Tab value="macOS and Linux">
+
 ```bash
-pip install "git+https://github.com/StefanDaniels1/BIMAI.git"
-cd your-project-folder
+curl -LsSf https://docs.bimai.nl/install.sh | sh
+```
+
+</Tab>
+</Tabs>
+
+Then, in your project folder:
+
+```bash
 bimai init
 ```
 
 `bimai init` asks the same questions in the terminal. See
 [Start a project](/docs/start/new-project#already-have-a-project-folder).
+
+### What the installer does
+
+It installs [uv](https://docs.astral.sh/uv/) (a widely used Python tool manager) in your user folder if
+you don't have it yet, then installs bimai with it; uv brings its own Python when your computer has none.
+Nothing is installed for other users and nothing needs administrator rights. Run the line again, or
+`bimai update`, to update. Want to read the script first? Open
+[install.ps1](https://docs.bimai.nl/install.ps1) or [install.sh](https://docs.bimai.nl/install.sh) in your
+browser. Already use Python tools? `uv tool install bimai` or `pipx install bimai` works too.
 
 ## Coming in v0.1: the full installer
 
@@ -60,7 +88,7 @@ bimai init
 #### Install the bimai program
 
 ```bash
-pipx install bimai
+curl -LsSf https://docs.bimai.nl/install.sh | sh
 ```
 
 </Step>

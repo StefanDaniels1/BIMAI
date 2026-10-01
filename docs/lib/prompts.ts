@@ -7,9 +7,11 @@
 export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project folder for me. Follow these steps in order and
 don't skip the confirmation.
 
-1. Check that Python 3.11 or newer is available. Then install bimai:
-   pip install "git+https://github.com/StefanDaniels1/BIMAI.git"
-   Check it worked with: bimai --version
+1. Install bimai with its one-line installer (it needs no Python, git or administrator rights):
+   - on Windows: powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
+   - on macOS or Linux: curl -LsSf https://docs.bimai.nl/install.sh | sh
+   If the bimai command isn't found afterwards, use the full path the installer printed (in the
+   .local/bin folder in my user folder). Check it worked with: bimai --version
 
 2. Look at what's already in this folder, so you can suggest answers: models (.ifc, .rvt, .nwd,
    .dgn, .dwg), BCF issues, a BEP or EIR document, planning exports, Relatics exports and meeting
