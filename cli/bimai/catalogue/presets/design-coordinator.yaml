@@ -1,5 +1,9 @@
 id: design-coordinator
 label: Design coordinator
-matches: [design coordinator, design manager, ontwerpcoordinator, ontwerpmanager]
+description: Manages the design process - requirements, risks, planning and design progress.
+matches: [design coordinator, design manager, design lead, ontwerpcoordinator, ontwerpmanager, ontwerpleider]
 team: [coordinator, requirements-risk-manager, planning-analyst, scribe]
 goals: [requirements, risks, planning, reporting]
+# Onboarding: the four goals and up to four tools offered first for this role (others via "Other").
+goal_options: [requirements, risks, planning, reporting]
+typical_tools: [relatics, primavera, msproject, acc]

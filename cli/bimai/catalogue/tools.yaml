@@ -2,6 +2,17 @@
 # A role joins a team only when every capability it `requires` is provided by one of these.
 goals: [requirements, risks, planning, reporting, issues, model-checks, delivery, meetings]
 
+# How goals are shown in the onboarding interview.
+goal_labels:
+  requirements: { label: Requirements, description: Track requirements and their verification }
+  risks: { label: Risks, description: Keep risks and mitigations up to date }
+  planning: { label: Planning, description: Milestones, deadlines and slipping deliverables }
+  reporting: { label: Progress reports, description: Weekly design progress reports }
+  issues: { label: Issues, description: Triage and follow up issues (ACC, BCF) }
+  model-checks: { label: Model checks, description: Check models - naming, properties, coordinates }
+  delivery: { label: Deliveries, description: Check deliveries against the BEP and EIR }
+  meetings: { label: Meetings, description: Minutes, decisions and actions from meeting transcripts }
+
 # Every capability bimai knows, in words people understand (used in the CLAUDE.md Connections section).
 capabilities:
   model.query: query models

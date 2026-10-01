@@ -1,5 +1,8 @@
 id: bim-coordinator
 label: BIM coordinator
-matches: [bim coordinator]
+description: Coordinates models and issues between disciplines and runs the coordination meetings.
+matches: [bim coordinator, coordinator bim, bim coordinatie, bim lead]
 team: [coordinator, issue-manager, model-checker, scribe]
 goals: [issues, model-checks, meetings]
+goal_options: [issues, model-checks, meetings, delivery]
+typical_tools: [acc, revit, ifc, navisworks]

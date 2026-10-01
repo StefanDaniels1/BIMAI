@@ -4,8 +4,7 @@
  */
 
 /** The start prompt: installs bimai and runs the onboarding interview (docs/start/install, landing page). */
-export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project folder for me. Follow these steps in order and
-don't skip the confirmation.
+export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project folder for me. Follow these steps in order.
 
 1. Install bimai with its one-line installer (it needs no Python, git or administrator rights):
    - on Windows: powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
@@ -13,32 +12,31 @@ don't skip the confirmation.
    If the bimai command isn't found afterwards, use the full path the installer printed (in the
    .local/bin folder in my user folder). Check it worked with: bimai --version
 
-2. Look at what's already in this folder, so you can suggest answers: models (.ifc, .rvt, .nwd,
-   .dgn, .dwg), BCF issues, a BEP or EIR document, planning exports, Relatics exports and meeting
-   transcripts.
+2. Get the interview: bimai init --interview
+   It prints the questions as JSON, made for your AskUserQuestion tool. It also shows what bimai found
+   in this folder through the suggested options.
 
-3. Ask me these questions one at a time, in plain language, suggesting answers where you can:
-   - The project name.
-   - My name.
-   - My role: design coordinator, BIM coordinator, BIM modeller or information manager.
-   - What I want help with. Choose from: requirements, risks, planning, reporting, issues,
-     model-checks, delivery, meetings.
-   - Which tools and data the project uses. Choose from: revit, civil3d, openroads, navisworks,
-     bonsai, ifc, autocad, acc, bcf, ids, bep, relatics, primavera, msproject.
-   - Whether I'm new to VS Code.
-   - The language for documents: en (English) or nl (Dutch).
+3. Ask me step 1 with the AskUserQuestion tool, in one call. Use each question's header, question text
+   and options exactly as given, in the given order, and put "(Recommended)" after the recommended
+   option. Use multiSelect where multi_select is true. Leave "Other" to me for my own answer.
+   - If I answer with Other on a choice, map my words to the closest value in that question's
+     "allowed" list. If you're not sure, ask me to confirm the mapping in plain language.
+   - For text questions (kind "text"), my own words are the answer.
 
-4. Show me what bimai would do, without writing anything:
-   bimai init --dry-run --yes --name "<project>" --person "<my name>" --role "<role>" \\
-     --goals <goals, comma-separated> --tools <tools, comma-separated> --language <en|nl>
-   Add --new-to-vscode if I said I'm new to VS Code. Explain the proposed team and why each
-   member is on it, in a few sentences.
+4. Get step 2 for my role: bimai init --interview --role "<my role>"
+   Ask it the same way, in one call.
 
-5. Ask me: "Shall I set this up?" Only when I say yes, run the same command without --dry-run.
+5. Show me what bimai would set up, without writing anything:
+   bimai init --dry-run --json --yes --name "<project>" --person "<my name>" --role "<role>" --goals <goals, comma-separated> --tools <tools, comma-separated> --language <en|nl>
+   Add --new-to-vscode if I said I'm new to VS Code. Explain the proposed team in a few short lines:
+   who is on it and why.
 
-6. Run: bimai validate
-   Then tell me to start a new Claude Code session, so my new team is loaded, and give me three
-   example questions I can ask my team.
+6. Ask me with AskUserQuestion: "Set up this team?" with the options "Yes, set it up" and "No, change
+   something". Only when I say yes, run the same command without --dry-run and --json.
 
-If a command fails, show me the error and explain it simply. Don't work around it by editing
-bimai's files by hand.`;
+7. Run: bimai validate
+   Then tell me to start a new Claude Code session so my team is loaded, and give me three example
+   questions I can ask my team. If I use Civil 3D, tell me I can connect it with: bimai connect civil3d
+
+If a command fails, show me the error and explain it simply. Don't work around it by editing bimai's
+files by hand.`;
