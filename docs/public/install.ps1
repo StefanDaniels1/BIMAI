@@ -48,5 +48,5 @@ if (-not $version) { Fail 'bimai was installed but does not start. Please report
 if (($env:Path -split ';') -notcontains $bin) { $env:Path = "$bin;$env:Path" }
 
 Write-Host ''
-Write-Host "✓ $version is installed." -ForegroundColor Green
+Write-Host "Done: $version is installed." -ForegroundColor Green
 Write-Host 'Next: go to your project folder and run  bimai init'
