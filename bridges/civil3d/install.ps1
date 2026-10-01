@@ -8,9 +8,16 @@
   Run from an elevated PowerShell:  powershell -ExecutionPolicy Bypass -File .\install.ps1
 #>
 param(
-    [string]$Bundle = (Join-Path $PSScriptRoot 'bimai-civil3d.bundle')
+    [string]$Bundle = (Join-Path $PSScriptRoot 'bimai-civil3d.bundle'),
+    # bimai runs this script in a separate administrator window; errors are written here so bimai can show them.
+    [string]$ErrorFile = ''
 )
 $ErrorActionPreference = 'Stop'
+trap {
+    if ($ErrorFile) { $_.Exception.Message | Out-File -FilePath $ErrorFile -Encoding utf8 }
+    Write-Error $_.Exception.Message -ErrorAction Continue
+    exit 1
+}
 
 if (-not (Test-Path (Join-Path $Bundle 'PackageContents.xml'))) {
     throw "No bundle found at '$Bundle'. Run this script from the unzipped bimai-civil3d-bridge folder."

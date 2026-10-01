@@ -43,38 +43,68 @@ reports what is defined (points, diameter, slope, cover) instead of guessing.
 
 ## Install
 
-Needs Civil 3D 2025, 2026 or 2027 on Windows, and administrator rights once.
+Needs Civil 3D 2025, 2026 or 2027 on Windows. In your project folder:
 
-1. **Get the bridge.** Until the first release: from the latest successful
-   [CI run](https://github.com/StefanDaniels1/BIMAI/actions/workflows/ci.yml), download the artifact
-   `bimai-civil3d-bridge`, or build it yourself with `bridges\civil3d\build.ps1` (needs the .NET 10 SDK).
-2. **Unzip it**, close Civil 3D, and run as administrator:
+```bash
+bimai connect civil3d
+```
 
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File .\install.ps1
-   ```
+That's it. bimai asks *"Install it now?"*, downloads the bridge, checks that it is exactly the version
+bimai expects, installs it, and connects your team to it. If you picked Civil 3D during `bimai init`,
+bimai offers this straight away.
 
-   This copies `bimai-civil3d.bundle` to `C:\Program Files\Autodesk\ApplicationPlugins`. Civil 3D always
-   trusts that folder, so there is no security warning, also not when your company sets SECURELOAD to 2.
-3. **Start Civil 3D**, open a drawing and type `BIMAIBRIDGE`. It shows:
+### Why Windows asks for permission
 
-   ```
-   bimai Civil 3D bridge 0.1.0: running at http://127.0.0.1:27184/mcp
-   ```
+During the install, Windows asks: *"Do you want to allow this app to make changes to your device?"*
+That is expected:
 
-4. **Connect it** in your project folder:
+- The bridge is installed in `C:\Program Files\Autodesk\ApplicationPlugins`. That is the one folder Civil
+  3D **always trusts**, so the bridge loads without security warnings, also on company PCs where Civil 3D
+  only loads add-ins from trusted folders (`SECURELOAD` set to 2).
+- Only administrators may write to Program Files, so Windows asks you once.
+- bimai copies the verified bridge there and changes nothing else. Click **Yes**.
 
-   ```bash
-   bimai connect civil3d
-   ```
+No administrator rights? Click **No** and ask IT (see below).
 
-   Your Model Checker gets access to it; members that don't need it don't. Start a new Claude Code session.
+### Check it
+
+```bash
+bimai bridge status civil3d      # installed version, update available, running or not
+```
+
+In Civil 3D, type `BIMAIBRIDGE`: it shows `running at http://127.0.0.1:27184/mcp`. The bridge starts
+together with Civil 3D, so your team can use it whenever Civil 3D is open with a drawing.
+
+### Updates and removal
+
+```bash
+bimai bridge install civil3d     # installs the newer version over the old one
+bimai bridge uninstall civil3d   # removes it (Windows asks permission again)
+bimai disconnect civil3d         # removes it from your project
+```
+
+### For IT departments
+
+The bridge is a standard Autodesk plug-in bundle. To deploy it to many PCs (Intune, SCCM or a login
+script), download `bimai-civil3d-bridge.zip` from the
+[releases](https://github.com/StefanDaniels1/BIMAI/releases), check its SHA-256 against
+`SHA256SUMS.txt`, and run as administrator or SYSTEM:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+It copies `bimai-civil3d.bundle` to `C:\Program Files\Autodesk\ApplicationPlugins` and nothing else. Users
+then only run `bimai connect civil3d`. A user can also install from a zip they were given:
+`bimai bridge install civil3d --from bimai-civil3d-bridge.zip`.
 
 ## Troubleshooting
 
 | You see | Do this |
 |---|---|
-| `BIMAIBRIDGE` is an unknown command | The bundle isn't loaded. Check that `C:\Program Files\Autodesk\ApplicationPlugins\bimai-civil3d.bundle` exists, and that you use Civil 3D 2025, 2026 or 2027 (not plain AutoCAD). |
+| `BIMAIBRIDGE` is an unknown command | The bundle isn't loaded. Run `bimai bridge status civil3d`; check you use Civil 3D 2025, 2026 or 2027 (not plain AutoCAD), and restart Civil 3D after installing. |
+| "the Windows permission prompt was declined" | Run `bimai connect civil3d` again and click Yes, or ask IT to install it (see above). |
+| "Couldn't download the bridge" | Your network or proxy blocks GitHub downloads. Ask IT for the zip and use `bimai bridge install civil3d --from <zip>`. |
 | "NOT running · port 27184 is already in use" | Another Civil 3D (or another program) uses the port. Close it, or set the environment variable `BIMAI_CIVIL3D_PORT` to another port before starting Civil 3D, and connect with `bimai connect civil3d --port <port>`. |
 | "Civil 3D is busy" | Finish or cancel the command you're in (Esc), then ask again. |
 | "No drawing is open" | Open a drawing. The bridge reads the active drawing. |

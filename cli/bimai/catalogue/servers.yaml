@@ -97,6 +97,14 @@ civil3d:
   # bimai's own local bridge (bridges/civil3d): an add-in inside Civil 3D serving MCP on loopback.
   bundle: bimai-civil3d.bundle
   port: 27184
+  # Published by .github/workflows/release-civil3d-bridge.yml. `bimai bridge install civil3d` only installs
+  # a download whose SHA-256 equals this pin; set it after the release is published.
+  release:
+    repo: StefanDaniels1/BIMAI
+    tag: civil3d-bridge-v0.1.0
+    asset: bimai-civil3d-bridge.zip
+    version: 0.1.0
+    sha256: null
   config: { type: http, url: "http://127.0.0.1:{port}/mcp" }
 
 autocad-civil3d:
