@@ -350,3 +350,17 @@ def test_person_defaults_to_git_user(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("bimai.cli._git_user", lambda root: "Jan Jansen")
     assert main(["init", str(tmp_path), "--role", "bim modeller", "--yes", "--dry-run", "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["answers"]["person_id"] == "jan"
+
+
+def test_default_person_never_fails(tmp_path, monkeypatch):
+    from bimai import cli
+    monkeypatch.setattr(cli, "_git_user", lambda root: "")
+    monkeypatch.setattr(cli.getpass, "getuser", lambda: (_ for _ in ()).throw(ModuleNotFoundError("pwd")))
+    assert cli._default_person(tmp_path) == "me"
+
+
+def test_person_flag_skips_the_login_lookup(tmp_path, monkeypatch):
+    from bimai import cli
+    monkeypatch.setattr(cli.getpass, "getuser", lambda: (_ for _ in ()).throw(AssertionError("should not be called")))
+    monkeypatch.setattr(cli, "_git_user", lambda root: (_ for _ in ()).throw(AssertionError("should not be called")))
+    assert main(["init", str(tmp_path), "--person", "Anna", "--role", "bim modeller", "--yes"]) == 0

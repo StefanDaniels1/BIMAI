@@ -67,6 +67,17 @@ def _git_user(root: Path) -> str:
         return ""
 
 
+def _default_person(root: Path) -> str:
+    """The git user name, else the login name; never fails (getpass.getuser can raise on Windows)."""
+    name = _git_user(root)
+    if name:
+        return name
+    try:
+        return getpass.getuser()
+    except Exception:
+        return "me"
+
+
 def _check_list(kind: str, values: list[str], allowed) -> list[str]:
     unknown = [v for v in values if v not in allowed]
     if unknown:
@@ -80,8 +91,7 @@ def _interview(args: argparse.Namespace, root: Path, found: dict[str, str]) -> A
     interactive = not args.yes
 
     name = args.name or (_ask("Project name", root.name) if interactive else root.name)
-    default_person = _git_user(root) or getpass.getuser()
-    person = args.person or (_ask("Your name", default_person) if interactive else default_person)
+    person = args.person or (_ask("Your name", _default_person(root)) if interactive else _default_person(root))
 
     if args.role:
         role = args.role
