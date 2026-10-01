@@ -22,7 +22,23 @@ bimai connect
 | **Autodesk Fusion** | on your computer, inside Fusion | none | yes |
 | **Autodesk Fusion Data** | Autodesk's cloud | your Autodesk account | yes |
 | **InfoWorks Hydraulic Modeling** | Autodesk's cloud, one address per region (US, UK, Australia) | your Autodesk account | yes |
+| **Autodesk Fusion Compute** (beta) | Autodesk's cloud, Fusion without a desktop | your Autodesk account | yes |
 | AutoCAD and Civil 3D | inside Autodesk Assistant only | – | not connectable yet; a bimai bridge for Civil 3D is planned |
+
+### AutoCAD and Civil 3D today
+
+Autodesk has its own AI inside AutoCAD and Civil 3D: **Autodesk Assistant** (in Civil 3D 2027 a Tech
+Preview). Its drawing tools only work inside Assistant for now, and Autodesk has said a way for other
+AI tools to connect will follow. Until then there are two separate assistants:
+
+| | Autodesk Assistant | Your bimai team |
+|---|---|---|
+| Where | inside AutoCAD or Civil 3D | in VS Code, with Claude Code |
+| Reaches your drawing | yes, the open drawing | not yet: bimai's own Civil 3D bridge is being built |
+| Knows your project's agreements, decisions and team | no | yes |
+
+They don't share information with each other yet. Organisations that don't want Assistant to talk to
+outside services can only block that at network level for now (Autodesk support article on Vault).
 
 ## Connect a server
 

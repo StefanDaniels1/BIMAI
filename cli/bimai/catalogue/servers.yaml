@@ -58,6 +58,17 @@ fusion-data:
   matches_tools: []
   config: { type: http, url: "https://developer.api.autodesk.com/fusion/mcp" }
 
+fusion-compute:
+  label: Autodesk Fusion Compute (beta)
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_FusionComputeMcp_connecting_to_the_fusion_compute_mcp_server_html
+  auth: signin
+  access: read-write
+  platforms: [windows, macos, linux]
+  provides: [cad.design]
+  matches_tools: []
+  config: { type: http, url: "https://developer.api.autodesk.com/da/v3/mcp/fusion" }
+
 hydraulic-modeling:
   label: InfoWorks Hydraulic Modeling
   vendor: Autodesk
@@ -79,7 +90,8 @@ autocad-civil3d:
   docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_AutoCADCivil3DMcp_autodesk_autocad_civil_3d_mcp_html
   unavailable: >-
     Autodesk's AutoCAD and Civil 3D server only works inside Autodesk Assistant for now; Autodesk
-    documents no way for other AI clients to connect. A bimai bridge for Civil 3D is planned.
+    documents no way for other AI clients to connect yet. Use it today inside AutoCAD or Civil 3D
+    through Autodesk Assistant (Civil 3D 2027, Tech Preview). A bimai bridge for Civil 3D is planned.
   platforms: [windows]
   provides: []
   matches_tools: [civil3d, autocad]

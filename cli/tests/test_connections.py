@@ -72,7 +72,7 @@ def front(root: Path, role: str) -> dict:
 def test_catalogue_is_complete_and_consistent():
     servers = conn.load_servers()
     known = set(load_catalogue().capabilities)
-    assert {"autodesk-help", "revit", "fusion", "fusion-data", "hydraulic-modeling", "autocad-civil3d"} <= set(servers)
+    assert {"autodesk-help", "revit", "fusion", "fusion-data", "fusion-compute", "hydraulic-modeling", "autocad-civil3d"} <= set(servers)
     for s in servers.values():
         assert s.label and s.vendor and s.docs.startswith("https://help.autodesk.com/"), s.name
         assert set(s.provides) <= known, s.name
