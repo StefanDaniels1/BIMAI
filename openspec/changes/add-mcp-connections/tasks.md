@@ -2,7 +2,7 @@
 
 ## 1. Catalogue
 
-- [ ] 1.1 Re-check each server against its Autodesk documentation page and write `cli/bimai/catalogue/servers.yaml` (Product Help, Revit read-only, Fusion, Fusion Data, Hydraulic Modeling) with auth, access, platforms, regions, provides, docs link and config; add `docs.search` and the new capabilities to `tools.yaml` where roles need them. Verify: catalogue test for completeness and consistency.
+- [ ] 1.1 Re-check each server against its Autodesk documentation page and write `cli/bimai/catalogue/servers.yaml` (Product Help, Revit read-only, Fusion, Fusion Data, Hydraulic Modeling; AutoCAD and Civil 3D listed as unavailable with its reason) with auth, access, platforms, regions, provides, docs link and config; add `docs.search` and the new capabilities to `tools.yaml` where roles need them. Verify: catalogue test for completeness and consistency.
 
 ## 2. .mcp.json and settings
 
@@ -13,7 +13,7 @@
 ## 3. bimai connect / disconnect
 
 - [ ] 3.1 `bimai connect` listing with status, access and plain-language sign-in text. Verify: test on the output.
-- [ ] 3.2 `bimai connect <server>`: platform check, Revit detection on Windows, `--region` (ask when interactive), read-write consent (`--allow-writes`), unknown server, then team regeneration. Verify: tests for public server, Revit on macOS, Revit not installed on Windows (mocked), region, consent refused, ask rule added.
+- [ ] 3.2 `bimai connect <server>`: platform check, Revit detection on Windows, `--region` (ask when interactive), read-write consent (`--allow-writes`), unknown server, then team regeneration. Verify: tests for public server, unavailable server, Revit on macOS, Revit not installed on Windows (mocked), region, consent refused, ask rule added.
 - [ ] 3.3 `bimai connect --custom <name> --url <url> --auth key|none [--header] [--scheme]`. Verify: test for the generated entry with `headersHelper`.
 - [ ] 3.4 `bimai disconnect <server>`: removes entry, ask rule and credential, regenerates the team. Verify: tests.
 

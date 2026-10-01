@@ -24,8 +24,10 @@ connections now, without the gateway, while keeping that rule.
 | Fusion Data | Autodesk cloud | sign-in | read-write (project admin) | `https://developer.api.autodesk.com/fusion/mcp` |
 | InfoWorks Hydraulic Modeling | Autodesk cloud, per region | sign-in | read-write (starts analyses) | `https://api.aps.{usa,gbr,aus}.autodesk.com/water/modeling-mcp/mcp` |
 
-Not included: AutoCAD and Civil 3D MCP (host-managed, Autodesk Assistant only), Fusion Compute (not
-reviewed yet). Re-check each entry against the vendor page during implementation.
+Listed as unavailable: AutoCAD and Civil 3D MCP (host-managed, Autodesk Assistant only; no connection
+for outside clients is documented). The expected route for Civil 3D is bimai's own local bridge, a
+`desktop-bridge` connector on the Civil 3D API (ARCHITECTURE.md §7.6, §9), as a separate change. Not
+included: Fusion Compute (not reviewed yet). Re-check each entry against the vendor page during implementation.
 
 ## Decisions
 

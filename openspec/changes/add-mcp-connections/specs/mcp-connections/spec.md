@@ -14,11 +14,17 @@ its official documentation, its authentication model (`none`, `signin` or `key`)
 provides, and the Claude Code configuration to write. The catalogue SHALL contain only servers whose
 connection details are confirmed in the vendor's documentation, and at least: Autodesk Product Help,
 Revit Public MCP (read-only tools), Autodesk Fusion, Autodesk Fusion Data and InfoWorks Hydraulic
-Modeling.
+Modeling. A server that exists but that outside clients can't connect to SHALL be listed as
+unavailable with the reason and no configuration; the catalogue SHALL list AutoCAD and Civil 3D this
+way.
 
 #### Scenario: Catalogue is complete and consistent
 - **WHEN** the catalogue is loaded
-- **THEN** every entry has all fields above, every `signin` entry is an `http` server, and every capability it provides is a known capability
+- **THEN** every available entry has all fields above, every `signin` entry is an `http` server, every unavailable entry has a reason, and every capability provided is a known capability
+
+#### Scenario: Unavailable server
+- **WHEN** the user runs `bimai connect autocad-civil3d`
+- **THEN** nothing is written, the output gives the reason (only reachable inside Autodesk Assistant), and the exit code is 2
 
 ### Requirement: One list in .mcp.json
 bimai SHALL keep every server in the project's `.mcp.json`, in Claude Code's format, under
