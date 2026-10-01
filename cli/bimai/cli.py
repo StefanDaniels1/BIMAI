@@ -3,15 +3,19 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import os
+import re
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 from bimai import __version__
+from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
 from bimai.files import apply as apply_plan
-from bimai.init import AlreadyInitialised, Answers, apply, check_not_initialised, plan_files, suggested_tools
+from bimai.init import (AlreadyInitialised, Answers, apply, check_not_initialised, connect_suggestions,
+                        plan_files, suggested_tools)
 from bimai.scan import scan
 from bimai.team import UnknownRole, load_catalogue, match_preset, propose
 from bimai.validate import NoWorkspace, validate
@@ -195,7 +199,13 @@ def cmd_init(args: argparse.Namespace) -> int:
         print(f"  ✗ {p}")
     if problems:
         return 1
-    print("✓ workspace is valid\n\nNext: open Claude Code in this folder (`claude`) and say hello to your team.")
+    print("✓ workspace is valid")
+    hints = connect_suggestions(answers.tools)
+    if hints:
+        print("\nConnect the tools you use:")
+        for hint in hints:
+            print(f"  {hint}")
+    print("\nNext: open Claude Code in this folder (`claude`) and say hello to your team.")
     return 0
 
 
@@ -239,6 +249,186 @@ def cmd_team(args: argparse.Namespace) -> int:
     return 1 if remaining else 0
 
 
+def _regenerate_team(root: Path, seat: str | None) -> None:
+    """After the server list changes, every member's access and the Connections section follow."""
+    try:
+        name = find_seat(root, seat)
+    except SeatError:
+        return
+    changed = apply_plan(root, plan_claude_files(root, load_seat_context(root, name)))
+    if changed:
+        print(f"Updated your team ({len(changed)} file{'s' if len(changed) != 1 else ''}).")
+
+
+def _sign_in(name: str, kind: str, interactive: bool) -> None:
+    if kind == "signin":
+        if interactive and _ask("Sign in with your Autodesk account now? (Y/n)", "y").lower().startswith("y"):
+            if conn.claude_mcp("login", name):
+                print("✓ Signed in. Claude Code keeps the sign-in safely in your computer's keychain.")
+                return
+            print("Claude Code can't sign in to this server yet: it has to approve the project's servers first.")
+        print(f"To sign in: {conn.in_session_hint(name)}")
+    elif kind == "key":
+        if interactive:
+            key = getpass.getpass(f"Paste the key for {name} (it won't be shown): ").strip()
+            if key:
+                conn.store_key(name, key)
+                print("✓ Key stored in your computer's keychain. It is never written to a file.")
+                return
+        print(f"To add the key later: bimai auth login {name}")
+
+
+def _connect_list(root: Path) -> int:
+    listed = {c.name for c in conn.connections(root)}
+    print("Servers you can connect (bimai connect <name>):\n")
+    for s in conn.load_servers().values():
+        if s.unavailable:
+            print(f"  {s.name:<20} {s.label:<28} not connectable yet: {s.unavailable.split(';')[0]}")
+            continue
+        status = "connected" if s.name in listed else ""
+        access = "can change data" if s.access == "read-write" else "read-only"
+        print(f"  {s.name:<20} {s.label:<28} {access:<16} {conn.SIGN_IN_TEXT[s.auth]:<38} {status}")
+    custom = [n for n in listed if n not in conn.load_servers()]
+    if custom:
+        print(f"\nAlso in .mcp.json: {', '.join(sorted(custom))}")
+    return 0
+
+
+def cmd_connect(args: argparse.Namespace) -> int:
+    root = args.path.resolve()
+    if not (root / ".bimai" / "project.yaml").is_file():
+        print(f"error: no bimai project in {root}; run `bimai init` first", file=sys.stderr)
+        return 2
+    if not args.server and not args.custom:
+        return _connect_list(root)
+    interactive = not args.yes
+    servers = conn.load_servers()
+    try:
+        mcp = conn.read_json(root / ".mcp.json")
+        settings = conn.read_json(root / ".claude" / "settings.json")
+        if args.custom:
+            name = args.custom
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name) or name in servers:
+                raise conn.ConnectError(f"'{name}' can't be used as a custom name (use lowercase letters, digits "
+                                        "and dashes, and not a catalogue name)")
+            if not args.url:
+                raise conn.ConnectError("--custom needs --url")
+            entry, kind, access, label = (conn.custom_config(args.url, args.auth, args.header, args.scheme),
+                                          args.auth, "unknown", name)
+        else:
+            name = args.server
+            if name not in servers:
+                raise conn.ConnectError(f"no server '{name}'. Choose from: {', '.join(servers)}")
+            server = servers[name]
+            region = args.region
+            if server.regions and not region and interactive and not server.unavailable:
+                region = _ask(f"Which region are your projects in? ({', '.join(server.regions)})").lower()
+            entry = conn.server_config(server, region=region)
+            kind, access, label = server.auth, server.access, server.label
+            if access == "read-write" and not args.allow_writes:
+                question = (f"{label} can change data. Every call will ask for your approval first. "
+                            "Connect it? (y/N)")
+                if not (interactive and _ask(question, "n").lower().startswith("y")):
+                    raise conn.ConnectError(f"{label} can change data, so it needs your explicit consent: "
+                                            f"bimai connect {name} --allow-writes")
+    except (conn.ConnectError, conn.McpJsonError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    (root / ".mcp.json").write_text(conn.json_text(conn.mcp_with(mcp, name, entry)), encoding="utf-8")
+    print(f"✓ {label} added to .mcp.json")
+    if access == "read-write":
+        path = root / ".claude" / "settings.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(conn.json_text(conn.settings_with_ask(settings, name)), encoding="utf-8")
+        print("  Every call to it asks for your approval (rule in .claude/settings.json).")
+    if kind == "none":
+        print("  No sign-in needed.")
+    _sign_in(name, kind, interactive)
+    _regenerate_team(root, args.seat)
+    print("Start a new Claude Code session to use it. Claude Code asks once to approve servers in .mcp.json.")
+    return 0
+
+
+def cmd_disconnect(args: argparse.Namespace) -> int:
+    root = args.path.resolve()
+    try:
+        mcp = conn.read_json(root / ".mcp.json")
+        settings = conn.read_json(root / ".claude" / "settings.json")
+    except conn.McpJsonError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    entry = (mcp.get("mcpServers") or {}).get(args.server)
+    if entry is None:
+        print(f"error: '{args.server}' is not in .mcp.json", file=sys.stderr)
+        return 2
+    kind = conn.auth_of(args.server, entry)
+    if kind == "signin":
+        conn.claude_mcp("logout", args.server, quiet=True)   # before removing: the CLI must still know it
+    (root / ".mcp.json").write_text(conn.json_text(conn.mcp_without(mcp, args.server)), encoding="utf-8")
+    if conn.ask_rule(args.server) in (settings.get("permissions") or {}).get("ask", []):
+        (root / ".claude" / "settings.json").write_text(
+            conn.json_text(conn.settings_without_ask(settings, args.server)), encoding="utf-8")
+    if kind == "key":
+        conn.delete_key(args.server)
+    print(f"✓ {args.server} removed")
+    _regenerate_team(root, args.seat)
+    return 0
+
+
+def _listed(root: Path) -> dict:
+    return conn.read_json(root / ".mcp.json").get("mcpServers") or {}
+
+
+def cmd_auth(args: argparse.Namespace) -> int:
+    if args.action == "headers":
+        # Called by Claude Code (headersHelper) at connect time. stdout carries the header, nothing else.
+        name = args.server or os.environ.get("CLAUDE_CODE_MCP_SERVER_NAME", "")
+        headers = conn.headers_for(name, args.header, args.scheme) if name else None
+        if headers is None:
+            print(f"bimai: no key stored for '{name}'. Run: bimai auth login {name}", file=sys.stderr)
+            return 1
+        print(json.dumps(headers))
+        return 0
+    root = args.path.resolve()
+    try:
+        listed = _listed(root)
+    except conn.McpJsonError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if args.action == "status":
+        if not listed:
+            print("No servers in .mcp.json yet. See: bimai connect")
+        for name, entry in listed.items():
+            kind = conn.auth_of(name, entry)
+            extra = (" · key stored ✓" if conn.has_key(name) else " · no key yet ✗") if kind == "key" else ""
+            if kind == "signin":
+                extra = " · check with /mcp in Claude Code"
+            print(f"  {name:<20} {conn.SIGN_IN_TEXT[kind]}{extra}")
+        return 0
+    if not args.server or args.server not in listed:
+        print(f"error: '{args.server}' is not in .mcp.json. Servers: {', '.join(listed) or 'none'}", file=sys.stderr)
+        return 2
+    kind = conn.auth_of(args.server, listed[args.server])
+    if args.action == "login":
+        if kind == "none":
+            print(f"{args.server} needs no sign-in.")
+        elif kind == "unknown":
+            print(conn.in_session_hint(args.server))
+        else:
+            _sign_in(args.server, kind, interactive=True)
+        return 0
+    # logout
+    if kind == "key":
+        print("✓ Key removed from your keychain." if conn.delete_key(args.server) else "No key was stored.")
+    elif kind == "signin":
+        if not conn.claude_mcp("logout", args.server):
+            print(f"In Claude Code, type /mcp, choose '{args.server}' and clear its authentication.")
+    else:
+        print(f"{args.server} has no stored sign-in.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bimai", description="An open-source BIM team that lives in your editor.")
     parser.add_argument("--version", action="version", version=f"bimai {__version__}")
@@ -269,6 +459,35 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--seat", help="whose team (needed when the project has several seats)")
     p.add_argument("--dry-run", action="store_true", help="show what would change; write nothing")
     p.set_defaults(func=cmd_team)
+
+    p = sub.add_parser("connect", help="connect your team to a tool (an MCP server); without a name: list them")
+    p.add_argument("server", nargs="?", help="server name, e.g. autodesk-help or revit")
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--region", help="for servers with one endpoint per region, e.g. usa, gbr, aus")
+    p.add_argument("--allow-writes", action="store_true", help="consent to a server that can change data")
+    p.add_argument("--custom", metavar="NAME", help="add your own server under this name (needs --url)")
+    p.add_argument("--url", help="with --custom: the server's https address")
+    p.add_argument("--auth", choices=["none", "key"], default="none", help="with --custom: does it need a key?")
+    p.add_argument("--header", default="Authorization", help="with --auth key: header that carries the key")
+    p.add_argument("--scheme", choices=["bearer", "raw"], default="bearer", help="with --auth key: 'Bearer <key>' or the key alone")
+    p.add_argument("--seat", help="whose team to update (needed when the project has several seats)")
+    p.add_argument("--yes", "-y", action="store_true", help="ask nothing")
+    p.set_defaults(func=cmd_connect)
+
+    p = sub.add_parser("disconnect", help="remove a server, its approval rule and its stored sign-in or key")
+    p.add_argument("server")
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--seat", help="whose team to update (needed when the project has several seats)")
+    p.set_defaults(func=cmd_disconnect)
+
+    p = sub.add_parser("auth", help="sign in to servers: login, status, logout")
+    p.add_argument("action", choices=["login", "status", "logout", "headers"],
+                   help="headers is used by Claude Code itself, not by people")
+    p.add_argument("server", nargs="?")
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--header", default="Authorization", help=argparse.SUPPRESS)
+    p.add_argument("--scheme", choices=["bearer", "raw"], default="bearer", help=argparse.SUPPRESS)
+    p.set_defaults(func=cmd_auth)
     return parser
 
 

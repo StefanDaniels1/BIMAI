@@ -45,8 +45,10 @@ included: Fusion Compute (not reviewed yet). Re-check each entry against the ven
 - **The human gate for write-capable servers is Claude Code's `permissions.ask`.** `mcp__<server>`
   matches every tool of that server and always prompts. It is coarse (read calls ask too), but it is a
   real gate today; the gateway later narrows it to write tools.
-- **Least privilege via subagent `mcpServers`,** derived from catalogue capabilities and role
-  `requires`/`optional`. The Coordinator, as the main session, sees all servers.
+- **Least privilege via subagent `disallowedTools`,** derived from catalogue capabilities and role
+  `requires`/`uses`: every server a role doesn't need is listed as `mcp__<server>`. Claude Code
+  documents this; it doesn't define what an empty `mcpServers: []` means, so that field isn't used.
+  The Coordinator, as the main session, sees all servers.
 - **Local servers in the shared `.mcp.json`.** A teammate on a Mac sees the Revit entry fail to start
   in `/mcp`; that is visible and harmless, and keeps one list. The Revit path is detected on Windows
   at connect time (Read-Tools install first, then Write-Tools with the read-only flag).
@@ -59,8 +61,13 @@ included: Fusion Compute (not reviewed yet). Re-check each entry against the ven
 
 - Autodesk servers are Technical Previews: endpoints and flags may change → the catalogue is data with
   doc links; a change is a one-line edit plus its test.
-- `claude mcp login` on a project server may require the workspace to be trusted first → verify during
-  implementation; fall back to `/mcp` instructions.
-- Empty `mcpServers: []` semantics in subagent frontmatter must be confirmed (no servers vs. all) →
-  verify; omit the key only if `[]` is not supported, and document the consequence.
+- Verified with Claude Code 2.1.286: the `claude mcp` CLI doesn't know project servers from `.mcp.json`
+  until they are approved in an interactive session ("awaiting approval — run `claude` in this
+  directory"). So right after `bimai connect`, sign-in goes through the session: approve the servers,
+  then `/mcp` → Authenticate. `bimai auth login` tries the CLI first and prints exactly those steps
+  when it can't.
 - `ask` rules prompt on read calls of write-capable servers too → accepted until the gateway.
+- Verified in Claude Code's permissions docs (October 2026): `mcp__<server>` matches every tool of a
+  server; rules are evaluated deny → ask → allow, so an ask rule wins over any allow rule; ask rules
+  still prompt in auto mode. `bypassPermissions` mode skips prompts, so the gate doesn't hold there:
+  the docs tell people not to use that mode with read-write servers.

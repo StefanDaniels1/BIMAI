@@ -1,0 +1,113 @@
+---
+title: Connections
+description: Connect your team to Autodesk's MCP servers with one command, and sign in without ever handling a key.
+---
+
+<Status state="available">Connecting Autodesk's MCP servers with <code>bimai connect</code> works today. Autodesk's servers are Technical Previews.</Status>
+
+Your team can only use the tools you connect. A connection is an **MCP server**: a small program that
+lets an AI read (and sometimes change) data in a tool such as Revit. bimai keeps all of them in one
+list and handles the setup for you.
+
+## What you can connect
+
+```bash
+bimai connect
+```
+
+| Server | Runs | Sign-in | Can change data? |
+|---|---|---|---|
+| **Autodesk Product Help** | Autodesk's cloud | none | no. Every project gets it automatically |
+| **Revit** | on your computer, inside Revit 2027.2 with Autodesk's MCP add-on (Windows) | none | no: bimai uses its read-only tools |
+| **Autodesk Fusion** | on your computer, inside Fusion | none | yes |
+| **Autodesk Fusion Data** | Autodesk's cloud | your Autodesk account | yes |
+| **InfoWorks Hydraulic Modeling** | Autodesk's cloud, one address per region (US, UK, Australia) | your Autodesk account | yes |
+| AutoCAD and Civil 3D | inside Autodesk Assistant only | – | not connectable yet; a bimai bridge for Civil 3D is planned |
+
+## Connect a server
+
+```bash
+bimai connect revit
+```
+
+That's all. bimai adds the server to your project, finds where it's installed, and updates your team:
+the Model Checker gets Revit, members who don't need it don't. Start a new Claude Code session to use
+it; Claude Code asks you once to approve the project's servers.
+
+For a regional server, add the region your projects are hosted in:
+
+```bash
+bimai connect hydraulic-modeling --region gbr
+```
+
+## Signing in
+
+There are three cases, and bimai tells you which one applies:
+
+| Case | Servers | What you do |
+|---|---|---|
+| **No sign-in** | Product Help, Revit, Fusion | Nothing |
+| **Autodesk account** | Fusion Data, Hydraulic Modeling | Sign in once in your browser |
+| **Key** | your own servers that need an API key | Paste the key once |
+
+**Signing in with your Autodesk account** uses Autodesk's official sign-in, the same one as in
+Autodesk's own documentation. Start Claude Code in the project, approve the servers when asked, type
+`/mcp`, choose the server and select **Authenticate**. Your browser opens the normal Autodesk sign-in.
+Afterwards, Claude Code keeps the sign-in in your computer's keychain and renews it itself. You can
+also start it from the terminal:
+
+```bash
+bimai auth login fusion-data
+```
+
+What you can see and do through a server is exactly what your Autodesk account can already see and do:
+the same hubs, projects and permissions. Your Autodesk administrator manages that as usual.
+
+**Keys** for your own servers are asked once, without showing what you type, and stored in your
+computer's keychain:
+
+```bash
+bimai connect --custom my-api --url https://example.com/mcp --auth key
+```
+
+Claude Code fetches the key from the keychain each time it connects. The key is never written to a file.
+
+```bash
+bimai auth status     # which servers need what; never shows a key
+bimai auth logout my-api
+```
+
+## Read by default
+
+Servers that can change data are only added when you agree. bimai then adds a rule so that **every
+call to that server asks your approval first**, also in Claude Code's auto mode.
+
+```bash
+bimai connect fusion-data --allow-writes
+```
+
+<Callout type="warn">
+Claude Code's "bypass permissions" mode skips all approval prompts, including these. Don't use that
+mode in a project with servers that can change data.
+</Callout>
+
+## What is stored where
+
+| What | Where | Who sees it |
+|---|---|---|
+| The list of servers | `.mcp.json` in the project | the whole team (it's shared) |
+| Approval rules | `.claude/settings.json` in the project | the whole team |
+| Autodesk sign-ins | your computer's keychain, managed by Claude Code | only you; never bimai, never the AI |
+| Keys for your own servers | your computer's keychain | only you; never the AI |
+
+`.mcp.json` never contains a secret: `bimai validate` reports one if someone pastes a token into it.
+
+## Your team and its connections
+
+Each team member only gets the servers its job needs. The Coordinator's instructions list what the
+team is connected to, and which tools you mentioned during setup are **not** connected, so nobody
+claims data from a tool it can't reach.
+
+```bash
+bimai disconnect fusion-data    # removes the server, its approval rule and your sign-in
+```

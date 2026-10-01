@@ -604,6 +604,11 @@ Typical questions this answers: "which requirements for the viaduct aren't verif
 
 The tools bimai targets out of the box. Routes are indicative: each entry becomes a connector following the contract (§7.3), and its exact integration is decided when it's built.
 
+Autodesk's own MCP servers that bimai already connects (Product Help, Revit Public MCP read-only, Fusion,
+Fusion Data, InfoWorks Hydraulic Modeling) are listed in `cli/bimai/catalogue/servers.yaml`. Autodesk's
+AutoCAD and Civil 3D server is only reachable inside Autodesk Assistant, so Civil 3D gets bimai's own
+local bridge.
+
 **Desktop apps** (`desktop-bridge`)
 
 | App | Likely route | Main capabilities | Platforms |
@@ -634,6 +639,13 @@ The AEC Data Model is a strong default for coordination: agents can read cloud m
 ## 8. Gateway, automations, planning and collaboration
 
 ### 8.1 Gateway
+
+> **Today, before the gateway:** servers are listed directly in the project's `.mcp.json` (Claude Code's own
+> format, shared with the team, never holding a secret), managed with `bimai connect` / `bimai disconnect`
+> from a catalogue of verified servers. Each subagent is limited to the servers its role needs
+> (`disallowedTools`), and servers that can change data get a Claude Code `ask` rule, so every call waits
+> for the person. When the gateway arrives it becomes one entry in that same `.mcp.json`, fronting the
+> others with namespacing, evidence and finer write control.
 
 The harness sees one MCP server: `bimai`. The gateway is also an MCP client to every connector and upstream server.
 
@@ -1143,6 +1155,13 @@ agent ◀──result only── gateway ◀── connector
 | Scheduled runs, CI | Federated OIDC login where the provider supports it (e.g. Entra), so no stored secret; otherwise CI secrets (GitHub Actions) |
 | **Never** | `.bimai/`, `~/bimai/desk/`, `.mcp.json`, `.env` files in a repo, task files, run records |
 
+**MCP servers today** (§8.1) follow three models, the same ones Autodesk documents: *none* (local servers
+inside a desktop app, and public servers), *Autodesk account sign-in* (cloud servers, via the MCP
+authorization flow with Client ID Metadata Documents, which Claude Code performs and whose tokens it keeps
+in the OS keychain, so bimai never sees them) and *key* (a custom server's key, stored by `bimai auth login`
+in the OS keychain and handed to Claude Code at connect time through a `headersHelper`). `bimai validate`
+rejects literal secrets in `.mcp.json`.
+
 Configuration holds **references**, never values:
 
 ```yaml
@@ -1155,6 +1174,7 @@ Management commands:
 
 | Command | Does |
 |---|---|
+| `bimai connect <server>` · `bimai disconnect <server>` | Adds or removes an MCP server in `.mcp.json` and updates the team (§8.1) |
 | `bimai auth login <connector>` | Runs the provider's login flow; stores the refresh token in the keychain |
 | `bimai auth status` | Shows which identities exist, their scopes and age; never the values |
 | `bimai auth rotate <connector>` | Replaces a credential and revokes the old one where the provider allows |
