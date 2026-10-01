@@ -89,5 +89,9 @@ official NuGet packages:
   (in the docs and the PR), on Windows with Civil 3D 2025, 2026 or 2027.
 - Long reads (huge drawings) block Civil 3D's UI for their duration; limits and the timeout keep this
   bounded.
-- Claude Code's protocol era isn't documented; the dual-era server and a test with the real Claude Code
-  CLI against a development server cover both.
+- Verified with Claude Code 2.1.286 against the development server (same protocol code and tool
+  definitions, sample data): Claude Code speaks the **modern 2026-07-28** era. It calls
+  `server/discover`, then `tools/list`, then `tools/call` with `MCP-Protocol-Version`, `Mcp-Method` and
+  `Mcp-Name` headers; header validation passed, and a headless session answered from two tool results
+  correctly. A legacy-only server would have depended on Claude Code's fallback. The legacy path stays
+  for other clients (Claude Desktop via mcp-remote, VS Code, Cursor).

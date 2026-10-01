@@ -11,6 +11,10 @@ npm install -g @fission-ai/openspec@1.13.2
 python -m pytest -q
 ```
 
+Working on a bridge (`bridges/`)? You also need the .NET 8 and .NET 10 SDKs:
+`dotnet test bridges/civil3d/tests/Bimai.Mcp.Tests`. The add-in compiles on macOS and Linux too, but only
+runs inside Civil 3D on Windows.
+
 ## How changes are made: specs first
 
 bimai uses [OpenSpec](https://github.com/Fission-AI/OpenSpec). Behavior is agreed in a short spec

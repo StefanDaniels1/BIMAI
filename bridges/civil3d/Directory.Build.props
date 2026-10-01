@@ -1,0 +1,17 @@
+<Project>
+  <!-- Shared settings for the bimai Civil 3D bridge. -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Company>bimai</Company>
+    <Product>bimai Civil 3D bridge</Product>
+    <Copyright>MIT License</Copyright>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Deterministic>true</Deterministic>
+    <!-- Lets the Windows-only add-in compile on macOS and Linux (CI, contributors). -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>

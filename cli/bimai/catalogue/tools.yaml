@@ -17,6 +17,10 @@ capabilities:
   cad.design: create and change Fusion designs
   design-data.read: Fusion projects and data
   hydraulics.read: InfoWorks hydraulic models and results
+  alignment.query: query alignments, stations and profiles
+  surface.query: query surfaces and elevations
+  corridor.query: query corridors
+  pipes.query: query pipe networks
 
 tools:
   revit:      { label: Revit, provides: [model.query] }

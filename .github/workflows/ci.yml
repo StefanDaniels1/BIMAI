@@ -44,3 +44,34 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/check_docs.py
+
+  civil3d-bridge:
+    # The Civil 3D add-in: protocol tests on Windows and Linux; on Windows also the add-in for
+    # Civil 3D 2025-2026 (.NET 8) and 2027 (.NET 10), compiled against Autodesk's NuGet packages,
+    # and the bundle zip users install.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: Protocol tests (.NET 8 and .NET 10)
+        run: dotnet test bridges/civil3d/tests/Bimai.Mcp.Tests -c Release -nologo
+      - name: Build the add-in and the bundle
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./bridges/civil3d/build.ps1
+      - name: Build the add-in and the bundle
+        if: runner.os != 'Windows'
+        run: ./bridges/civil3d/build.sh
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: bimai-civil3d-bridge
+          path: bridges/civil3d/dist/bimai-civil3d-bridge.zip

@@ -323,7 +323,7 @@ def cmd_connect(args: argparse.Namespace) -> int:
             region = args.region
             if server.regions and not region and interactive and not server.unavailable:
                 region = _ask(f"Which region are your projects in? ({', '.join(server.regions)})").lower()
-            entry = conn.server_config(server, region=region)
+            entry = conn.server_config(server, region=region, port=args.port)
             kind, access, label = server.auth, server.access, server.label
             if access == "read-write" and not args.allow_writes:
                 question = (f"{label} can change data. Every call will ask for your approval first. "
@@ -465,6 +465,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
     p.add_argument("--region", help="for servers with one endpoint per region, e.g. usa, gbr, aus")
     p.add_argument("--allow-writes", action="store_true", help="consent to a server that can change data")
+    p.add_argument("--port", type=int, help="for local servers with a configurable port, e.g. civil3d")
     p.add_argument("--custom", metavar="NAME", help="add your own server under this name (needs --url)")
     p.add_argument("--url", help="with --custom: the server's https address")
     p.add_argument("--auth", choices=["none", "key"], default="none", help="with --custom: does it need a key?")

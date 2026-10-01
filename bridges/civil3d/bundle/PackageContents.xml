@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  bimai Civil 3D bridge: Autodesk plug-in bundle manifest (PackageContents.xml Format Reference).
+  One Components element per build; Civil 3D loads the one whose RuntimeRequirements match:
+    R25.0 = Civil 3D 2025, R25.1 = Civil 3D 2026 (.NET 8), R26.0 = Civil 3D 2027 (.NET 10).
+  No Commands element on purpose: declaring commands would switch the component to load-on-command,
+  and the MCP server must start when Civil 3D starts.
+  Keep UpgradeCode fixed across versions; give each release a new ProductCode and AppVersion.
+-->
+<ApplicationPackage
+    SchemaVersion="1.0"
+    AutodeskProduct="AutoCAD"
+    ProductType="Application"
+    Name="bimai Civil 3D bridge"
+    Description="Gives the bimai AI team read-only access to the drawing open in Civil 3D, through a local MCP server on this computer."
+    AppVersion="0.1.0"
+    Author="bimai"
+    ProductCode="{D876E159-A3BF-4265-B8C6-06DC061533FC}"
+    UpgradeCode="{2803912E-17AF-4B6D-9B13-5B573AED931E}"
+    Helpfile="https://docs.bimai.nl/docs/guides/civil3d-bridge">
+  <CompanyDetails Name="bimai" Url="https://docs.bimai.nl" />
+
+  <Components Description="Civil 3D 2025 and 2026 (.NET 8)">
+    <RuntimeRequirements OS="Win64" Platform="Civil3D" SeriesMin="R25.0" SeriesMax="R25.1" />
+    <ComponentEntry
+        AppName="BimaiCivil3DBridge"
+        AppDescription="bimai Civil 3D bridge (local MCP server)"
+        ModuleName="./Contents/net8.0-windows/Bimai.Civil3D.dll" />
+  </Components>
+
+  <Components Description="Civil 3D 2027 (.NET 10)">
+    <RuntimeRequirements OS="Win64" Platform="Civil3D" SeriesMin="R26.0" SeriesMax="R26.0" />
+    <ComponentEntry
+        AppName="BimaiCivil3DBridge"
+        AppDescription="bimai Civil 3D bridge (local MCP server)"
+        ModuleName="./Contents/net10.0-windows/Bimai.Civil3D.dll" />
+  </Components>
+</ApplicationPackage>
