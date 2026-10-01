@@ -5,11 +5,12 @@ always write the same thing. Pure: returns a plan, never writes.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 
+from bimai.connections import Connection, connections, load_servers
 from bimai.files import BLOCK_END, BLOCK_START, GENERATED, FileWrite, plan_create_only, plan_write, with_block
 from bimai.team import Catalogue, Member, load_catalogue
 
@@ -26,6 +27,8 @@ class SeatContext:
     positions: list[str]
     goals: list[str]
     team: list[Member]
+    connections: list[Connection] = field(default_factory=list)   # servers in .mcp.json
+    tools: list[str] = field(default_factory=list)                # tools and data the seat declared
 
 
 def history_path(position: str, role: str) -> str:
@@ -59,10 +62,21 @@ def memory_section(ctx: SeatContext, role: str) -> str:
     )
 
 
+def may_use(conn: Connection, role: str, cat: Catalogue) -> bool:
+    """Least privilege: a member uses a server only when it provides a capability the role needs."""
+    if role == COORDINATOR:
+        return True
+    r = cat.roles[role]
+    return conn.known and bool(set(conn.provides) & (set(r.requires) | set(r.uses)))
+
+
 def subagent(ctx: SeatContext, role: str, cat: Catalogue) -> str:
     r = cat.roles[role]
-    meta = yaml.safe_dump({"name": r.id, "description": r.description, "model": r.model},
-                          sort_keys=False, allow_unicode=True, width=10_000)
+    front = {"name": r.id, "description": r.description, "model": r.model}
+    blocked = [f"mcp__{c.name}" for c in ctx.connections if not may_use(c, role, cat)]
+    if blocked:
+        front["disallowedTools"] = ", ".join(blocked)
+    meta = yaml.safe_dump(front, sort_keys=False, allow_unicode=True, width=10_000)
     return f"---\n{meta}---\n{GENERATED}\n{r.charter}\n{memory_section(ctx, role)}"
 
 
@@ -87,6 +101,29 @@ def routing_section(ctx: SeatContext, cat: Catalogue) -> str:
     )
 
 
+def connections_section(ctx: SeatContext, cat: Catalogue) -> str:
+    servers = load_servers()
+    connected_tools = {t for c in ctx.connections if c.known for t in servers[c.name].matches_tools}
+    declared = [cat.tools[t]["label"] for t in ctx.tools if t in cat.tools and t not in connected_tools]
+    lines = ["## Connections", ""]
+    if ctx.connections:
+        lines += ["| Server | Gives the team | Can change data | Used by |", "|---|---|---|---|"]
+        for c in ctx.connections:
+            gives = ", ".join(cat.capabilities.get(p, p) for p in c.provides) or "set up by hand"
+            writes = {"read-only": "no", "read-write": "yes: every call asks the person first"}.get(c.access, "unknown")
+            users = ", ".join(cat.roles[m.role].label for m in ctx.team if may_use(c, m.role, cat))
+            lines.append(f"| {c.label} (`{c.name}`) | {gives} | {writes} | {users} |")
+        lines.append("")
+    else:
+        lines += ["The team has no live connections yet.", ""]
+    if declared:
+        lines += [f"Declared but not connected: {', '.join(declared)}. There is no live connection to these: "
+                  "never present data from them as if you had read it.", ""]
+    lines.append("Exports people place in the project folder can always be read as files. "
+                 "Connections are managed with `bimai connect`.")
+    return "\n".join(lines) + "\n"
+
+
 def claude_block(ctx: SeatContext, cat: Catalogue) -> str:
     return (
         f"{BLOCK_START}\n"
@@ -94,6 +131,7 @@ def claude_block(ctx: SeatContext, cat: Catalogue) -> str:
         f"# bimai: {ctx.project_name}\n\n"
         f"{cat.roles[COORDINATOR].charter}\n"
         f"{routing_section(ctx, cat)}\n"
+        f"{connections_section(ctx, cat)}\n"
         f"{memory_section(ctx, COORDINATOR)}\n"
         "## This seat\n\n"
         f"You work for **{ctx.person_name}** ({ctx.title}), seat `.bimai/seats/{ctx.seat}/`. "
@@ -180,4 +218,6 @@ def load_seat_context(root: str | Path, seat: str, cat: Catalogue | None = None)
         positions=list(data.get("positions") or []),
         goals=list(data.get("goals") or []),
         team=team,
+        connections=connections(root),
+        tools=list(data.get("tools") or []),
     )

@@ -1,0 +1,41 @@
+# Tasks
+
+## 1. Catalogue
+
+- [x] 1.1 Re-check each server against its Autodesk documentation page and write `cli/bimai/catalogue/servers.yaml` (Product Help, Revit read-only, Fusion, Fusion Data, Hydraulic Modeling; AutoCAD and Civil 3D listed as unavailable with its reason) with auth, access, platforms, regions, provides, docs link and config; add `docs.search` and the new capabilities to `tools.yaml` where roles need them. Verify: catalogue test for completeness and consistency.
+
+## 2. .mcp.json and settings
+
+- [x] 2.1 Read, add and remove entries in `.mcp.json` without touching others; refuse invalid JSON. Verify: tests for keeping an existing server, invalid JSON, removing.
+- [x] 2.2 Add and remove the `mcp__<server>` ask rule in `.claude/settings.json`, keeping other settings. Verify: tests for adding, removing, existing permissions kept.
+- [x] 2.3 Confirm with Claude Code docs or a real session that `permissions.ask: ["mcp__<server>"]` prompts for every tool of that server. Verify: note the result in design.md.
+
+## 3. bimai connect / disconnect
+
+- [x] 3.1 `bimai connect` listing with status, access and plain-language sign-in text. Verify: test on the output.
+- [x] 3.2 `bimai connect <server>`: platform check, Revit detection on Windows, `--region` (ask when interactive), read-write consent (`--allow-writes`), unknown server, then team regeneration. Verify: tests for public server, unavailable server, Revit on macOS, Revit not installed on Windows (mocked), region, consent refused, ask rule added.
+- [x] 3.3 `bimai connect --custom <name> --url <url> --auth key|none [--header] [--scheme]`. Verify: test for the generated entry with `headersHelper`.
+- [x] 3.4 `bimai disconnect <server>`: removes entry, ask rule and credential, regenerates the team. Verify: tests.
+
+## 4. bimai auth
+
+- [x] 4.1 `bimai auth login`: `claude mcp login <server>` for sign-in servers (fallback text without the CLI); hidden key prompt into the keychain for key servers; offered by `connect`. Verify: tests with a mocked `claude` and an in-memory keyring backend.
+- [x] 4.2 `bimai auth headers` (helper): reads the key for `CLAUDE_CODE_MCP_SERVER_NAME`, prints header JSON, nothing on stdout and non-zero without a key. Verify: tests for bearer, raw, missing key.
+- [x] 4.3 `bimai auth status` and `bimai auth logout`. Verify: tests that status never contains the key, logout removes it.
+- [x] 4.4 Confirm `claude mcp login` works for a project `.mcp.json` server (trust/approval), in a real session. Verify: note the result in design.md; adjust the fallback text if needed.
+
+## 5. Team integration
+
+- [x] 5.1 Subagent `disallowedTools` from capabilities (`mcpServers: []` semantics are undocumented, so not used). Verify: test for the Model Checker / Scribe scenario.
+- [x] 5.2 Connections section in the `CLAUDE.md` block, with declared-but-not-connected tools from `seat.yaml` `tools`. Verify: tests for connected, declared-not-connected and no connections.
+- [x] 5.3 `bimai init`: store `tools` in `seat.yaml` (schema updated), add Product Help to `.mcp.json`, suggest `bimai connect` for declared tools. Verify: tests; existing init tests still pass.
+
+## 6. Validate
+
+- [x] 6.1 `.mcp.json` secret checks (literal header/env values, `clientSecret`, invalid JSON), never printing values. Verify: tests for a literal token, a `${VAR}` reference, invalid JSON.
+
+## 7. Documentation
+
+- [x] 7.1 New guide `docs/content/docs/guides/connections.mdx`: the servers, how sign-in works, read-only vs read-write, what is never stored where; commands in the reference; update ARCHITECTURE.md §7.6, §8.1 (interim without gateway) and §11.3 (sign-in via the harness, `headersHelper`). Verify: `check_docs.py` passes and the site builds.
+- [x] 7.2 Hand test on macOS: init, `bimai connect`, `autodesk-help` in a real Claude Code session ("search Revit help for worksharing"), a custom key server with the helper. Verify: notes in the PR.
+- [x] 7.3 Final check: `pytest` (strict encoding mode), `openspec validate --all --strict`, `check_docs.py`.

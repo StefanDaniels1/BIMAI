@@ -2,6 +2,22 @@
 # A role joins a team only when every capability it `requires` is provided by one of these.
 goals: [requirements, risks, planning, reporting, issues, model-checks, delivery, meetings]
 
+# Every capability bimai knows, in words people understand (used in the CLAUDE.md Connections section).
+capabilities:
+  model.query: query models
+  drawing.query: query drawings
+  clashes.read: read clashes
+  issues.read: read issues
+  documents.read: read documents
+  requirements.read: read requirements
+  requirements.check: check requirements (IDS)
+  risks.read: read risks
+  schedule.read: read the planning
+  docs.search: search Autodesk product help
+  cad.design: create and change Fusion designs
+  design-data.read: Fusion projects and data
+  hydraulics.read: InfoWorks hydraulic models and results
+
 tools:
   revit:      { label: Revit, provides: [model.query] }
   civil3d:    { label: Civil 3D, provides: [model.query] }

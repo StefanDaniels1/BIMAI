@@ -15,6 +15,8 @@ from pathlib import Path
 import yaml
 
 from bimai.claude import SeatContext, plan_claude_files
+from bimai.connections import (Connection, McpJsonError, connections_from, json_text, load_servers, mcp_with,
+                               read_json, server_config)
 from bimai.files import BLOCK_END, BLOCK_START, FileWrite, apply, plan_write  # noqa: F401 (re-exported)
 from bimai.scan import Scan
 from bimai.team import Catalogue, Team, load_catalogue
@@ -84,23 +86,49 @@ def _bimai_files(a: Answers, team: Team, cat: Catalogue) -> dict[str, str]:
         ".bimai/people.yaml": _yaml({"people": [{"id": me, "name": a.person, "title": preset.label, "seat": me}]}),
         ".bimai/ownership.yaml": _yaml({"positions": {preset.id: {"role": preset.id, "held_by": [me]}}}),
         f".bimai/seats/{me}/seat.yaml": _yaml({
-            "person": me, "role": a.role, "preset": preset.id, "goals": a.goals, "positions": [preset.id],
-            "team": [{"role": m.role, "why": m.why} for m in team.members],
+            "person": me, "role": a.role, "preset": preset.id, "goals": a.goals, "tools": a.tools,
+            "positions": [preset.id], "team": [{"role": m.role, "why": m.why} for m in team.members],
         }),
     }
 
 
-def seat_context(a: Answers, team: Team, cat: Catalogue) -> SeatContext:
+def seat_context(a: Answers, team: Team, cat: Catalogue, conns: list[Connection] | None = None) -> SeatContext:
     preset = cat.presets[team.preset]
     return SeatContext(project_name=a.name, language=a.language, person_name=a.person, seat=a.person_id,
-                       title=preset.label, positions=[preset.id], goals=a.goals, team=team.members)
+                       title=preset.label, positions=[preset.id], goals=a.goals, team=team.members,
+                       connections=conns or [], tools=a.tools)
+
+
+def _plan_mcp(root: Path) -> tuple[FileWrite, list[Connection]]:
+    """Every project gets the default servers (Autodesk Product Help); servers already listed are kept."""
+    path = root / ".mcp.json"
+    try:
+        data = read_json(path)
+    except McpJsonError as exc:
+        return FileWrite(".mcp.json", "", "conflict", str(exc)), []
+    new = data
+    for server in load_servers().values():
+        if server.default and server.name not in (data.get("mcpServers") or {}):
+            new = mcp_with(new, server.name, server_config(server))
+    if new is data and path.exists():
+        return FileWrite(".mcp.json", path.read_text(encoding="utf-8"), "unchanged"), connections_from(data)
+    return (plan_write(root, ".mcp.json", json_text(new), merge_note="Autodesk Product Help added; other servers kept"),
+            connections_from(new))
+
+
+def connect_suggestions(tools: list[str]) -> list[str]:
+    """`bimai connect` hints for catalogue servers that match the tools someone declared."""
+    return [f"{s.label}: bimai connect {s.name}" for s in load_servers().values()
+            if not s.unavailable and not s.default and set(s.matches_tools) & set(tools)]
 
 
 def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None = None) -> list[FileWrite]:
     root = Path(root).resolve()
     cat = cat or load_catalogue()
     plan = [plan_write(root, rel, content) for rel, content in _bimai_files(a, team, cat).items()]
-    plan += plan_claude_files(root, seat_context(a, team, cat), cat)
+    mcp, conns = _plan_mcp(root)
+    plan += plan_claude_files(root, seat_context(a, team, cat, conns), cat)
+    plan.append(mcp)
 
     settings = root / ".claude" / "settings.json"
     if settings.exists():

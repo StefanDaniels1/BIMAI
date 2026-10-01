@@ -31,6 +31,7 @@ class Role:
     requires: tuple[str, ...]
     serves: tuple[str, ...]
     charter: str
+    uses: tuple[str, ...] = ()           # optional capabilities: used when connected, never required
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,7 @@ class Catalogue:
     goals: tuple[str, ...]
     tools: dict[str, dict]          # id -> {label, provides}
     suggests: dict[str, str]        # scan suggestion key -> tool id
+    capabilities: dict[str, str]    # capability -> words people understand
 
     def provided(self, tools) -> set[str]:
         return {cap for t in tools for cap in self.tools[t]["provides"]}
@@ -86,7 +88,8 @@ def load_catalogue() -> Catalogue:
         meta, body = _front_matter(f.read_text(encoding="utf-8"))
         roles[meta["name"]] = Role(meta["name"], meta["label"], meta["description"], meta["model"],
                                    meta["handles"], tuple(meta["examples"]),
-                                   tuple(meta.get("requires") or ()), tuple(meta.get("serves") or ()), body)
+                                   tuple(meta.get("requires") or ()), tuple(meta.get("serves") or ()), body,
+                                   tuple(meta.get("uses") or ()))
     presets = {}
     for f in sorted(base.joinpath("presets").iterdir(), key=lambda f: f.name):
         if not f.name.endswith(".yaml"):
@@ -94,7 +97,7 @@ def load_catalogue() -> Catalogue:
         p = yaml.safe_load(f.read_text(encoding="utf-8"))
         presets[p["id"]] = Preset(p["id"], p["label"], tuple(p["matches"]), tuple(p["team"]), tuple(p["goals"]))
     tools = yaml.safe_load(base.joinpath("tools.yaml").read_text(encoding="utf-8"))
-    return Catalogue(roles, presets, tuple(tools["goals"]), tools["tools"], tools["suggests"])
+    return Catalogue(roles, presets, tuple(tools["goals"]), tools["tools"], tools["suggests"], tools["capabilities"])
 
 
 def normalize(text: str) -> str:

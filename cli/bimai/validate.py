@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from dataclasses import asdict, dataclass
 from functools import cache
 from importlib import resources
@@ -17,6 +18,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from bimai.team import load_catalogue
 
 STEP_TYPES = ("script", "tool", "agent", "workflow", "gate")
+ENV_REF = re.compile(r"^\$\{[A-Za-z_][A-Za-z0-9_]*(:-[^}]*)?\}$")
 
 
 class NoWorkspace(Exception):
@@ -121,7 +123,35 @@ def validate(path: str | Path = ".") -> list[Problem]:
         if isinstance(owner, str) and owner not in positions and owner not in seats:
             ws.report(p, "owner", f"'{owner}' is neither a position in ownership.yaml nor a seat")
 
+    _check_mcp_json(ws, root / ".mcp.json")
     return sorted(set(ws.problems))
+
+
+def _check_mcp_json(ws: _Workspace, path: Path) -> None:
+    """.mcp.json is shared with the team: it may hold references to secrets, never the secrets."""
+    if not path.is_file():
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8") or "{}")
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        ws.report(path, f"line {getattr(exc, 'lineno', '?')}", "not valid JSON")
+        return
+    servers = data.get("mcpServers") if isinstance(data, dict) else None
+    if not isinstance(servers, dict):
+        return
+    advice = ("looks like a secret written into a shared file; use `bimai connect --custom <name> --url <url> "
+              "--auth key` (key in your keychain) or a ${VARIABLE} reference")
+    for name, entry in servers.items():
+        if not isinstance(entry, dict):
+            continue
+        for key in ("headers", "env"):
+            values = entry.get(key)
+            for k, v in (values.items() if isinstance(values, dict) else []):
+                if not (isinstance(v, str) and ENV_REF.match(v)):
+                    ws.report(path, f"mcpServers.{name}.{key}.{k}", advice)
+        oauth = entry.get("oauth")
+        if isinstance(oauth, dict) and "clientSecret" in oauth:
+            ws.report(path, f"mcpServers.{name}.oauth.clientSecret", advice)
 
 
 def _ids(items) -> set[str] | None:

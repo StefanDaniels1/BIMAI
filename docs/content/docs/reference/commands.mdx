@@ -3,7 +3,7 @@ title: Commands
 description: Every bimai command, in the terminal and in a Claude Code session.
 ---
 
-<Status state="planned">Already available: <code>bimai validate</code>, <code>bimai init</code> and <code>bimai team</code> (see [Checking your files](#checking-your-files)).</Status>
+<Status state="planned">Already available: <code>bimai validate</code>, <code>bimai init</code>, <code>bimai team</code>, <code>bimai connect</code> and <code>bimai auth</code> (see [Checking your files](#checking-your-files)).</Status>
 
 ## In a session (Claude Code)
 
@@ -90,7 +90,10 @@ You can also just ask in plain language; the Coordinator picks the right workflo
 
 | Command | Does |
 |---|---|
-| `bimai auth login` · `status` · `rotate` · `logout` | Manage logins (stored in the OS keychain) |
+| `bimai connect` · `bimai connect <server>` | List the servers your team can use, or connect one ([Connections](/docs/guides/connections)) (available now) |
+| `bimai disconnect <server>` | Remove a server, its approval rule and its sign-in (available now) |
+| `bimai auth login` · `status` · `logout` | Sign in to a server, see what needs signing in, sign out (available now) |
+| `bimai auth rotate` | Replace a key and revoke the old one |
 | `bimai connector new` · `record` · `test` | Build and test connectors |
 | `bimai graph team` · `workflow` · `connectors` · `project` · `projects` | Draw diagrams |
 | `bimai validate` | Check every bimai file (available now) |

@@ -1,0 +1,97 @@
+# MCP servers bimai can add to a project's .mcp.json (`bimai connect <name>`).
+# Only servers whose connection details are confirmed in the vendor's documentation are listed.
+# auth:   none | signin (Autodesk account, via Claude Code's sign-in) | key (stored in the OS keychain)
+# access: read-only | read-write (read-write servers need consent and get a Claude Code `ask` rule)
+# Checked against help.autodesk.com (ADSKMCP), October 2026. Autodesk servers are Technical Previews.
+
+autodesk-help:
+  label: Autodesk Product Help
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_ProductHelpMcp_autodesk_product_help_mcp_server_html
+  auth: none
+  access: read-only
+  platforms: [windows, macos, linux]
+  provides: [docs.search]
+  matches_tools: []
+  default: true
+  config: { type: http, url: "https://developer.api.autodesk.com/knowledge/public/v1/mcp" }
+
+revit:
+  label: Revit (read-only)
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_RevitMcp_setting_up_revit_mcp_server_html
+  auth: none
+  access: read-only
+  platforms: [windows]
+  needs: Revit 2027.2 with the Revit Public MCP Server add-on, running with a model open
+  provides: [model.query]
+  matches_tools: [revit]
+  # The first installed variant wins. The Write-Tools install is limited to its read-only tools.
+  config:
+    type: stdio
+    variants:
+      - command: '{ProgramFiles}\Autodesk\Revit 2027 MCP Server Read-Tools Technical Preview\Autodesk.RevitMcpServer.Stdio.exe'
+        args: ["--ManageConfigurationWithAutodeskRevitPluginInstaller=true"]
+      - command: '{ProgramFiles}\Autodesk\Revit 2027 MCP Server Write-Tools Technical Preview\Autodesk.RevitMcpServer.Stdio.exe'
+        args: ["--tool-permission=StableReadOnly", "--ManageConfigurationWithAutodeskRevitPluginInstaller=true"]
+
+fusion:
+  label: Autodesk Fusion
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_FusionDesktopMcp_connecting_to_the_fusion_mcp_server_html
+  auth: none
+  access: read-write
+  platforms: [windows, macos]
+  needs: Fusion running, with Preferences > General > API > Fusion MCP Server switched on
+  provides: [cad.design]
+  matches_tools: []
+  config: { type: http, url: "http://127.0.0.1:27182/mcp" }
+
+fusion-data:
+  label: Autodesk Fusion Data
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_FusionCloudMcp_connecting_to_the_fusion_data_mcp_server_html
+  auth: signin
+  access: read-write
+  platforms: [windows, macos, linux]
+  provides: [design-data.read]
+  matches_tools: []
+  config: { type: http, url: "https://developer.api.autodesk.com/fusion/mcp" }
+
+fusion-compute:
+  label: Autodesk Fusion Compute (beta)
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_FusionComputeMcp_connecting_to_the_fusion_compute_mcp_server_html
+  auth: signin
+  access: read-write
+  platforms: [windows, macos, linux]
+  provides: [cad.design]
+  matches_tools: []
+  config: { type: http, url: "https://developer.api.autodesk.com/da/v3/mcp/fusion" }
+
+hydraulic-modeling:
+  label: InfoWorks Hydraulic Modeling
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_HydraulicModelingMcp_ide_integration_html
+  auth: signin
+  access: read-write
+  platforms: [windows, macos, linux]
+  provides: [hydraulics.read]
+  matches_tools: []
+  regions:
+    usa: "https://api.aps.usa.autodesk.com/water/modeling-mcp/mcp"
+    gbr: "https://api.aps.gbr.autodesk.com/water/modeling-mcp/mcp"
+    aus: "https://api.aps.aus.autodesk.com/water/modeling-mcp/mcp"
+  config: { type: http, url: "{region}" }
+
+autocad-civil3d:
+  label: AutoCAD and Civil 3D
+  vendor: Autodesk
+  docs: https://help.autodesk.com/view/ADSKMCP/ENU/?guid=ADSKMCP_AutoCADCivil3DMcp_autodesk_autocad_civil_3d_mcp_html
+  unavailable: >-
+    Autodesk's AutoCAD and Civil 3D server only works inside Autodesk Assistant for now; Autodesk
+    documents no way for other AI clients to connect yet. Use it today inside AutoCAD or Civil 3D
+    through Autodesk Assistant (Civil 3D 2027, Tech Preview). A bimai bridge for Civil 3D is planned.
+  platforms: [windows]
+  provides: []
+  matches_tools: [civil3d, autocad]
