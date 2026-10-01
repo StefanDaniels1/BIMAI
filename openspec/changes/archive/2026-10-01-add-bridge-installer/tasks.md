@@ -20,4 +20,4 @@
 ## 4. Docs and checks
 
 - [x] 4.1 Civil 3D guide rewritten around one command; IT section; command reference. Verify: check_docs, site build.
-- [ ] 4.2 Final check: pytest (strict), openspec validate --all --strict, check_docs; CI green.
+- [x] 4.2 Final check: pytest (strict), openspec validate --all --strict, check_docs; CI green.

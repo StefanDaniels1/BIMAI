@@ -327,8 +327,16 @@ def test_init_offers_the_bridge_for_civil3d(tmp_path, win, monkeypatch, capsys):
 
 
 def test_bridge_commands(win, monkeypatch, capsys, tmp_path):
+    monkeypatch.setattr(bridges, "probe", lambda port, **k: None)
     assert main(["bridge", "status", "civil3d"]) == 0
     assert "not installed" in capsys.readouterr().out
     assert main(["bridge", "install", "autodesk-help"]) == 2
-    assert main(["bridge", "install", "civil3d"]) == 1            # no pinned release yet
+    servers = {**conn.load_servers(), "civil3d": bridge(None)}       # as if no release were pinned yet
+    monkeypatch.setattr(conn, "load_servers", lambda: servers)
+    assert main(["bridge", "install", "civil3d"]) == 1
     assert "--from" in capsys.readouterr().err
+
+
+def test_published_release_is_pinned():
+    rel = bridges.release_of(conn.load_servers()["civil3d"])
+    assert rel.sha256 and len(rel.sha256) == 64

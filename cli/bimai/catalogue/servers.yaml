@@ -104,7 +104,7 @@ civil3d:
     tag: civil3d-bridge-v0.1.0
     asset: bimai-civil3d-bridge.zip
     version: 0.1.0
-    sha256: null
+    sha256: 913d8e1d086f07ab8b70618769c2791e38f4a1d5440f54cc9f9acb166472e0c9
   config: { type: http, url: "http://127.0.0.1:{port}/mcp" }
 
 autocad-civil3d:

@@ -25,4 +25,4 @@
 
 - [x] 5.1 CI job (windows-latest): build both add-in targets, run protocol tests; also run protocol tests on ubuntu. Verify: green on the PR.
 - [x] 5.2 Docs: `docs/content/docs/guides/civil3d-bridge.mdx` (install, connect, tools, troubleshooting, manual test checklist), Connections guide, command reference, ARCHITECTURE.md §7.6/§9. Verify: check_docs and site build pass.
-- [ ] 5.3 Final check: pytest (strict), dotnet test, openspec validate --all --strict, check_docs.
+- [x] 5.3 Final check: pytest (strict), dotnet test, openspec validate --all --strict, check_docs.
