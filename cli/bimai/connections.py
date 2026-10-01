@@ -34,6 +34,10 @@ class ConnectError(Exception):
     """A server can't be connected here, with the reason in plain language (exit 2)."""
 
 
+class BridgeMissing(ConnectError):
+    """A bimai bridge (an add-in inside a desktop program) isn't installed; it can be installed."""
+
+
 class McpJsonError(Exception):
     """.mcp.json exists but isn't valid JSON (or not a JSON object)."""
 
@@ -54,6 +58,9 @@ class Server:
     needs: str = ""
     unavailable: str = ""
     default: bool = False
+    bundle: str = ""        # an Autodesk plug-in bundle that must be installed (bimai bridges)
+    port: int = 0           # default port for local servers whose port can be changed (--port)
+    release: dict = field(default_factory=dict)   # published bridge release: repo, tag, asset, version, sha256
 
 
 @dataclass(frozen=True)
@@ -78,25 +85,42 @@ def load_servers() -> dict[str, Server]:
             platforms=tuple(s.get("platforms") or ()), provides=tuple(s.get("provides") or ()),
             matches_tools=tuple(s.get("matches_tools") or ()), config=s.get("config") or {},
             regions=s.get("regions") or {}, needs=s.get("needs", ""), unavailable=s.get("unavailable", ""),
-            default=bool(s.get("default")),
+            default=bool(s.get("default")), bundle=s.get("bundle", ""), port=int(s.get("port") or 0),
+            release=s.get("release") or {},
         )
     return servers
 
 
 # ------------------------------------------------------------------ server configuration
 
-def server_config(server: Server, *, region: str | None = None, platform: str | None = None,
+def plugin_folders(environ) -> list[str]:
+    """Where Autodesk products look for plug-in bundles (Autodesk: ApplicationPlugins locations)."""
+    roots = [environ.get("ProgramFiles", r"C:\Program Files"), environ.get("ProgramData", r"C:\ProgramData"),
+             environ.get("APPDATA", "")]
+    return [f"{root}\\Autodesk\\ApplicationPlugins" for root in roots if root]
+
+
+def server_config(server: Server, *, region: str | None = None, port: int | None = None, platform: str | None = None,
                   environ=None, exists=None) -> dict:
     """The .mcp.json entry for a catalogue server on this machine, or ConnectError explaining why not."""
     platform = platform or PLATFORM
     environ = os.environ if environ is None else environ
     exists = exists or os.path.exists
+    if port is not None and not server.port:
+        raise ConnectError(f"{server.label} has no port to choose; leave out --port.")
+    if port is not None and not 0 < port < 65536:
+        raise ConnectError("--port must be between 1 and 65535.")
     if server.unavailable:
         raise ConnectError(server.unavailable)
     if platform not in server.platforms:
         where = " and ".join(p.capitalize() if p != "macos" else "macOS" for p in server.platforms)
         raise ConnectError(f"{server.label} only works on {where}.")
+    if server.bundle and not any(exists(f"{folder}\\{server.bundle}") for folder in plugin_folders(environ)):
+        raise BridgeMissing(f"{server.label} isn't installed on this computer. It needs: {server.needs}. "
+                            f"Install it with: bimai bridge install {server.name}  (guide: {server.docs})")
     cfg = copy.deepcopy(server.config)
+    if server.port and "url" in cfg:
+        cfg["url"] = cfg["url"].replace("{port}", str(port or server.port))
     if "variants" in cfg:
         program_files = environ.get("ProgramFiles", r"C:\Program Files")
         for variant in cfg.pop("variants"):

@@ -10,6 +10,7 @@ Instructions for AI coding agents (Claude Code, Codex, Copilot, …) and humans 
 | `openspec/specs/` | What is **built and tested today**. The contract for current behavior. |
 | `openspec/changes/` | Changes in progress: proposal, design, spec deltas, tasks. |
 | `packs/` | Packs (skill + deterministic scripts + tests). `packs/meeting-intake/` is the reference layout. |
+| `bridges/` | Local MCP bridges inside desktop apps (C#). `bridges/civil3d/` is the reference. |
 | `docs/` | Documentation site (Fumadocs). Documentation is part of done. |
 | `scripts/check_docs.py` | CI check: every command and pack has a page. |
 
@@ -41,4 +42,5 @@ Pick changes from the build order in `ARCHITECTURE.md` §14, one small usable sl
 python -m pytest -q                 # all tests
 openspec validate --all --strict    # specs and changes are well-formed
 python scripts/check_docs.py        # every command and pack has a page
+dotnet test bridges/civil3d/tests/Bimai.Mcp.Tests   # only when you changed a bridge
 ```

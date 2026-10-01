@@ -607,7 +607,8 @@ The tools bimai targets out of the box. Routes are indicative: each entry become
 Autodesk's own MCP servers that bimai already connects (Product Help, Revit Public MCP read-only, Fusion,
 Fusion Data, InfoWorks Hydraulic Modeling) are listed in `cli/bimai/catalogue/servers.yaml`. Autodesk's
 AutoCAD and Civil 3D server is only reachable inside Autodesk Assistant, so Civil 3D gets bimai's own
-local bridge.
+local bridge: `bridges/civil3d/` (✅ started), a read-only add-in for Civil 3D 2025–2027 that serves MCP on
+loopback (catalogue entry `civil3d`).
 
 **Desktop apps** (`desktop-bridge`)
 

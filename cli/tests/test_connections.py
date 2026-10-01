@@ -72,9 +72,12 @@ def front(root: Path, role: str) -> dict:
 def test_catalogue_is_complete_and_consistent():
     servers = conn.load_servers()
     known = set(load_catalogue().capabilities)
-    assert {"autodesk-help", "revit", "fusion", "fusion-data", "fusion-compute", "hydraulic-modeling", "autocad-civil3d"} <= set(servers)
+    assert {"autodesk-help", "revit", "fusion", "fusion-data", "fusion-compute", "hydraulic-modeling", "autocad-civil3d",
+            "civil3d"} <= set(servers)
     for s in servers.values():
-        assert s.label and s.vendor and s.docs.startswith("https://help.autodesk.com/"), s.name
+        assert s.label and s.vendor, s.name
+        official = {"Autodesk": "https://help.autodesk.com/", "bimai": "https://docs.bimai.nl/"}
+        assert s.docs.startswith(official[s.vendor]), s.name
         assert set(s.provides) <= known, s.name
         if s.unavailable:
             assert not s.config, s.name
@@ -412,3 +415,66 @@ def test_env_reference_with_default_is_fine(project):
 def test_invalid_mcp_json_is_a_problem(project):
     (project / ".mcp.json").write_text("{ nope", encoding="utf-8")
     assert [p.file for p in validate(project)] == [".mcp.json"]
+
+
+# -- the bimai Civil 3D bridge ---------------------------------------------------
+
+WINDOWS_ENV = {"ProgramFiles": r"C:\Program Files", "ProgramData": r"C:\ProgramData",
+               "APPDATA": r"C:\Users\anna\AppData\Roaming"}
+BUNDLE = r"C:\Program Files\Autodesk\ApplicationPlugins\bimai-civil3d.bundle"
+
+
+def test_civil3d_bridge_needs_its_bundle():
+    bridge = conn.load_servers()["civil3d"]
+    with pytest.raises(conn.ConnectError, match="isn't installed.*civil3d-bridge"):
+        conn.server_config(bridge, platform="windows", environ=WINDOWS_ENV, exists=lambda p: False)
+
+
+@pytest.mark.parametrize("folder", [r"C:\Program Files", r"C:\ProgramData", r"C:\Users\anna\AppData\Roaming"])
+def test_civil3d_bridge_found_in_any_plugin_folder(folder):
+    bridge = conn.load_servers()["civil3d"]
+    wanted = folder + r"\Autodesk\ApplicationPlugins\bimai-civil3d.bundle"
+    cfg = conn.server_config(bridge, platform="windows", environ=WINDOWS_ENV, exists=lambda p: p == wanted)
+    assert cfg == {"type": "http", "url": "http://127.0.0.1:27184/mcp"}
+
+
+def test_civil3d_bridge_port_override():
+    bridge = conn.load_servers()["civil3d"]
+    cfg = conn.server_config(bridge, port=28000, platform="windows", environ=WINDOWS_ENV, exists=lambda p: p == BUNDLE)
+    assert cfg["url"] == "http://127.0.0.1:28000/mcp"
+    with pytest.raises(conn.ConnectError, match="between 1 and 65535"):
+        conn.server_config(bridge, port=70000, platform="windows", environ=WINDOWS_ENV, exists=lambda p: p == BUNDLE)
+    with pytest.raises(conn.ConnectError, match="no port"):
+        conn.server_config(conn.load_servers()["autodesk-help"], port=28000)
+
+
+def test_civil3d_bridge_only_on_windows():
+    with pytest.raises(conn.ConnectError, match="only works on Windows"):
+        conn.server_config(conn.load_servers()["civil3d"], platform="macos")
+
+
+def test_connect_civil3d_gives_the_model_checker_access(project, monkeypatch):
+    monkeypatch.setattr(conn, "PLATFORM", "windows")
+    monkeypatch.setattr(conn.os, "environ", {**WINDOWS_ENV})
+    monkeypatch.setattr(conn.os.path, "exists", lambda p: p == BUNDLE)
+    assert connect(project, "civil3d", "--yes") == 0
+    assert mcp(project)["mcpServers"]["civil3d"] == {"type": "http", "url": "http://127.0.0.1:27184/mcp"}
+    assert "permissions" not in settings(project)                       # read-only: no approval rule
+    assert "mcp__civil3d" not in front(project, "model-checker").get("disallowedTools", "")
+    assert "mcp__civil3d" in front(project, "scribe")["disallowedTools"]
+    text = (project / "CLAUDE.md").read_text(encoding="utf-8")
+    assert "Civil 3D (bimai bridge, read-only) (`civil3d`)" in text and "query alignments" in text
+
+
+def test_connect_civil3d_not_installed_explains(project, monkeypatch, capsys):
+    monkeypatch.setattr(conn, "PLATFORM", "windows")
+    monkeypatch.setattr(conn.os, "environ", {**WINDOWS_ENV})
+    monkeypatch.setattr(conn.os.path, "exists", lambda p: False)
+    assert connect(project, "civil3d", "--yes") == 2
+    assert "docs.bimai.nl/docs/guides/civil3d-bridge" in capsys.readouterr().err
+    assert "civil3d" not in mcp(project)["mcpServers"]
+
+
+def test_declaring_civil3d_suggests_the_bridge(tmp_path, capsys):
+    assert main(["init", str(tmp_path), "--person", "Anna", "--role", "bim modeller", "--tools", "civil3d", "--yes"]) == 0
+    assert "bimai connect civil3d" in capsys.readouterr().out

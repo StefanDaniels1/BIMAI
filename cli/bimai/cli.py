@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from bimai import __version__
+from bimai import bridges
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
 from bimai.files import apply as apply_plan
@@ -66,6 +67,17 @@ def _git_user(root: Path) -> str:
         return ""
 
 
+def _default_person(root: Path) -> str:
+    """The git user name, else the login name; never fails (getpass.getuser can raise on Windows)."""
+    name = _git_user(root)
+    if name:
+        return name
+    try:
+        return getpass.getuser()
+    except Exception:
+        return "me"
+
+
 def _check_list(kind: str, values: list[str], allowed) -> list[str]:
     unknown = [v for v in values if v not in allowed]
     if unknown:
@@ -79,8 +91,7 @@ def _interview(args: argparse.Namespace, root: Path, found: dict[str, str]) -> A
     interactive = not args.yes
 
     name = args.name or (_ask("Project name", root.name) if interactive else root.name)
-    default_person = _git_user(root) or getpass.getuser()
-    person = args.person or (_ask("Your name", default_person) if interactive else default_person)
+    person = args.person or (_ask("Your name", _default_person(root)) if interactive else _default_person(root))
 
     if args.role:
         role = args.role
@@ -200,13 +211,34 @@ def cmd_init(args: argparse.Namespace) -> int:
     if problems:
         return 1
     print("✓ workspace is valid")
-    hints = connect_suggestions(answers.tools)
+    offered = _offer_bridges(root, answers.tools, interactive=not args.yes)
+    hints = [h for h in connect_suggestions(answers.tools) if not any(h.endswith(" " + n) for n in offered)]
     if hints:
         print("\nConnect the tools you use:")
         for hint in hints:
             print(f"  {hint}")
     print("\nNext: open Claude Code in this folder (`claude`) and say hello to your team.")
     return 0
+
+
+def _offer_bridges(root: Path, tools: list[str], interactive: bool) -> list[str]:
+    """After init on Windows: offer to set up the bimai bridges for the tools someone declared."""
+    if not interactive or conn.PLATFORM != "windows":
+        return []
+    offered = []
+    for server in conn.load_servers().values():
+        if not (server.bundle and server.release and set(server.matches_tools) & set(tools)):
+            continue
+        offered.append(server.name)
+        question = (f"\nYou use {', '.join(t for t in server.matches_tools if t in tools)}. Connect your team to it now "
+                    f"with {server.label}? (installs it if needed; Windows asks permission once) (Y/n)")
+        if _ask(question, "y").lower().startswith("y"):
+            ns = build_parser().parse_args(["connect", server.name, "--path", str(root), "--install"])
+            if cmd_connect(ns) != 0:
+                print(f"  You can try again later with: bimai connect {server.name}")
+        else:
+            print(f"  Later: bimai connect {server.name}")
+    return offered
 
 
 def _print_files(plan) -> None:
@@ -323,7 +355,12 @@ def cmd_connect(args: argparse.Namespace) -> int:
             region = args.region
             if server.regions and not region and interactive and not server.unavailable:
                 region = _ask(f"Which region are your projects in? ({', '.join(server.regions)})").lower()
-            entry = conn.server_config(server, region=region)
+            try:
+                entry = conn.server_config(server, region=region, port=args.port)
+            except conn.BridgeMissing:
+                if not _offer_bridge_install(server, interactive, args.install):
+                    raise
+                entry = conn.server_config(server, region=region, port=args.port)
             kind, access, label = server.auth, server.access, server.label
             if access == "read-write" and not args.allow_writes:
                 question = (f"{label} can change data. Every call will ask for your approval first. "
@@ -331,6 +368,9 @@ def cmd_connect(args: argparse.Namespace) -> int:
                 if not (interactive and _ask(question, "n").lower().startswith("y")):
                     raise conn.ConnectError(f"{label} can change data, so it needs your explicit consent: "
                                             f"bimai connect {name} --allow-writes")
+    except bridges.BridgeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
     except (conn.ConnectError, conn.McpJsonError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
@@ -346,8 +386,30 @@ def cmd_connect(args: argparse.Namespace) -> int:
         print("  No sign-in needed.")
     _sign_in(name, kind, interactive)
     _regenerate_team(root, args.seat)
+    server = servers.get(name)
+    if server and server.bundle and server.port:
+        port = args.port or server.port
+        if bridges.probe(port) is not None:
+            print(f"✓ {server.label} answers: Civil 3D is running with the bridge.")
+        else:
+            print(f"  {server.label} starts together with Civil 3D: open Civil 3D with a drawing to use it.")
     print("Start a new Claude Code session to use it. Claude Code asks once to approve servers in .mcp.json.")
     return 0
+
+
+def _offer_bridge_install(server, interactive: bool, install: bool) -> bool:
+    """A bimai bridge is missing: install it now (one Windows permission click) if the person agrees."""
+    if not server.release or conn.PLATFORM != "windows":
+        return False
+    if not install:
+        if not interactive:
+            return False
+        question = (f"{server.label} isn't installed yet. Install it now? Windows will ask for permission once, "
+                    "because it is installed in the folder Civil 3D trusts. (Y/n)")
+        if not _ask(question, "y").lower().startswith("y"):
+            return False
+    bridges.install(server, ask=lambda q: _ask(q, "y").lower().startswith("y"), say=print)
+    return True
 
 
 def cmd_disconnect(args: argparse.Namespace) -> int:
@@ -429,6 +491,35 @@ def cmd_auth(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_bridge(args: argparse.Namespace) -> int:
+    servers = conn.load_servers()
+    server = servers.get(args.server)
+    if server is None or not server.bundle:
+        names = ", ".join(s.name for s in servers.values() if s.bundle)
+        print(f"error: '{args.server}' is not a bimai bridge. Bridges: {names}", file=sys.stderr)
+        return 2
+    ask = (lambda q: True) if args.yes else (lambda q: _ask(q, "y").lower().startswith("y"))
+    try:
+        if args.action == "install":
+            bridges.install(server, zip_path=args.from_zip, ask=ask, say=print)
+            print(f"Next, in your project folder: bimai connect {server.name}")
+        elif args.action == "uninstall":
+            bridges.uninstall(server, say=print)
+        else:
+            st = bridges.status(server)
+            if not st["installed"]:
+                print(f"{server.label}: not installed. Install it with: bimai bridge install {server.name}")
+            else:
+                update = f" (version {st['latest']} is available: bimai bridge install {server.name})" if st["update_available"] else ""
+                print(f"{server.label}: installed, version {st['version']}{update}")
+                print(f"  {st['path']}")
+                print("  running: yes" if st["running"] else "  running: no (it starts with Civil 3D)")
+    except bridges.BridgeError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bimai", description="An open-source BIM team that lives in your editor.")
     parser.add_argument("--version", action="version", version=f"bimai {__version__}")
@@ -465,6 +556,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
     p.add_argument("--region", help="for servers with one endpoint per region, e.g. usa, gbr, aus")
     p.add_argument("--allow-writes", action="store_true", help="consent to a server that can change data")
+    p.add_argument("--port", type=int, help="for local servers with a configurable port, e.g. civil3d")
+    p.add_argument("--install", action="store_true", help="install a missing bimai bridge without asking first")
     p.add_argument("--custom", metavar="NAME", help="add your own server under this name (needs --url)")
     p.add_argument("--url", help="with --custom: the server's https address")
     p.add_argument("--auth", choices=["none", "key"], default="none", help="with --custom: does it need a key?")
@@ -479,6 +572,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
     p.add_argument("--seat", help="whose team to update (needed when the project has several seats)")
     p.set_defaults(func=cmd_disconnect)
+
+    p = sub.add_parser("bridge", help="install, check or remove a bimai bridge (e.g. civil3d)")
+    p.add_argument("action", choices=["install", "status", "uninstall"])
+    p.add_argument("server", help="the bridge, e.g. civil3d")
+    p.add_argument("--from", dest="from_zip", type=Path, help="install from a zip you have instead of downloading")
+    p.add_argument("--yes", "-y", action="store_true", help="don't ask bimai's questions (Windows still asks for permission)")
+    p.set_defaults(func=cmd_bridge)
 
     p = sub.add_parser("auth", help="sign in to servers: login, status, logout")
     p.add_argument("action", choices=["login", "status", "logout", "headers"],

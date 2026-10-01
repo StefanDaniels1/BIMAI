@@ -84,6 +84,29 @@ hydraulic-modeling:
     aus: "https://api.aps.aus.autodesk.com/water/modeling-mcp/mcp"
   config: { type: http, url: "{region}" }
 
+civil3d:
+  label: Civil 3D (bimai bridge, read-only)
+  vendor: bimai
+  docs: https://docs.bimai.nl/docs/guides/civil3d-bridge
+  auth: none
+  access: read-only
+  platforms: [windows]
+  needs: the bimai Civil 3D bridge (bimai-civil3d.bundle) and Civil 3D 2025, 2026 or 2027 running with a drawing open
+  provides: [model.query, drawing.query, alignment.query, surface.query, corridor.query, pipes.query]
+  matches_tools: [civil3d]
+  # bimai's own local bridge (bridges/civil3d): an add-in inside Civil 3D serving MCP on loopback.
+  bundle: bimai-civil3d.bundle
+  port: 27184
+  # Published by .github/workflows/release-civil3d-bridge.yml. `bimai bridge install civil3d` only installs
+  # a download whose SHA-256 equals this pin; set it after the release is published.
+  release:
+    repo: StefanDaniels1/BIMAI
+    tag: civil3d-bridge-v0.1.0
+    asset: bimai-civil3d-bridge.zip
+    version: 0.1.0
+    sha256: null
+  config: { type: http, url: "http://127.0.0.1:{port}/mcp" }
+
 autocad-civil3d:
   label: AutoCAD and Civil 3D
   vendor: Autodesk
@@ -91,7 +114,8 @@ autocad-civil3d:
   unavailable: >-
     Autodesk's AutoCAD and Civil 3D server only works inside Autodesk Assistant for now; Autodesk
     documents no way for other AI clients to connect yet. Use it today inside AutoCAD or Civil 3D
-    through Autodesk Assistant (Civil 3D 2027, Tech Preview). A bimai bridge for Civil 3D is planned.
+    through Autodesk Assistant (Civil 3D 2027, Tech Preview). For your bimai team, use bimai's own
+    Civil 3D bridge instead: bimai connect civil3d.
   platforms: [windows]
   provides: []
-  matches_tools: [civil3d, autocad]
+  matches_tools: [autocad]

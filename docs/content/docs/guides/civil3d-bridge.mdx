@@ -1,0 +1,145 @@
+---
+title: Civil 3D bridge
+description: Let your bimai team read the drawing open in Civil 3D (alignments, profiles, surfaces, corridors and pipe networks) through a local bridge on your own computer.
+---
+
+<Status state="design">The bridge is built and tested against Autodesk's Civil 3D 2025 and 2027 APIs, but it hasn't been run inside a real Civil 3D yet. Please test it with the checklist below and report what you find.</Status>
+
+Autodesk's own AutoCAD and Civil 3D MCP server only works inside Autodesk Assistant. So bimai brings its
+own: the **Civil 3D bridge**, a small add-in that Civil 3D loads at startup. It lets your bimai team read
+the drawing you have open, on your own computer, and nothing else.
+
+```
+bimai team (Claude Code) ──▶ http://127.0.0.1:27184/mcp ──▶ bridge inside Civil 3D ──▶ your open drawing
+```
+
+## What it can do
+
+Read-only, on the drawing that is active in Civil 3D:
+
+| Tool | Answers questions like |
+|---|---|
+| `get_drawing` | Which units and coordinate system does this drawing use? How many alignments and surfaces are there? |
+| `list_layers`, `count_objects` | Which layers are frozen? How many objects are on layer C-ROAD? |
+| `list_alignments`, `get_alignment` | Which alignments are there, how long, and which profiles do they have? |
+| `alignment_point`, `alignment_station` | Where is station 1+250 at 3.5 m offset? At what station is this point? |
+| `profile_elevations` | What are the design levels every 20 m along A2-MAIN? |
+| `list_surfaces`, `surface_elevations` | What are the lowest and highest levels of the existing ground? What is the level at these points? |
+| `list_corridors` | Which corridors are out of date, and which assemblies do they use where? |
+| `list_pipe_networks`, `get_pipe_network` | Which pipes have less than 0.8 m cover? Which pipes run between which structures? |
+
+All values are in drawing units. Pipe slopes are absolute values. **Invert levels are not calculated**:
+Autodesk's API doesn't say whether a pipe's start point is its centre or its invert, so the bridge
+reports what is defined (points, diameter, slope, cover) instead of guessing.
+
+## Safe by design
+
+- **It never changes your drawing.** Everything is opened read-only.
+- **It never interrupts your work.** While you are in a command, the bridge answers "Civil 3D is busy"
+  and waits for you; it doesn't take over the drawing.
+- **It is only reachable from your own computer.** It listens on `127.0.0.1` only and refuses requests
+  from web pages or other machines.
+- **Nothing is sent anywhere by the bridge.** It answers your bimai team on the same computer.
+
+## Install
+
+Needs Civil 3D 2025, 2026 or 2027 on Windows. In your project folder:
+
+```bash
+bimai connect civil3d
+```
+
+That's it. bimai asks *"Install it now?"*, downloads the bridge, checks that it is exactly the version
+bimai expects, installs it, and connects your team to it. If you picked Civil 3D during `bimai init`,
+bimai offers this straight away.
+
+### Why Windows asks for permission
+
+During the install, Windows asks: *"Do you want to allow this app to make changes to your device?"*
+That is expected:
+
+- The bridge is installed in `C:\Program Files\Autodesk\ApplicationPlugins`. That is the one folder Civil
+  3D **always trusts**, so the bridge loads without security warnings, also on company PCs where Civil 3D
+  only loads add-ins from trusted folders (`SECURELOAD` set to 2).
+- Only administrators may write to Program Files, so Windows asks you once.
+- bimai copies the verified bridge there and changes nothing else. Click **Yes**.
+
+No administrator rights? Click **No** and ask IT (see below).
+
+### Check it
+
+```bash
+bimai bridge status civil3d      # installed version, update available, running or not
+```
+
+In Civil 3D, type `BIMAIBRIDGE`: it shows `running at http://127.0.0.1:27184/mcp`. The bridge starts
+together with Civil 3D, so your team can use it whenever Civil 3D is open with a drawing.
+
+### Updates and removal
+
+```bash
+bimai bridge install civil3d     # installs the newer version over the old one
+bimai bridge uninstall civil3d   # removes it (Windows asks permission again)
+bimai disconnect civil3d         # removes it from your project
+```
+
+### For IT departments
+
+The bridge is a standard Autodesk plug-in bundle. To deploy it to many PCs (Intune, SCCM or a login
+script), download `bimai-civil3d-bridge.zip` from the
+[releases](https://github.com/StefanDaniels1/BIMAI/releases), check its SHA-256 against
+`SHA256SUMS.txt`, and run as administrator or SYSTEM:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+It copies `bimai-civil3d.bundle` to `C:\Program Files\Autodesk\ApplicationPlugins` and nothing else. Users
+then only run `bimai connect civil3d`. A user can also install from a zip they were given:
+`bimai bridge install civil3d --from bimai-civil3d-bridge.zip`.
+
+## Troubleshooting
+
+| You see | Do this |
+|---|---|
+| `BIMAIBRIDGE` is an unknown command | The bundle isn't loaded. Run `bimai bridge status civil3d`; check you use Civil 3D 2025, 2026 or 2027 (not plain AutoCAD), and restart Civil 3D after installing. |
+| "the Windows permission prompt was declined" | Run `bimai connect civil3d` again and click Yes, or ask IT to install it (see above). |
+| "Couldn't download the bridge" | Your network or proxy blocks GitHub downloads. Ask IT for the zip and use `bimai bridge install civil3d --from <zip>`. |
+| "NOT running · port 27184 is already in use" | Another Civil 3D (or another program) uses the port. Close it, or set the environment variable `BIMAI_CIVIL3D_PORT` to another port before starting Civil 3D, and connect with `bimai connect civil3d --port <port>`. |
+| "Civil 3D is busy" | Finish or cancel the command you're in (Esc), then ask again. |
+| "No drawing is open" | Open a drawing. The bridge reads the active drawing. |
+| "did not respond within 30 seconds" | A dialog box is open, or Civil 3D is doing something long. Close the dialog and try again. |
+| Claude Code shows the server as failed | Civil 3D must be running for the bridge to answer. |
+
+The bridge keeps a log at `%LOCALAPPDATA%\bimai\civil3d-bridge.log`: start-up, errors, and which tool
+ran for how long. It never contains drawing contents.
+
+## Test checklist
+
+Please run this once on your machine and report the results (a GitHub issue is fine):
+
+1. `BIMAIBRIDGE` says "running" and shows your Civil 3D version in the log.
+2. In Claude Code: *"Use get_drawing"*. Units and coordinate system match the drawing settings.
+3. *"List the alignments"*, then *"profile elevations of &lt;alignment&gt; every 20 m"*. Compare two values with
+   Civil 3D's own profile view.
+4. *"Surface elevations of &lt;surface&gt; at &lt;a point inside&gt; and &lt;a point outside&gt;"*. The second is reported
+   as outside.
+5. Start a command (for example `LINE`) and ask something: the answer is "Civil 3D is busy". Press Esc and
+   ask again: it works.
+6. *"List the corridors"* and *"get pipe network &lt;name&gt;"* on a drawing that has them.
+7. Close Civil 3D: Claude Code reports the server as unavailable, and nothing hangs.
+
+## Remove
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\uninstall.ps1    # as administrator
+bimai disconnect civil3d                                     # in your project
+```
+
+## For developers
+
+The source is in `bridges/civil3d/`: a protocol library with a loopback HTTP server and MCP (tested on
+every platform), the add-in (`net8.0-windows` for Civil 3D 2025–2026, `net10.0-windows` for 2027, compiled
+against Autodesk's `AutoCAD.NET` and `Civil3D.NET` NuGet packages), the bundle manifest, and a development
+server with sample data for testing AI clients without Civil 3D. The server speaks both MCP eras: the
+stateless 2026-07-28 protocol (which Claude Code uses) and the older `initialize` handshake.

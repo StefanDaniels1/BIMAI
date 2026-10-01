@@ -1,0 +1,67 @@
+# Publishes the bimai Civil 3D bridge as a GitHub Release when a tag like civil3d-bridge-v0.1.0 is pushed.
+# `bimai bridge install civil3d` downloads the zip from that release and only installs it when its
+# SHA-256 matches the hash pinned in cli/bimai/catalogue/servers.yaml (pin it after publishing).
+name: release-civil3d-bridge
+
+on:
+  push:
+    tags: ["civil3d-bridge-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: The tag matches the bridge version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          [xml]$props = Get-Content bridges/civil3d/Directory.Build.props
+          [xml]$manifest = Get-Content bridges/civil3d/bundle/PackageContents.xml
+          $version = $props.Project.PropertyGroup.Version
+          if ($tag -ne "civil3d-bridge-v$version") { throw "tag $tag does not match bridge version $version" }
+          if ($manifest.ApplicationPackage.AppVersion -ne $version) { throw "PackageContents.xml AppVersion differs from $version" }
+
+      - name: Tests
+        run: dotnet test bridges/civil3d/tests/Bimai.Mcp.Tests -c Release -nologo
+
+      - name: Build the bundle
+        shell: pwsh
+        run: ./bridges/civil3d/build.ps1
+
+      - name: Checksum
+        shell: pwsh
+        working-directory: bridges/civil3d/dist
+        run: |
+          $hash = (Get-FileHash bimai-civil3d-bridge.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  bimai-civil3d-bridge.zip" | Out-File -Encoding ascii SHA256SUMS.txt
+          Write-Host "SHA-256: $hash  (pin this in cli/bimai/catalogue/servers.yaml)"
+
+      - name: Publish the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $hash = (Get-Content bridges/civil3d/dist/SHA256SUMS.txt).Split(' ')[0]
+          $notes = @"
+          bimai Civil 3D bridge for Civil 3D 2025, 2026 and 2027 (Windows).
+
+          Install from your project folder: ``bimai bridge install civil3d`` (or ``bimai connect civil3d``).
+          Manual install: unzip, then run ``install.ps1`` as administrator.
+
+          SHA-256 of bimai-civil3d-bridge.zip: ``$hash``
+
+          Guide: https://docs.bimai.nl/docs/guides/civil3d-bridge
+          "@
+          gh release create $tag bridges/civil3d/dist/bimai-civil3d-bridge.zip bridges/civil3d/dist/SHA256SUMS.txt `
+            --title "Civil 3D bridge $($tag -replace 'civil3d-bridge-v','')" --notes $notes --prerelease

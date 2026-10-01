@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The MCP protocol and a loopback HTTP server. Plain .NET only: no ASP.NET Core and no third-party
+       packages, because Civil 3D does not load Microsoft.AspNetCore.App. -->
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>Bimai.Mcp</RootNamespace>
+  </PropertyGroup>
+</Project>

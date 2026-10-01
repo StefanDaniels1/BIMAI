@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Development only: the same MCP server and tool definitions with sample Civil 3D data, to test AI
+       clients (Claude Code) without Civil 3D. Never shipped. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\src\Bimai.Civil3D\ToolSpecs.cs" Link="Linked\ToolSpecs.cs" />
+    <ProjectReference Include="..\..\src\Bimai.Mcp\Bimai.Mcp.csproj" />
+  </ItemGroup>
+</Project>
