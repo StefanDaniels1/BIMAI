@@ -34,6 +34,6 @@ def test_start_prompt_runs_the_guided_interview():
     text = (ROOT / "docs" / "lib" / "prompts.ts").read_text(encoding="utf-8")
     prompt = text[text.index("export const startPrompt = `") + len("export const startPrompt = `"):text.rindex("`;")]
     for needed in ("bimai init --interview", "--interview --role", "AskUserQuestion", "Other", '"allowed"',
-                   "--dry-run", "Set up this team?", "install.ps1", "install.sh"):
+                   "--dry-run", "Set up this team?", "needs-install", "Windows asks permission once", "install.ps1", "install.sh"):
         assert needed in prompt, needed
     assert "`" not in prompt and "${" not in prompt     # it lives inside a JavaScript template string

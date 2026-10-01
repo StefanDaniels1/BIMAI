@@ -113,8 +113,7 @@ def server_config(server: Server, *, region: str | None = None, port: int | None
     if server.unavailable:
         raise ConnectError(server.unavailable)
     if platform not in server.platforms:
-        where = " and ".join(p.capitalize() if p != "macos" else "macOS" for p in server.platforms)
-        raise ConnectError(f"{server.label} only works on {where}.")
+        raise ConnectError(f"{server.label} only works on {_where(server)}.")
     if server.bundle and not any(exists(f"{folder}\\{server.bundle}") for folder in plugin_folders(environ)):
         raise BridgeMissing(f"{server.label} isn't installed on this computer. It needs: {server.needs}. "
                             f"Install it with: bimai bridge install {server.name}  (guide: {server.docs})")
@@ -136,6 +135,54 @@ def server_config(server: Server, *, region: str | None = None, port: int | None
                                "Use the region your projects are hosted in.")
         cfg["url"] = server.regions[region]
     return cfg
+
+
+def _where(server: Server) -> str:
+    return " and ".join(p.capitalize() if p != "macos" else "macOS" for p in server.platforms)
+
+
+def tool_connections(tools: list[str], *, platform: str | None = None, environ=None, exists=None) -> list[dict]:
+    """For each chosen tool with a catalogue server (no sign-in needed): can it be connected on this computer?
+
+    status: ready | needs-install | needs-app | other-platform | unavailable. `command` is only given
+    where it works on this computer; `config` only when ready.
+    """
+    platform = platform or PLATFORM
+    result = []
+    for server in load_servers().values():
+        matched = [t for t in tools if t in server.matches_tools]
+        if not matched or server.default or server.auth != "none":
+            continue
+        entry = {"tools": matched, "server": server.name, "label": server.label, "command": None, "config": None}
+        if server.unavailable:
+            entry |= {"status": "unavailable", "message": f"No live connection from Claude Code yet (more: {server.docs})."}
+        elif platform not in server.platforms:
+            entry |= {"status": "other-platform",
+                      "message": f"{_where(server)} only: your team connects to it on a {_where(server)} PC."}
+        else:
+            try:
+                entry |= {"status": "ready", "config": server_config(server, platform=platform, environ=environ,
+                                                                     exists=exists),
+                          "message": "Connected: your team can use it."}
+            except BridgeMissing:
+                if server.release:
+                    entry |= {"status": "needs-install", "command": f"bimai connect {server.name} --install --yes",
+                              "message": f"The bimai bridge isn't installed yet. Installing it asks {_where(server)} "
+                                         "for permission once, because it goes into the folder the program trusts."}
+                else:
+                    entry |= {"status": "needs-app", "message": f"Needs {server.needs}. Setup: {server.docs}"}
+            except ConnectError:
+                entry |= {"status": "needs-app", "command": f"bimai connect {server.name}",
+                          "message": f"Needs {server.needs}. Set it up ({server.docs}), then connect it."}
+        result.append(entry)
+    return result
+
+
+def option_note(connection: dict) -> str:
+    """A short warning for an interview option whose connection can't work on this computer ('' if none)."""
+    return {"other-platform": connection["message"],
+            "needs-app": "Needs an add-on that isn't installed yet.",
+            "unavailable": "No live connection from Claude Code yet."}.get(connection["status"], "")
 
 
 def custom_config(url: str, auth: str = "none", header: str = "Authorization", scheme: str = "bearer") -> dict:

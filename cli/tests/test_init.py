@@ -282,7 +282,7 @@ def test_scan_prefills_tools(tmp_path, capsys):
     out = json.loads(capsys.readouterr().out)
     assert out["answers"]["tools"] == ["revit"]
     assert out["team"]["members"][1] == {"role": "model-checker", "why": "Goal: model-checks · Data: Revit"}
-    assert set(out) == {"scan", "answers", "team", "files"}
+    assert set(out) == {"scan", "answers", "team", "connections", "files"}
 
 
 def test_interactive_shows_found_tools_and_uses_defaults(tmp_path, monkeypatch, capsys):

@@ -151,3 +151,13 @@ def test_answers_from_the_interview_are_accepted_by_init(tmp_path, capsys):
             "--goals", ",".join(o["value"] for o in q2["goals"]["options"]),
             "--tools", ",".join(o["value"] for o in q2["tools"]["options"] if o["value"]), "--yes"]
     assert main(args) == 0
+
+
+def test_civil3d_option_on_a_mac_says_windows_only(tmp_path, monkeypatch):
+    from bimai import connections as conn
+    monkeypatch.setattr(conn, "PLATFORM", "macos")
+    tools = interview(tmp_path, role="BIM modeller")["steps"][0]["questions"][1]["options"]
+    civil3d = next(o for o in tools if o["value"] == "civil3d")
+    assert civil3d["description"].startswith("Windows only")
+    ifc = next(o for o in tools if o["value"] == "ifc")
+    assert not ifc["description"].startswith("Windows only")

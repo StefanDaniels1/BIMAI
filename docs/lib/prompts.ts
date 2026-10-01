@@ -34,9 +34,17 @@ export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project
 6. Ask me with AskUserQuestion: "Set up this team?" with the options "Yes, set it up" and "No, change
    something". Only when I say yes, run the same command without --dry-run and --json.
 
-7. Run: bimai validate
+7. Connect my tools. The dry run listed "connections" with a status for each tool I chose:
+   - "ready": already connected by bimai init.
+   - "needs-install": ask me with AskUserQuestion: "Install the <label> now?" with the options "Yes,
+     install it" and "Not now". Explain first that Windows asks permission once, because the bridge goes
+     into the folder Civil 3D trusts, and that Civil 3D must be closed. Only on yes, run its "command".
+   - "needs-app", "other-platform", "unavailable": tell me its "message" in plain words. Don't suggest a
+     command for these unless the connection gives one.
+
+8. Run: bimai validate
    Then tell me to start a new Claude Code session so my team is loaded, and give me three example
-   questions I can ask my team. If I use Civil 3D, tell me I can connect it with: bimai connect civil3d
+   questions I can ask my team.
 
 If a command fails, show me the error and explain it simply. Don't work around it by editing bimai's
 files by hand.`;
