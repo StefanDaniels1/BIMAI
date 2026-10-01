@@ -13,5 +13,5 @@
 ## 3. Prompt and docs
 
 - [x] 3.1 Rewrite the start prompt for the guided flow; update the install and new-project pages. Verify: test on the prompt text (names `--interview`, the question tool, "Other" mapping, final yes); site build.
-- [ ] 3.2 Try the guided flow with the real Claude Code on a scratch folder (headless where possible). Verify: notes in the PR.
-- [ ] 3.3 Final check: pytest (strict), openspec validate --all --strict, check_docs, CI green.
+- [x] 3.2 Try the guided flow with the real Claude Code on a scratch folder (headless where possible). Verify: notes in the PR.
+- [x] 3.3 Final check: pytest (strict), openspec validate --all --strict, check_docs, CI green.
