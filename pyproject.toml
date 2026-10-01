@@ -1,15 +1,32 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bimai"
 dynamic = ["version"]
-description = "An open-source BIM team that lives in your editor"
+description = "An open-source BIM team that lives in your editor: AI agents for BIM coordination, built on Claude Code"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "bimai contributors" }]
 requires-python = ">=3.11"
 dependencies = ["pyyaml>=6", "jsonschema>=4.18", "keyring>=24"]
+keywords = ["bim", "aec", "revit", "civil-3d", "ifc", "claude-code", "mcp", "ai-agents"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Other Audience",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
 
 [project.optional-dependencies]
 dev = ["pytest", "python-docx"]
@@ -18,7 +35,10 @@ dev = ["pytest", "python-docx"]
 bimai = "bimai.cli:main"
 
 [project.urls]
+Homepage = "https://docs.bimai.nl"
 Documentation = "https://docs.bimai.nl"
+Source = "https://github.com/StefanDaniels1/BIMAI"
+Issues = "https://github.com/StefanDaniels1/BIMAI/issues"
 
 [tool.setuptools]
 package-dir = { "" = "cli" }

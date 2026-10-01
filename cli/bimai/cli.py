@@ -12,6 +12,7 @@ from pathlib import Path
 
 from bimai import __version__
 from bimai import bridges
+from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
 from bimai.files import apply as apply_plan
@@ -520,6 +521,27 @@ def cmd_bridge(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_update(args: argparse.Namespace) -> int:
+    try:
+        if args.check:
+            latest = self_update.latest_version()
+            if self_update.newer(latest, __version__):
+                print(f"bimai {latest} is available (you have {__version__}). Update with: bimai update")
+            else:
+                print(f"bimai {__version__} is up to date.")
+            return 0
+        method = self_update.install_method()
+        command = self_update.update_command(method)
+        print(f"Updating bimai ({' '.join(command[1:] if method != 'pip' else command[2:])}) ...")
+        code = self_update.run_update(method)
+    except self_update.UpdateError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    if code == 0:
+        print("✓ Done. Run `bimai --version` to see the version.")
+    return code
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bimai", description="An open-source BIM team that lives in your editor.")
     parser.add_argument("--version", action="version", version=f"bimai {__version__}")
@@ -572,6 +594,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
     p.add_argument("--seat", help="whose team to update (needed when the project has several seats)")
     p.set_defaults(func=cmd_disconnect)
+
+    p = sub.add_parser("update", help="update bimai itself (use --check to only look for a new version)")
+    p.add_argument("--check", action="store_true", help="only check whether a newer version exists")
+    p.set_defaults(func=cmd_update)
 
     p = sub.add_parser("bridge", help="install, check or remove a bimai bridge (e.g. civil3d)")
     p.add_argument("action", choices=["install", "status", "uninstall"])

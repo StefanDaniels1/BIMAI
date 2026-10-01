@@ -1258,7 +1258,7 @@ Rules that keep it working everywhere:
 - **Connectors declare platforms** in their manifest (`platforms: [windows]`). On other systems the gateway marks their tools unavailable with a clear message, and `bimai doctor` explains the alternative (e.g. Revit Public MCP on a Windows machine, or open formats).
 - **Corporate networks:** the kit uses the OS certificate store and system proxy settings, so company proxies and TLS inspection work without extra setup; `bimai doctor` tests connectivity per connector.
 - **Synced folders:** `bimai doctor` warns when a workspace sits in OneDrive/SharePoint sync, which conflicts with git.
-- **One installer per platform:** `pipx` or `uv` everywhere; winget and Homebrew packages later.
+- **One installer per platform:** a one-line install script (`install.ps1`, `install.sh` on docs.bimai.nl) that installs uv and then bimai from PyPI per user, without Python, git or administrator rights; `bimai update` updates it. winget and Homebrew packages later.
 - **CI runs on all three:** every pull request is tested on Windows, macOS and Linux runners.
 
 ### 12.6 Language

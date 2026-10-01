@@ -98,6 +98,7 @@ You can also just ask in plain language; the Coordinator picks the right workflo
 | `bimai connector new` · `record` · `test` | Build and test connectors |
 | `bimai graph team` · `workflow` · `connectors` · `project` · `projects` | Draw diagrams |
 | `bimai validate` | Check every bimai file (available now) |
+| `bimai update` · `update --check` | Update bimai itself, or only check for a new version (available now) |
 | `bimai upgrade` | Update bimai files; never touches your decisions or history |
 | `bimai nap` | Compact agent learnings and archive or anonymize old logs (retention) |
 | `bimai lint` | Check that outputs cite evidence and decisions are logged (runs automatically) |
@@ -110,7 +111,7 @@ fields, that the people and positions they mention exist, and that workflows hav
 or loops. It never changes anything.
 
 ```bash
-pip install "git+https://github.com/StefanDaniels1/BIMAI.git"
+curl -LsSf https://docs.bimai.nl/install.sh | sh   # Windows: powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
 bimai validate              # the project in the current folder
 bimai validate ../bridge-3  # or another project
 ```
