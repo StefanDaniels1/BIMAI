@@ -532,7 +532,7 @@ def cmd_update(args: argparse.Namespace) -> int:
             return 0
         method = self_update.install_method()
         command = self_update.update_command(method)
-        print(f"Updating bimai ({' '.join(command[1:] if method != 'pip' else command[2:])}) ...")
+        print(f"Updating bimai ({' '.join(command[1:] if method != 'pip' else command[2:])}) ...", flush=True)
         code = self_update.run_update(method)
     except self_update.UpdateError as exc:
         print(f"error: {exc}", file=sys.stderr)
