@@ -17,7 +17,7 @@ from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
 from bimai.files import apply as apply_plan
-from bimai.init import (AlreadyInitialised, Answers, apply, check_not_initialised, connect_suggestions,
+from bimai.init import (AlreadyInitialised, Answers, apply, check_not_initialised,
                         plan_files, suggested_tools)
 from bimai.scan import scan
 from bimai.team import UnknownRole, load_catalogue, match_preset, propose
@@ -198,8 +198,9 @@ def cmd_init(args: argparse.Namespace) -> int:
     plan = plan_files(root, answers, team)
 
     if args.json:
+        connections = [{k: v for k, v in c.items() if k != "config"} for c in conn.tool_connections(answers.tools)]
         print(json.dumps({"scan": s.as_dict(), "answers": answers.as_dict(), "team": team.as_dict(),
-                          "files": [{"path": f.path, "action": f.action, "note": f.note} for f in plan]},
+                          "connections": connections, "files": [{"path": f.path, "action": f.action, "note": f.note} for f in plan]},
                          indent=2, ensure_ascii=False))
         return 0
     _print_proposal(team, plan)
@@ -222,34 +223,33 @@ def cmd_init(args: argparse.Namespace) -> int:
     if problems:
         return 1
     print("✓ workspace is valid")
-    offered = _offer_bridges(root, answers.tools, interactive=not args.yes)
-    hints = [h for h in connect_suggestions(answers.tools) if not any(h.endswith(" " + n) for n in offered)]
-    if hints:
-        print("\nConnect the tools you use:")
-        for hint in hints:
-            print(f"  {hint}")
+    connections = conn.tool_connections(answers.tools)
+    if connections:
+        print("\nYour tools:")
+        for c in connections:
+            print(f"  {c['label']}: {c['message']}")
+            if c["command"] and not (c["status"] == "needs-install" and not args.yes):
+                print(f"    {c['command']}")
+    _offer_bridges(root, connections, interactive=not args.yes)
     print("\nNext: open Claude Code in this folder (`claude`) and say hello to your team.")
     return 0
 
 
-def _offer_bridges(root: Path, tools: list[str], interactive: bool) -> list[str]:
-    """After init on Windows: offer to set up the bimai bridges for the tools someone declared."""
-    if not interactive or conn.PLATFORM != "windows":
-        return []
-    offered = []
-    for server in conn.load_servers().values():
-        if not (server.bundle and server.release and set(server.matches_tools) & set(tools)):
+def _offer_bridges(root: Path, connections: list[dict], interactive: bool) -> None:
+    """After init in the terminal: offer to install the bimai bridges that chosen tools need."""
+    if not interactive:
+        return
+    for c in connections:
+        if c["status"] != "needs-install":
             continue
-        offered.append(server.name)
-        question = (f"\nYou use {', '.join(t for t in server.matches_tools if t in tools)}. Connect your team to it now "
-                    f"with {server.label}? (installs it if needed; Windows asks permission once) (Y/n)")
+        question = (f"\nYou use {', '.join(c['tools'])}. Connect your team to it now with {c['label']}? "
+                    "(installs it; Windows asks permission once) (Y/n)")
         if _ask(question, "y").lower().startswith("y"):
-            ns = build_parser().parse_args(["connect", server.name, "--path", str(root), "--install"])
+            ns = build_parser().parse_args(["connect", c["server"], "--path", str(root), "--install"])
             if cmd_connect(ns) != 0:
-                print(f"  You can try again later with: bimai connect {server.name}")
+                print(f"  You can try again later with: {c['command']}")
         else:
-            print(f"  Later: bimai connect {server.name}")
-    return offered
+            print(f"  Later: {c['command']}")
 
 
 def _print_files(plan) -> None:

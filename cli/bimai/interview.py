@@ -13,6 +13,7 @@ import getpass
 import re
 from pathlib import Path
 
+from bimai.connections import option_note, tool_connections
 from bimai.init import suggested_tools
 from bimai.scan import scan
 from bimai.team import Catalogue, load_catalogue, match_preset
@@ -83,10 +84,14 @@ def step_two(root: Path, role: str, cat: Catalogue) -> dict:
     for t in preset.typical_tools:
         if t not in tool_ids:
             tool_ids.append(t)
+    shown = tool_ids[:MAX_OPTIONS]
+    notes = {t: option_note(c) for c in tool_connections(shown) for t in c["tools"]}
     tools = []
-    for t in tool_ids[:MAX_OPTIONS]:
+    for t in shown:
         provides = ", ".join(cat.capabilities.get(c, c) for c in cat.tools[t]["provides"])
         description = f"Found in this folder: {found[t]}" if t in found else f"Lets your team {provides}"
+        if notes.get(t):
+            description = f"{notes[t]} {description}"
         tools.append(_option(cat.tools[t]["label"], description, t))
     if len(tools) < 2:
         tools.append(dict(TYPE_IT))

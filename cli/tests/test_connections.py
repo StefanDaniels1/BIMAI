@@ -137,7 +137,9 @@ def test_init_adds_product_help(project, capsys):
     assert mcp(project) == {"mcpServers": {"autodesk-help": {"type": "http", "url": HELP_URL}}}
 
 
-def test_init_keeps_existing_servers_and_suggests_connects(tmp_path, capsys):
+def test_init_keeps_existing_servers_and_suggests_connects(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(conn, "PLATFORM", "windows")
+    monkeypatch.setattr(conn.os.path, "exists", lambda p: False)           # Revit's add-on isn't installed
     (tmp_path / ".mcp.json").write_text(json.dumps({"mcpServers": {"my-tool": {"type": "stdio", "command": "x"}}}),
                                         encoding="utf-8")
     assert main(["init", str(tmp_path), "--person", "Anna", "--role", "bim modeller", "--tools", "revit", "--yes"]) == 0
@@ -475,6 +477,52 @@ def test_connect_civil3d_not_installed_explains(project, monkeypatch, capsys):
     assert "civil3d" not in mcp(project)["mcpServers"]
 
 
-def test_declaring_civil3d_suggests_the_bridge(tmp_path, capsys):
-    assert main(["init", str(tmp_path), "--person", "Anna", "--role", "bim modeller", "--tools", "civil3d", "--yes"]) == 0
-    assert "bimai connect civil3d" in capsys.readouterr().out
+def init_civil3d(root: Path, *extra: str) -> int:
+    return main(["init", str(root), "--person", "Anna", "--role", "bim modeller", "--tools", "civil3d,ifc", "--yes", *extra])
+
+
+def by_server(connections: list[dict]) -> dict:
+    return {c["server"]: c for c in connections}
+
+
+def test_civil3d_on_a_mac_is_honest(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(conn, "PLATFORM", "macos")
+    assert main(["init", str(tmp_path), "--person", "Anna", "--role", "bim modeller", "--tools", "civil3d,autocad",
+                 "--yes"]) == 0
+    out = capsys.readouterr().out
+    assert "Civil 3D (bimai bridge, read-only): Windows only" in out
+    assert "AutoCAD and Civil 3D: No live connection from Claude Code yet" in out
+    assert "bimai connect civil3d" not in out                       # it can't work here
+    assert "civil3d" not in mcp(tmp_path)["mcpServers"]
+
+
+def test_civil3d_bridge_missing_on_windows(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(conn, "PLATFORM", "windows")
+    monkeypatch.setattr(conn.os.path, "exists", lambda p: False)
+    assert init_civil3d(tmp_path, "--dry-run", "--json") == 0
+    c = by_server(json.loads(capsys.readouterr().out)["connections"])["civil3d"]
+    assert c["status"] == "needs-install" and c["command"] == "bimai connect civil3d --install --yes"
+    assert "permission once" in c["message"] and "config" not in c
+    assert init_civil3d(tmp_path) == 0                               # installs nothing by itself
+    assert "civil3d" not in mcp(tmp_path)["mcpServers"]
+    assert "bimai connect civil3d --install --yes" in capsys.readouterr().out
+
+
+def test_ready_bridge_is_connected_by_init(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(conn, "PLATFORM", "windows")
+    monkeypatch.setattr(conn.os.path, "exists", lambda p: str(p).endswith("bimai-civil3d.bundle"))
+    assert init_civil3d(tmp_path) == 0
+    assert mcp(tmp_path)["mcpServers"]["civil3d"] == {"type": "http", "url": "http://127.0.0.1:27184/mcp"}
+    assert "Civil 3D (bimai bridge, read-only): Connected" in capsys.readouterr().out
+    assert validate(tmp_path) == []
+
+
+def test_tool_connection_statuses():
+    def status(tools, platform, exists=lambda p: False):
+        return {c["server"]: c["status"] for c in conn.tool_connections(tools, platform=platform, exists=exists, environ={})}
+    assert status(["autocad"], "windows") == {"autocad-civil3d": "unavailable"}
+    assert status(["revit"], "windows") == {"revit": "needs-app"}
+    assert status(["revit"], "linux") == {"revit": "other-platform"}
+    assert status(["ifc", "acc"], "windows") == {}                     # no server without sign-in for these
+    note = conn.option_note(conn.tool_connections(["civil3d"], platform="macos")[0])
+    assert note.startswith("Windows only")
