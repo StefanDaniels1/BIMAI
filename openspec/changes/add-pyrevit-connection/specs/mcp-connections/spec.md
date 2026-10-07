@@ -45,3 +45,18 @@ administrator rights. When pyRevit's agent host is off, it SHALL offer (or with 
 #### Scenario: Revit running
 - **WHEN** Revit is running during the install
 - **THEN** bimai asks to close Revit first and installs nothing until it is closed
+
+### Requirement: pyRevit prerequisites in one step
+Before installing pyRevit, bimai SHALL check for the .NET 8 and .NET 10 Desktop Runtimes at the minimum
+versions pyRevit's installer requires. Missing runtimes SHALL be installed from Microsoft's official
+installers pinned in the catalogue (version, URL, SHA-512), all in one elevated step, after saying that
+Windows asks permission once and why. A download whose SHA-512 differs SHALL be refused. When nothing is
+missing, no permission is asked.
+
+#### Scenario: Both runtimes missing
+- **WHEN** neither .NET 8 nor .NET 10 Desktop Runtime is installed and the user agrees
+- **THEN** both are installed in one elevated step, and then pyRevit is installed without elevation
+
+#### Scenario: Runtimes present
+- **WHEN** both runtimes are installed at the required versions
+- **THEN** pyRevit is installed without any permission prompt

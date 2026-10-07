@@ -20,6 +20,14 @@ host enforces its own contract (queries roll back; changes need approval in Revi
 - **Version check** by running `pyrevit.exe --version` (stdlib `subprocess`, 10 s timeout); 7.0+ needed.
 - **Enabling the host** changes pyRevit's user config, so it is asked separately and explained.
 
+- **Prerequisites first, in one prompt.** pyRevit's installer (Inno Setup + CodeDependencies) installs
+  missing .NET 8/10 Desktop Runtimes itself, each triggering its own UAC prompt, and requires at least
+  8.0.23 and 10.0.2. bimai detects them via `%ProgramFiles%\dotnet\shared\Microsoft.WindowsDesktop.App\<v>`
+  (the desktop runtime installer also installs `Microsoft.NETCore.App`), downloads Microsoft's installers
+  (pinned: 8.0.31, 10.0.12, SHA-512 from Microsoft's releases.json), and runs them `/install /quiet
+  /norestart` from one elevated PowerShell, like the Civil 3D bridge install. Then pyRevit's checks pass
+  and its installer runs unelevated without prompts.
+
 ## Risks / Trade-offs
 
 - pyRevit's agent runtime is experimental (validated on Revit 2024 and 2025) → the guide says so, and

@@ -18,9 +18,14 @@ change it (`run_modify`). Revit users should get it with the same one-step conne
   the model. With `--allow-writes` (explicit consent) they become `ask` rules instead, on top of
   pyRevit's own approval inside Revit. Removing the server removes the rules.
 - **One-step install of the newest pyRevit.** `bimai connect pyrevit` offers to install the pinned
-  pyRevit release (7.0.0, the signed per-user installer, SHA-256 checked, silent, **no administrator
-  rights**, Revit must be closed), and to switch on pyRevit's agent host (`pyrevit configs agent
+  pyRevit release (7.0.0, the signed per-user installer, SHA-256 checked, silent, no administrator
+  rights for pyRevit itself, Revit must be closed), and to switch on pyRevit's agent host (`pyrevit configs agent
   enable`, off by default), each after a yes. An older pyRevit (< 7.0) is reported with the update offer.
+- **Prerequisites in one permission prompt.** pyRevit needs Microsoft's .NET 8 and .NET 10 Desktop
+  Runtimes (machine-wide; its installer would otherwise ask Windows' permission once per runtime, without
+  explanation). bimai checks which are missing and installs them first, from Microsoft's official
+  installers with pinned SHA-512, in one elevated step it explains beforehand. pyRevit's own installer
+  then runs without any prompt. WebView2 (per user) is left to pyRevit's installer.
 - **Onboarding:** choosing Revit gives the pyRevit connection a status like Civil 3D (`ready`,
   `needs-install`, `other-platform`), so the guided flow offers it.
 - **Docs:** a pyRevit guide (what it can do, read-only vs. changes, why Revit must be closed, how to

@@ -8,7 +8,8 @@
 ## 2. Install
 
 - [ ] 2.1 `apps.py`: download, SHA-256 check, Revit-running check, silent per-user install, enable the agent host; offered by `bimai connect pyrevit` and `--install`. Verify: tests with a fake Windows; Windows CI installs the real pyRevit and checks `pyrevit --version` and agent enable.
-- [ ] 2.2 Onboarding status `needs-install` for pyRevit. Verify: test.
+- [ ] 2.2 Prerequisites: detect .NET 8/10 Desktop Runtimes, install missing ones from pinned Microsoft installers (SHA-512) in one elevated step. Verify: tests with a fake Windows (none, one, both missing; bad hash); Windows CI.
+- [ ] 2.3 Onboarding status `needs-install` for pyRevit. Verify: test.
 
 ## 3. Docs and checks
 
