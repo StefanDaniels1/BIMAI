@@ -99,7 +99,7 @@ jobs:
 
   openroads-bridge:
     # The OpenRoads bridge as bimai installs it on a user's PC, minus OpenRoads itself (CI has none): the real
-    # .NET Framework compiler, the real permission step, against a fake OpenRoads folder with a stand-in
+    # .NET Framework compiler, the real permission step, against a stand-in OpenRoads folder with a stand-in
     # Bentley.MstnPlatformNET.dll. Then the bridge's MCP server (development host) against the protocol tests.
     runs-on: windows-latest
     steps:
@@ -112,16 +112,14 @@ jobs:
         run: |
           pip install -e . pytest --quiet
           $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          $fake = Join-Path $env:RUNNER_TEMP "PF"
-          $ord = Join-Path $fake "Bentley\OpenRoads Designer 2025\OpenRoadsDesigner"
+          # A stand-in OpenRoads in the real Program Files (the runner is a throwaway machine).
+          $ord = Join-Path $env:ProgramFiles "Bentley\OpenRoads Designer 2025\OpenRoadsDesigner"
           New-Item -ItemType Directory -Force $ord | Out-Null
           Set-Content (Join-Path $ord "OpenRoadsDesigner.exe") "stand-in"
           & $csc /nologo /target:library /langversion:5 "/out:$ord\Bentley.MstnPlatformNET.dll" (Get-ChildItem bridges\openroads\stubs\*.cs | ForEach-Object FullName)
           if ($LASTEXITCODE -ne 0) { throw "stub didn't compile" }
           python bridges/openroads/pack.py bridges/openroads/dist/bimai-openroads-bridge.zip
 
-          $env:ProgramFiles = $fake
-          $env:ProgramData = Join-Path $env:RUNNER_TEMP "PD"
           bimai bridge install openroads --from bridges/openroads/dist/bimai-openroads-bridge.zip --yes
           if ($LASTEXITCODE -ne 0) { throw "install failed" }
           $dll = Join-Path $env:ProgramData "bimai\openroads\openroads-designer-2025\BimaiOpenRoads.dll"
