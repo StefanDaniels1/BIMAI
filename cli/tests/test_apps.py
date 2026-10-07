@@ -112,7 +112,7 @@ class FakePC:
         said = []
         version = apps.setup(server or pyrevit(), ask=kw.pop("ask", lambda q: True), say=said.append, platform="windows",
                              run=self.run, opener=self.opener, environ=self.environ, exists=self.exists,
-                             listdir=self.listdir, **kw)
+                             listdir=self.listdir, is_elevated=kw.pop("is_elevated", lambda: False), **kw)
         return version, said
 
 
@@ -223,6 +223,14 @@ def test_revit_running(pc):
     assert pc.version == "7.0.0.26278"
 
 
+def test_refuses_to_run_as_administrator(pc):
+    with pytest.raises(BridgeError, match="not 'Run as administrator'"):
+        pc.setup(is_elevated=lambda: True)
+    assert pc.downloads == [] and pc.version is None
+    pc.install_pyrevit()
+    pc.setup(is_elevated=lambda: True)                      # only switching the agent on: fine as administrator
+
+
 def test_only_on_windows(pc):
     with pytest.raises(BridgeError, match="only be set up on Windows"):
         apps.setup(pyrevit(), ask=lambda q: True, say=print, platform="macos")
@@ -248,6 +256,7 @@ def windows(pc, monkeypatch):
     monkeypatch.setattr(apps.os, "listdir", pc.listdir)
     monkeypatch.setattr(apps.subprocess, "run", pc.run)
     monkeypatch.setattr(apps.urllib.request, "urlopen", pc.opener)
+    monkeypatch.setattr(apps, "elevated", lambda: False)
     servers = {**conn.load_servers(), "pyrevit": pyrevit()}
     monkeypatch.setattr(conn, "load_servers", lambda: servers)
     return pc

@@ -242,8 +242,7 @@ def _offer_bridges(root: Path, connections: list[dict], interactive: bool) -> No
     for c in connections:
         if c["status"] != "needs-install":
             continue
-        question = (f"\nYou use {', '.join(c['tools'])}. Connect your team to it now with {c['label']}? "
-                    "(installs it; Windows asks permission once) (Y/n)")
+        question = f"\nYou use {', '.join(c['tools'])}. {c['label']}: {c['message']} Set it up now? (Y/n)"
         if _ask(question, "y").lower().startswith("y"):
             ns = build_parser().parse_args(["connect", c["server"], "--path", str(root), "--install"])
             if cmd_connect(ns) != 0:

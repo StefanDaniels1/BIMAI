@@ -32,6 +32,15 @@ WHY_RUNTIMES = (
     "  Click Yes to continue. (No admin rights? Choose No, and ask IT to install them.)")
 
 
+def elevated() -> bool:
+    """True when bimai runs as administrator ("Run as administrator", or a PC with UAC switched off)."""
+    try:
+        import ctypes
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except (AttributeError, OSError):
+        return False
+
+
 def _parts(version: str) -> tuple[int, ...]:
     return tuple(int(x) for x in re.findall(r"\d+", version)[:3])
 
@@ -161,7 +170,7 @@ def _install_runtimes(missing: list[dict], app: str, work: Path, *, say, run, op
 def setup(server: conn.Server, *, ask: Callable[[str], bool], say: Callable[[str], None],
           close_app: Callable[[str], bool] = lambda question: False, platform: str | None = None,
           run: Callable | None = None, opener: Callable | None = None, environ=None, exists=None,
-          listdir: Callable | None = None) -> str:
+          listdir: Callable | None = None, is_elevated: Callable[[], bool] | None = None) -> str:
     """Installs or updates the app (prerequisites first) and switches its agent host on, asking where it
     changes something (`close_app` asks to close Revit first). Returns the app's version. Raises BridgeError with what to do otherwise."""
     run = run or subprocess.run
@@ -175,6 +184,12 @@ def setup(server: conn.Server, *, ask: Callable[[str], bool], say: Callable[[str
     version = version_of(exe, run) if exe else None
     if not (version and _at_least(version, app["min_version"])):
         installer = app["installer"]
+        if (is_elevated or elevated)():
+            # pyRevit's per-user installer, run as administrator, ends with a message box no flag can hide,
+            # and would install for the administrator instead of you.
+            raise BridgeError(f"bimai is running as administrator. {app['name']} installs for your own user, so run this "
+                              "from a normal terminal or VS Code window (not 'Run as administrator'). Windows still "
+                              "asks permission where it is needed.")
         while _running(app["process"], run):
             if not close_app("Revit is running. Close it (save your work first), then continue? (Y/n)"):
                 raise BridgeError(f"Revit must be closed to install {app['name']}. Close it and try again.")

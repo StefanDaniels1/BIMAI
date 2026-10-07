@@ -321,7 +321,7 @@ def test_init_offers_the_bridge_for_civil3d(tmp_path, win, monkeypatch, capsys):
     asked = []
     monkeypatch.setattr("builtins.input", lambda prompt="": asked.append(prompt) or next(answers))
     assert main(["init", str(tmp_path / "p"), "--person", "Anna"]) == 0
-    assert any("Connect your team to it now" in q and "Windows asks permission once" in q for q in asked)
+    assert any("Set it up now" in q and "permission once" in q for q in asked)
     data = json.loads((tmp_path / "p" / ".mcp.json").read_text(encoding="utf-8"))
     assert "civil3d" in data["mcpServers"]
 

@@ -120,8 +120,21 @@ jobs:
           $project = Join-Path $env:RUNNER_TEMP "revit-project"
           bimai init $project --person Anna --role "BIM modeller" --tools revit --yes
           if ($LASTEXITCODE -ne 0) { throw "init failed" }
-          bimai connect pyrevit --path $project --install --yes
-          if ($LASTEXITCODE -ne 0) { throw "connect failed" }
+          # As a normal user would: not as administrator (GitHub's runner is one). runas /trustlevel starts
+          # it with a standard user token; it runs detached, so its output goes to a file.
+          $bimai = (Get-Command bimai).Source
+          $out = Join-Path $env:RUNNER_TEMP "connect.txt"; $done = Join-Path $env:RUNNER_TEMP "connect.done"
+          $cmd = Join-Path $env:RUNNER_TEMP "connect.cmd"
+          Set-Content $cmd -Encoding ascii -Value @(
+            '@echo off', 'set PYTHONUNBUFFERED=1',
+            "`"$bimai`" connect pyrevit --path `"$project`" --install --yes > `"$out`" 2>&1",
+            "echo %ERRORLEVEL% > `"$done`"")
+          runas /trustlevel:0x20000 $cmd
+          $deadline = (Get-Date).AddMinutes(15)
+          while (-not (Test-Path $done) -and (Get-Date) -lt $deadline) { Start-Sleep 5 }
+          Get-Content $out -ErrorAction SilentlyContinue
+          if (-not (Test-Path $done)) { throw "connect didn't finish" }
+          if ((Get-Content $done).Trim() -ne "0") { throw "connect failed" }
           $exe = "$env:APPDATA\pyRevit-Master\bin\pyrevit.exe"
           & $exe --version
           if ($LASTEXITCODE -ne 0) { throw "pyrevit doesn't start" }
