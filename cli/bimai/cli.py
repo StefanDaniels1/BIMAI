@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 from bimai import __version__
-from bimai import bridges
+from bimai import apps, bridges
 from bimai import interview as onboarding
 from bimai import update as self_update
 from bimai import connections as conn
@@ -368,8 +368,9 @@ def cmd_connect(args: argparse.Namespace) -> int:
                 region = _ask(f"Which region are your projects in? ({', '.join(server.regions)})").lower()
             try:
                 entry = conn.server_config(server, region=region, port=args.port)
-            except conn.BridgeMissing:
-                if not _offer_bridge_install(server, interactive, args.install):
+            except conn.BridgeMissing as missing:
+                setup = _offer_app_setup if server.app else _offer_bridge_install
+                if not setup(server, interactive, args.install, missing):
                     raise
                 entry = conn.server_config(server, region=region, port=args.port)
             kind, access, label = server.auth, server.access, server.label
@@ -393,6 +394,17 @@ def cmd_connect(args: argparse.Namespace) -> int:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(conn.json_text(conn.settings_with_ask(settings, name)), encoding="utf-8")
         print("  Every call to it asks for your approval (rule in .claude/settings.json).")
+    if server_rules := (conn.write_rules(servers[name]) if name in servers else []):
+        allow = args.allow_writes or (interactive and _ask(
+            f"{label} can also change your model ({', '.join(servers[name].write_tools)}). Allow that? Each change "
+            "then asks you in Claude Code, and again inside the program. (y/N)", "n").lower().startswith("y"))
+        path = root / ".claude" / "settings.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        cleared = conn.settings_without_rules(settings, server_rules)
+        path.write_text(conn.json_text(conn.settings_with_rules(cleared, "ask" if allow else "deny", server_rules)),
+                        encoding="utf-8")
+        print("  Changes allowed: each one asks for your approval first." if allow else
+              f"  Read-only: your team can't change the model (allow it with: bimai connect {name} --allow-writes).")
     if kind == "none":
         print("  No sign-in needed.")
     _sign_in(name, kind, interactive)
@@ -408,7 +420,23 @@ def cmd_connect(args: argparse.Namespace) -> int:
     return 0
 
 
-def _offer_bridge_install(server, interactive: bool, install: bool) -> bool:
+def _offer_app_setup(server, interactive: bool, install: bool, missing: Exception) -> bool:
+    """A vendor app (pyRevit) is missing, too old or switched off: set it up now if the person agrees."""
+    if conn.PLATFORM != "windows":
+        return False
+    if not install:
+        if not interactive:
+            return False
+        question = f"{missing} Set it up now? (Y/n)"
+        if not _ask(question, "y").lower().startswith("y"):
+            return False
+    yes = (lambda q: _ask(q, "y").lower().startswith("y")) if interactive else (lambda q: True)
+    close = (lambda q: _ask(q, "y").lower().startswith("y")) if interactive else (lambda q: False)
+    apps.setup(server, ask=yes, close_app=close, say=print)
+    return True
+
+
+def _offer_bridge_install(server, interactive: bool, install: bool, missing: Exception | None = None) -> bool:
     """A bimai bridge is missing: install it now (one Windows permission click) if the person agrees."""
     if not server.release or conn.PLATFORM != "windows":
         return False
@@ -419,7 +447,9 @@ def _offer_bridge_install(server, interactive: bool, install: bool) -> bool:
                     "because it is installed in the folder Civil 3D trusts. (Y/n)")
         if not _ask(question, "y").lower().startswith("y"):
             return False
-    bridges.install(server, ask=lambda q: _ask(q, "y").lower().startswith("y"), say=print)
+    # Without a person to answer (--yes), "close Civil 3D first?" can't be answered: stop instead of waiting.
+    ask = (lambda q: _ask(q, "y").lower().startswith("y")) if interactive else (lambda q: False)
+    bridges.install(server, ask=ask, say=print)
     return True
 
 
@@ -439,6 +469,10 @@ def cmd_disconnect(args: argparse.Namespace) -> int:
     if kind == "signin":
         conn.claude_mcp("logout", args.server, quiet=True)   # before removing: the CLI must still know it
     (root / ".mcp.json").write_text(conn.json_text(conn.mcp_without(mcp, args.server)), encoding="utf-8")
+    server = conn.load_servers().get(args.server)
+    if server and server.write_tools:
+        settings = conn.settings_without_rules(settings, conn.write_rules(server))
+        (root / ".claude" / "settings.json").write_text(conn.json_text(settings), encoding="utf-8")
     if conn.ask_rule(args.server) in (settings.get("permissions") or {}).get("ask", []):
         (root / ".claude" / "settings.json").write_text(
             conn.json_text(conn.settings_without_ask(settings, args.server)), encoding="utf-8")

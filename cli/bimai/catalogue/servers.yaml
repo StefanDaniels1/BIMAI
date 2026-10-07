@@ -35,6 +35,56 @@ revit:
       - command: '{ProgramFiles}\Autodesk\Revit 2027 MCP Server Write-Tools Technical Preview\Autodesk.RevitMcpServer.Stdio.exe'
         args: ["--tool-permission=StableReadOnly", "--ManageConfigurationWithAutodeskRevitPluginInstaller=true"]
 
+pyrevit:
+  label: pyRevit (Revit, read-only)
+  vendor: pyRevit Labs
+  docs: https://docs.bimai.nl/docs/guides/pyrevit
+  auth: none
+  access: read-only
+  platforms: [windows]
+  needs: pyRevit 7.0 or newer with its agent runtime switched on, and Revit running with a model open
+  provides: [model.query]
+  matches_tools: [revit]
+  # Connected read-only: bimai denies these tools unless the person allows changes (--allow-writes);
+  # then each call asks in Claude Code, and pyRevit asks again inside Revit.
+  write_tools: [run_modify]
+  # The same entry `pyrevit mcp install claude --project` writes. Per-user install first.
+  config:
+    type: stdio
+    variants:
+      - command: '{APPDATA}\pyRevit-Master\bin\pyrevit.exe'
+        args: [mcp]
+      - command: '{ProgramFiles}\pyRevit-Master\bin\pyrevit.exe'
+        args: [mcp]
+  # A vendor app bimai can install: the signed per-user installer (no administrator rights), pinned.
+  app:
+    name: pyRevit
+    min_version: "7.0"
+    process: Revit.exe
+    config_file: '{APPDATA}\pyRevit\pyRevit_config.ini'
+    enable: [configs, agent, enable]
+    installer:
+      version: 7.0.0.26278
+      url: https://github.com/pyrevitlabs/pyRevit/releases/download/v7.0.0.26278%2B2233/pyRevit_7.0.0.26278_signed.exe
+      sha256: bf242d23f3ca8ae214f430aa29764f63e02756e7fcb620b21ca85965c8ee4476
+      args: [/VERYSILENT, /SUPPRESSMSGBOXES, /NORESTART, /SP-]
+    # Machine-wide Microsoft runtimes pyRevit's installer requires (it would ask permission once per
+    # runtime). bimai installs the missing ones first, in one elevated step. Minimums from pyRevit's
+    # release/CodeDependencies.iss; pinned installers from Microsoft's releases.json.
+    prerequisites:
+      - name: .NET 8 Desktop Runtime
+        folder: '{ProgramFiles}\dotnet\shared\Microsoft.WindowsDesktop.App'
+        min: 8.0.23
+        version: 8.0.31
+        url: https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.31/windowsdesktop-runtime-8.0.31-win-x64.exe
+        sha512: 0b907e9312867172a4eb82f4b5ab3f7c2d25e27d8349546d77eeb5d5b8cbecab9ebebfed189b13e9669dc578d892756c548366da539d47b3ddac5efcb7ae72fe
+      - name: .NET 10 Desktop Runtime
+        folder: '{ProgramFiles}\dotnet\shared\Microsoft.WindowsDesktop.App'
+        min: 10.0.2
+        version: 10.0.12
+        url: https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.12/windowsdesktop-runtime-10.0.12-win-x64.exe
+        sha512: 0b907e9312867172a4eb82f4b5ab3f7c2d25e27d8349546d77eeb5d5b8cbecab9ebebfed189b13e9669dc578d892756c548366da539d47b3ddac5efcb7ae72fe
+
 fusion:
   label: Autodesk Fusion
   vendor: Autodesk

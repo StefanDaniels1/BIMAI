@@ -1,0 +1,74 @@
+---
+title: pyRevit
+description: Connect your team to a live Revit model through pyRevit 7.0, read-only by default, set up in one step.
+---
+
+<Status state="available">Works today on Windows with Revit 2024 and newer. pyRevit's agent runtime is new and marked experimental by pyRevit.</Status>
+
+[pyRevit](https://github.com/pyrevitlabs/pyRevit) is a free, widely used add-in for Revit. Since version
+7.0 it can talk to AI assistants such as Claude Code. bimai uses that to give your team a live view of
+the Revit model you have open: also on Revit 2024, 2025 and 2026, where Autodesk's own Revit server
+isn't available.
+
+## What your team can do
+
+- **Read the model:** elements, categories, types, levels, parameters, the selection and the active view.
+- **Look things up** in the Revit API of the Revit you are running.
+- **Run read-only checks** written in Python, for example "count the walls without a fire rating".
+  pyRevit rolls back anything such a check would change.
+- **Show and capture views:** select and isolate elements, or make an image of a view.
+
+**Changing the model is switched off** unless you allow it (see below).
+
+## Connect it
+
+On Windows, in your project folder:
+
+```bash
+bimai connect pyrevit
+```
+
+If you chose Revit during onboarding, Claude offers this straight away. bimai checks what's there and
+only does what's missing, asking first:
+
+1. **Microsoft .NET 8 and .NET 10 Desktop Runtimes**, which pyRevit needs. If they're missing, bimai
+   installs Microsoft's official installers (checked against their published fingerprints) in one step.
+   **Windows asks permission once**, because .NET is installed for the whole PC. If they're already there,
+   nothing is asked.
+2. **pyRevit 7.0**, or an update if you have an older pyRevit. It's installed for your user only, so this
+   needs **no administrator rights**. Revit must be closed while it installs.
+3. **pyRevit's agent runtime**, which is off until you switch it on. bimai switches it on with your yes.
+   Restart Revit afterwards.
+
+Then start a new Claude Code session and open a model in Revit. Your team can now read it.
+
+## Read-only, unless you allow changes
+
+pyRevit can also change the model (its `run_modify` tool). bimai blocks that by default, so your team can
+read the model but never change it. To allow changes:
+
+```bash
+bimai connect pyrevit --allow-writes
+```
+
+Then every change is asked twice: first in Claude Code, then **inside Revit**, where pyRevit selects
+the elements it would change and asks you to *Keep* or *Discard*. A kept change is one undo step in
+Revit, named after what it did. pyRevit also blocks saving, syncing and exporting while a script runs.
+
+## Updating pyRevit
+
+bimai installs the pyRevit version it has checked (now 7.0.0). When pyRevit publishes a new version,
+a bimai update brings the new one: `bimai update`, then `bimai connect pyrevit` again. You can also
+update pyRevit yourself; bimai works with any pyRevit from 7.0.
+
+## Troubleshooting
+
+| You see | What to do |
+|---|---|
+| *Revit is running* | Save your work, close Revit and run the command again |
+| *The Windows permission prompt was declined* | Ask IT to install the .NET 8 and .NET 10 Desktop Runtimes, then run it again |
+| *pyRevit is installed but doesn't start* | A .NET runtime is missing: run `bimai connect pyrevit` again |
+| Your team says Revit doesn't answer | Open Revit with a model, and check pyRevit's settings: **pyRevit → Settings → Agent Runtime (MCP)** |
+
+To disconnect: `bimai disconnect pyrevit`. This leaves pyRevit itself installed; remove it through
+Windows' *Apps* settings if you want.

@@ -35,7 +35,8 @@ class ConnectError(Exception):
 
 
 class BridgeMissing(ConnectError):
-    """A bimai bridge (an add-in inside a desktop program) isn't installed; it can be installed."""
+    """Something bimai can install is missing: a bimai bridge (an add-in inside a desktop program), or a vendor
+    app such as pyRevit (missing, too old, or its agent host switched off)."""
 
 
 class McpJsonError(Exception):
@@ -61,6 +62,8 @@ class Server:
     bundle: str = ""        # an Autodesk plug-in bundle that must be installed (bimai bridges)
     port: int = 0           # default port for local servers whose port can be changed (--port)
     release: dict = field(default_factory=dict)   # published bridge release: repo, tag, asset, version, sha256
+    write_tools: tuple[str, ...] = ()   # tools that change data: denied unless the person allows changes
+    app: dict = field(default_factory=dict)       # a vendor app bimai can install (pyRevit), see apps.py
 
 
 @dataclass(frozen=True)
@@ -86,7 +89,7 @@ def load_servers() -> dict[str, Server]:
             matches_tools=tuple(s.get("matches_tools") or ()), config=s.get("config") or {},
             regions=s.get("regions") or {}, needs=s.get("needs", ""), unavailable=s.get("unavailable", ""),
             default=bool(s.get("default")), bundle=s.get("bundle", ""), port=int(s.get("port") or 0),
-            release=s.get("release") or {},
+            release=s.get("release") or {}, write_tools=tuple(s.get("write_tools") or ()), app=s.get("app") or {},
         )
     return servers
 
@@ -98,6 +101,12 @@ def plugin_folders(environ) -> list[str]:
     roots = [environ.get("ProgramFiles", r"C:\Program Files"), environ.get("ProgramData", r"C:\ProgramData"),
              environ.get("APPDATA", "")]
     return [f"{root}\\Autodesk\\ApplicationPlugins" for root in roots if root]
+
+
+def expand(path: str, environ) -> str:
+    """Fills in {ProgramFiles} and {APPDATA} from the environment."""
+    return (path.replace("{ProgramFiles}", environ.get("ProgramFiles", r"C:\Program Files"))
+                .replace("{APPDATA}", environ.get("APPDATA", "")))
 
 
 def server_config(server: Server, *, region: str | None = None, port: int | None = None, platform: str | None = None,
@@ -121,11 +130,17 @@ def server_config(server: Server, *, region: str | None = None, port: int | None
     if server.port and "url" in cfg:
         cfg["url"] = cfg["url"].replace("{port}", str(port or server.port))
     if "variants" in cfg:
-        program_files = environ.get("ProgramFiles", r"C:\Program Files")
         for variant in cfg.pop("variants"):
-            command = variant["command"].replace("{ProgramFiles}", program_files)
+            command = expand(variant["command"], environ)
             if exists(command):
+                if server.app:
+                    from bimai import apps      # apps imports this module
+                    problem = apps.problem(server, command)
+                    if problem:
+                        raise BridgeMissing(problem)
                 return {"type": cfg["type"], "command": command, "args": list(variant.get("args", []))}
+        if server.app:
+            raise BridgeMissing(f"{server.app['name']} isn't installed on this computer. It needs: {server.needs}.")
         raise ConnectError(f"{server.label} isn't installed on this computer. It needs: {server.needs}. "
                            f"Setup: {server.docs}")
     if server.regions:
@@ -163,9 +178,13 @@ def tool_connections(tools: list[str], *, platform: str | None = None, environ=N
             try:
                 entry |= {"status": "ready", "config": server_config(server, platform=platform, environ=environ,
                                                                      exists=exists),
-                          "message": "Connected: your team can use it."}
-            except BridgeMissing:
-                if server.release:
+                          "message": "Connected read-only: your team can read it but not change it." if server.write_tools
+                                     else "Connected: your team can use it."}
+            except BridgeMissing as missing:
+                if server.app:
+                    entry |= {"status": "needs-install", "command": f"bimai connect {server.name} --install --yes",
+                              "message": f"{missing} bimai can set it up for you."}
+                elif server.release:
                     entry |= {"status": "needs-install", "command": f"bimai connect {server.name} --install --yes",
                               "message": f"The bimai bridge isn't installed yet. Installing it asks {_where(server)} "
                                          "for permission once, because it goes into the folder the program trusts."}
@@ -250,6 +269,34 @@ def settings_without_ask(data: dict, name: str) -> dict:
             del perms["ask"]
         if not perms:
             del out["permissions"]
+    return out
+
+
+def write_rules(server: Server) -> list[str]:
+    return [f"mcp__{server.name}__{tool}" for tool in server.write_tools]
+
+
+def settings_with_rules(data: dict, kind: str, rules: list[str]) -> dict:
+    """Adds permission rules (kind: ask | deny), keeping all other settings."""
+    out = copy.deepcopy(data)
+    listed = out.setdefault("permissions", {}).setdefault(kind, [])
+    listed.extend(r for r in rules if r not in listed)
+    return out
+
+
+def settings_without_rules(data: dict, rules: list[str]) -> dict:
+    """Removes these rules from ask and deny; empty lists and an empty permissions block go too."""
+    out = copy.deepcopy(data)
+    perms = out.get("permissions")
+    if not isinstance(perms, dict):
+        return out
+    for kind in ("ask", "deny"):
+        if isinstance(perms.get(kind), list):
+            perms[kind] = [r for r in perms[kind] if r not in rules]
+            if not perms[kind]:
+                del perms[kind]
+    if not perms:
+        del out["permissions"]
     return out
 
 
