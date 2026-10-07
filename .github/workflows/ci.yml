@@ -117,9 +117,7 @@ jobs:
           Get-ChildItem "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App" -ErrorAction SilentlyContinue | ForEach-Object Name
           $wv = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
           "WebView2: " + ((Get-ItemProperty $wv -ErrorAction SilentlyContinue).pv ?? "not installed")
-          $project = Join-Path $env:RUNNER_TEMP "revit-project"
-          bimai init $project --person Anna --role "BIM modeller" --tools revit --yes
-          if ($LASTEXITCODE -ne 0) { throw "init failed" }
+          $project = Join-Path $env:USERPROFILE "revit-project"
           # As a normal user would: not as administrator (GitHub's runner is one). runas /trustlevel starts
           # it with a standard user token; it runs detached, so its output goes to a file.
           $bimai = (Get-Command bimai).Source
@@ -127,7 +125,9 @@ jobs:
           $cmd = Join-Path $env:RUNNER_TEMP "connect.cmd"
           Set-Content $cmd -Encoding ascii -Value @(
             '@echo off', 'set PYTHONUNBUFFERED=1',
-            "`"$bimai`" connect pyrevit --path `"$project`" --install --yes > `"$out`" 2>&1",
+            "`"$bimai`" init `"$project`" --person Anna --role `"BIM modeller`" --tools revit --yes > `"$out`" 2>&1",
+            "if errorlevel 1 (echo 1 > `"$done`" & exit /b 1)",
+            "`"$bimai`" connect pyrevit --path `"$project`" --install --yes >> `"$out`" 2>&1",
             "echo %ERRORLEVEL% > `"$done`"")
           runas /trustlevel:0x20000 $cmd
           $deadline = (Get-Date).AddMinutes(15)
