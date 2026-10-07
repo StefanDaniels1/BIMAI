@@ -28,6 +28,12 @@ host enforces its own contract (queries roll back; changes need approval in Revi
   /norestart` from one elevated PowerShell, like the Civil 3D bridge install. Then pyRevit's checks pass
   and its installer runs unelevated without prompts.
 
+- **Never as administrator.** Run elevated, pyRevit's per-user installer takes its "admin" path, fails to
+  update the original user's PATH and shows a plain `MsgBox` that `/SUPPRESSMSGBOXES` doesn't hide: the
+  install hangs (seen in CI). bimai refuses to install when elevated; CI runs it with a standard user token
+  (`runas /trustlevel:0x20000`). Real output confirmed in CI: `pyrevit --version` prints
+  `pyrevit v7.0.0.26278+2233.<hash>`; `pyrevit agent status` prints `Agent host: enabled (policy: ask, ...)`.
+
 ## Risks / Trade-offs
 
 - pyRevit's agent runtime is experimental (validated on Revit 2024 and 2025) → the guide says so, and

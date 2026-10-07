@@ -97,7 +97,7 @@ class FakePC:
         if cmd[0] in (self.user_exe, self.admin_exe):
             if cmd[1:] == ["--version"]:
                 ok = self.version is not None
-                return SimpleNamespace(returncode=0 if ok else 1, stdout=f"pyRevit CLI v{self.version}+2233\n" if ok else "",
+                return SimpleNamespace(returncode=0 if ok else 1, stdout=f"pyrevit v{self.version}+2233.ccc49398b26f\nYou have the latest version.\n" if ok else "",
                                        stderr="" if ok else "You must install .NET to run this application.")
             if cmd[1:] == ["configs", "agent", "enable"]:
                 self.enable()

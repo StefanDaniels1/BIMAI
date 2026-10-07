@@ -14,4 +14,4 @@
 ## 3. Docs and checks
 
 - [x] 3.1 `guides/pyrevit.mdx`, connections page. Verify: check_docs, site build.
-- [ ] 3.2 Final check: pytest (strict), openspec validate --all --strict, CI green.
+- [x] 3.2 Final check: pytest (strict), openspec validate --all --strict, CI green.
