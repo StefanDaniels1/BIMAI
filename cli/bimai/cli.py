@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 from bimai import __version__
-from bimai import apps, bridges
+from bimai import apps, bridges, openroads
 from bimai import interview as onboarding
 from bimai import update as self_update
 from bimai import connections as conn
@@ -409,12 +409,13 @@ def cmd_connect(args: argparse.Namespace) -> int:
     _sign_in(name, kind, interactive)
     _regenerate_team(root, args.seat)
     server = servers.get(name)
-    if server and server.bundle and server.port:
+    if server and _is_bridge(server) and server.port:
         port = args.port or server.port
+        program = server.program or "the program"
         if bridges.probe(port) is not None:
-            print(f"✓ {server.label} answers: Civil 3D is running with the bridge.")
+            print(f"✓ {server.label} answers: {program} is running with the bridge.")
         else:
-            print(f"  {server.label} starts together with Civil 3D: open Civil 3D with a drawing to use it.")
+            print(f"  {server.label} starts together with {program}: open {program} with a drawing to use it.")
     print("Start a new Claude Code session to use it. Claude Code asks once to approve servers in .mcp.json.")
     return 0
 
@@ -443,13 +444,22 @@ def _offer_bridge_install(server, interactive: bool, install: bool, missing: Exc
         if not interactive:
             return False
         question = (f"{server.label} isn't installed yet. Install it now? Windows will ask for permission once, "
-                    "because it is installed in the folder Civil 3D trusts. (Y/n)")
+                    f"because it is registered in a folder {server.program or 'the program'} trusts. (Y/n)")
         if not _ask(question, "y").lower().startswith("y"):
             return False
     # Without a person to answer (--yes), "close Civil 3D first?" can't be answered: stop instead of waiting.
     ask = (lambda q: _ask(q, "y").lower().startswith("y")) if interactive else (lambda q: False)
-    bridges.install(server, ask=ask, say=print)
+    _installer(server).install(server, ask=ask, say=print)
     return True
+
+
+def _is_bridge(server) -> bool:
+    return bool(server.bundle or server.builds)
+
+
+def _installer(server):
+    """The module that installs this bimai bridge: a ready-made bundle, or built on this PC (OpenRoads)."""
+    return openroads if server.builds == "openroads" else bridges
 
 
 def cmd_disconnect(args: argparse.Namespace) -> int:
@@ -538,17 +548,32 @@ def cmd_auth(args: argparse.Namespace) -> int:
 def cmd_bridge(args: argparse.Namespace) -> int:
     servers = conn.load_servers()
     server = servers.get(args.server)
-    if server is None or not server.bundle:
-        names = ", ".join(s.name for s in servers.values() if s.bundle)
+    if server is None or not _is_bridge(server):
+        names = ", ".join(s.name for s in servers.values() if _is_bridge(s))
         print(f"error: '{args.server}' is not a bimai bridge. Bridges: {names}", file=sys.stderr)
         return 2
-    ask = (lambda q: True) if args.yes else (lambda q: _ask(q, "y").lower().startswith("y"))
+    # With --yes nobody can answer "close the program first?", so that answer is no (stop, don't wait).
+    ask = (lambda q: False) if args.yes else (lambda q: _ask(q, "y").lower().startswith("y"))
+    installer = _installer(server)
     try:
         if args.action == "install":
-            bridges.install(server, zip_path=args.from_zip, ask=ask, say=print)
+            installer.install(server, zip_path=args.from_zip, ask=ask, say=print)
             print(f"Next, in your project folder: bimai connect {server.name}")
         elif args.action == "uninstall":
-            bridges.uninstall(server, say=print)
+            installer.uninstall(server, say=print)
+        elif server.builds:
+            st = installer.status(server)
+            if not st["openroads"]:
+                print(f"{server.label}: no OpenRoads Designer found on this computer.")
+            elif not st["installed"]:
+                print(f"{server.label}: not installed (OpenRoads found: {', '.join(st['openroads'])}). "
+                      f"Install it with: bimai bridge install {server.name}")
+            else:
+                for name, version in st["versions"].items():
+                    print(f"{server.label}: installed for {name}, version {version or '?'}")
+                if st["update_available"]:
+                    print(f"  Version {st['latest']} is available: bimai bridge install {server.name}")
+                print("  running: yes" if st["running"] else f"  running: no (it starts with {server.program})")
         else:
             st = bridges.status(server)
             if not st["installed"]:
@@ -557,7 +582,7 @@ def cmd_bridge(args: argparse.Namespace) -> int:
                 update = f" (version {st['latest']} is available: bimai bridge install {server.name})" if st["update_available"] else ""
                 print(f"{server.label}: installed, version {st['version']}{update}")
                 print(f"  {st['path']}")
-                print("  running: yes" if st["running"] else "  running: no (it starts with Civil 3D)")
+                print("  running: yes" if st["running"] else f"  running: no (it starts with {server.program or 'Civil 3D'})")
     except bridges.BridgeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

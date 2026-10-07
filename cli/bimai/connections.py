@@ -62,6 +62,8 @@ class Server:
     bundle: str = ""        # an Autodesk plug-in bundle that must be installed (bimai bridges)
     port: int = 0           # default port for local servers whose port can be changed (--port)
     release: dict = field(default_factory=dict)   # published bridge release: repo, tag, asset, version, sha256
+    builds: str = ""        # a bimai bridge built on the user's PC (openroads), see openroads.py
+    program: str = ""       # the desktop program a local bridge runs in, for messages
     write_tools: tuple[str, ...] = ()   # tools that change data: denied unless the person allows changes
     app: dict = field(default_factory=dict)       # a vendor app bimai can install (pyRevit), see apps.py
 
@@ -90,6 +92,7 @@ def load_servers() -> dict[str, Server]:
             regions=s.get("regions") or {}, needs=s.get("needs", ""), unavailable=s.get("unavailable", ""),
             default=bool(s.get("default")), bundle=s.get("bundle", ""), port=int(s.get("port") or 0),
             release=s.get("release") or {}, write_tools=tuple(s.get("write_tools") or ()), app=s.get("app") or {},
+            builds=s.get("builds", ""), program=s.get("program", ""),
         )
     return servers
 
@@ -123,6 +126,11 @@ def server_config(server: Server, *, region: str | None = None, port: int | None
         raise ConnectError(server.unavailable)
     if platform not in server.platforms:
         raise ConnectError(f"{server.label} only works on {_where(server)}.")
+    if server.builds == "openroads":
+        from bimai import openroads     # openroads imports this module
+        if not openroads.installed(environ, exists):
+            raise BridgeMissing(f"{server.label} isn't installed on this computer. It needs: {server.needs}. "
+                                f"Install it with: bimai bridge install {server.name}  (guide: {server.docs})")
     if server.bundle and not any(exists(f"{folder}\\{server.bundle}") for folder in plugin_folders(environ)):
         raise BridgeMissing(f"{server.label} isn't installed on this computer. It needs: {server.needs}. "
                             f"Install it with: bimai bridge install {server.name}  (guide: {server.docs})")
