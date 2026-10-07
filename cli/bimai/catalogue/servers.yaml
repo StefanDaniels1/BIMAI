@@ -178,7 +178,7 @@ openroads:
     tag: openroads-bridge-v0.1.0
     asset: bimai-openroads-bridge.zip
     version: 0.1.0
-    sha256:
+    sha256: 26b76386fb0476eabeaf36f3696dad844b8addf22756c4540656a4ed4e08dd46
   config: { type: http, url: "http://127.0.0.1:{port}/mcp" }
 
 microstation:

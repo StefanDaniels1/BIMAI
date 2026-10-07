@@ -338,5 +338,6 @@ def test_bridge_commands(win, monkeypatch, capsys, tmp_path):
 
 
 def test_published_release_is_pinned():
-    rel = bridges.release_of(conn.load_servers()["civil3d"])
-    assert rel.sha256 and len(rel.sha256) == 64
+    for name in ("civil3d", "openroads"):
+        rel = bridges.release_of(conn.load_servers()[name])
+        assert rel.sha256 and len(rel.sha256) == 64, name
