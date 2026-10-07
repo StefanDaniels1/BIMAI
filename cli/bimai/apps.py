@@ -103,6 +103,12 @@ def missing_prerequisites(server: conn.Server, environ=None, listdir: Callable |
     return missing
 
 
+def install_log(app: dict, environ) -> str:
+    """Where the app's installer writes its log (kept after bimai finishes, for the person or IT)."""
+    temp = environ.get("TEMP") or tempfile.gettempdir()
+    return os.path.join(temp, f"bimai-{app['name'].lower()}-install.log")
+
+
 # ------------------------------------------------------------------ download, verify, run
 
 def _fetch(url: str, dest: Path, algorithm: str, expected: str, opener: Callable) -> Path:
@@ -181,14 +187,15 @@ def setup(server: conn.Server, *, ask: Callable[[str], bool], say: Callable[[str
             path = _fetch(installer["url"], work / Path(installer["url"]).name.replace("%2B", "+"), "sha256",
                           installer["sha256"], opener)
             say(f"✓ Download verified. Installing {app['name']} for your user (no administrator rights needed)…")
+            log = install_log(app, environ)
             try:
-                out = run([str(path), *installer.get("args", [])], capture_output=True, encoding="utf-8",
-                          errors="replace", timeout=900)
+                out = run([str(path), *installer.get("args", []), f"/LOG={log}"], capture_output=True,
+                          encoding="utf-8", errors="replace", timeout=600)
             except (OSError, subprocess.SubprocessError) as exc:
-                raise BridgeError(f"The {app['name']} installer didn't run: {exc}") from exc
+                raise BridgeError(f"The {app['name']} installer didn't finish ({exc}). Its log: {log}") from exc
             if out.returncode != 0:
-                raise BridgeError(f"The {app['name']} installer stopped with code {out.returncode}. "
-                                  f"Try installing it by hand: {installer['url']}")
+                raise BridgeError(f"The {app['name']} installer stopped with code {out.returncode}. Its log: {log}. "
+                                  f"You can also install it by hand: {installer['url']}")
         exe = installed_exe(server, environ, exists)
         version = version_of(exe, run) if exe else None
         if not (version and _at_least(version, app["min_version"])):

@@ -61,7 +61,10 @@ class FakePC:
         self.config.write_text("[core]\nchecks = true\n\n[agent]\nenabled = true\n", encoding="utf-8")
 
     def exists(self, path):
-        return path in self.files or ("\\" not in str(path) and REAL_EXISTS(path))
+        """Fake inside the fake AppData and Program Files; the real file system elsewhere (the project)."""
+        if str(path).startswith(tuple(self.environ.values())):
+            return str(path) in self.files
+        return REAL_EXISTS(path)
 
     def listdir(self, path):
         if path == self.dotnet:

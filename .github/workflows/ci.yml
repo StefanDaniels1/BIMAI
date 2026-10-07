@@ -102,6 +102,9 @@ jobs:
     # elevated step; the runner is an administrator with UAC off), pyRevit's per-user installer, the agent
     # switch, and the read-only connection.
     runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -112,6 +115,8 @@ jobs:
         run: |
           pip install -e . --quiet
           Get-ChildItem "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App" -ErrorAction SilentlyContinue | ForEach-Object Name
+          $wv = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          "WebView2: " + ((Get-ItemProperty $wv -ErrorAction SilentlyContinue).pv ?? "not installed")
           $project = Join-Path $env:RUNNER_TEMP "revit-project"
           bimai init $project --person Anna --role "BIM modeller" --tools revit --yes
           if ($LASTEXITCODE -ne 0) { throw "init failed" }
@@ -127,6 +132,10 @@ jobs:
           if ($settings.permissions.deny -notcontains "mcp__pyrevit__run_modify") { throw "not read-only" }
           bimai connect pyrevit --path $project --yes
           if ($LASTEXITCODE -ne 0) { throw "a second connect should find everything ready" }
+      - name: pyRevit installer log
+        if: always()
+        shell: pwsh
+        run: Get-Content "$env:TEMP\bimai-pyrevit-install.log" -Tail 80 -ErrorAction SilentlyContinue
 
   install:
     # The one-line installers (docs/public/install.sh and install.ps1) on clean runners, installing the
