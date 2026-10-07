@@ -1,0 +1,81 @@
+---
+title: Voice
+description: Let your team speak its replies aloud, with a British voice you choose, using your own ElevenLabs key.
+---
+
+<Status state="available">Works on Windows, macOS and Linux with your own ElevenLabs account. Off until you switch it on.</Status>
+
+With voice on, your team tells you what it found while your hands are in the model: a short spoken
+briefing after each reply, and a line when it needs your approval. It works through Claude Code's hooks,
+in the background, so Claude never waits for the voice.
+
+## What you need
+
+An [ElevenLabs](https://elevenlabs.io) account and an API key of your own. bimai doesn't include a key:
+everyone brings theirs. Make the key with only what bimai needs:
+
+| Setting | Choose |
+|---|---|
+| **Text to Speech** | Access |
+| **Voices** | Read |
+| Everything else | No Access |
+| **Usage limit** | a monthly cap you're comfortable with (a spoken reply is up to about 400 characters) |
+| **Auto-disable if leaked** | keep on |
+
+## Set it up
+
+In a terminal:
+
+```bash
+bimai voice setup
+```
+
+1. bimai says what is sent to ElevenLabs and asks you to continue.
+2. Paste your key (it isn't shown while you type). It goes into your computer's keychain, never into a
+   project file.
+3. Choose a voice. bimai lists the **British voices** in your ElevenLabs account first and suggests a calm
+   one. You can also paste the ID of any voice in your own ElevenLabs library.
+
+Hear it:
+
+```bash
+bimai voice test
+```
+
+Then switch it on in a project, and start a new Claude Code session:
+
+```bash
+bimai voice on      # in the project folder
+bimai voice off     # to switch it off again
+bimai voice status  # voice, key, on or off, and the log
+```
+
+Voice is **only for you**. bimai puts the hooks in `.claude/settings.local.json`, which isn't shared with
+your team, and keeps your voice choice in your own bimai settings.
+
+## What it says
+
+- **After each reply:** the first sentences, without code, tables and links, up to about 400 characters.
+  A new reply stops the previous one.
+- **When the team needs you:** for example *"I need your approval. Bash requires permission to run the
+  tests."*
+
+If something goes wrong (no internet, the usage limit is reached) the voice simply stays quiet; the reason
+is in the log (`bimai voice status` shows where).
+
+## A JARVIS voice?
+
+You'll find "JARVIS" voices in ElevenLabs' community library. They copy a film character's voice, and
+the actor's, without consent, which ElevenLabs' [use policy](https://elevenlabs.io/use-policy) doesn't
+allow. bimai doesn't offer them. Two good ways to get the feel:
+
+- a **British voice** from ElevenLabs' own voices (setup suggests one), or
+- an **original voice** made with ElevenLabs' **Voice Design**, from a description such as *"a calm,
+  refined British AI butler, dry wit, measured pace"*. Paste its voice ID during `bimai voice setup`.
+
+## Privacy and costs
+
+What is spoken is sent to ElevenLabs: the first sentences of each reply, which can contain project
+details. ElevenLabs' terms and your plan apply. Each spoken reply costs ElevenLabs credits (about one per
+character with the default Flash model); the 400-character limit keeps that low. To change the limit or
+the model, edit `max_chars` or `model` in `voice.json` (`bimai voice status` shows the folder).

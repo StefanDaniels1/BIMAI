@@ -13,6 +13,7 @@ from pathlib import Path
 from bimai import __version__
 from bimai import apps, bridges, openroads
 from bimai import interview as onboarding
+from bimai import voice
 from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
@@ -610,6 +611,117 @@ def cmd_update(args: argparse.Namespace) -> int:
     return code
 
 
+def cmd_voice(args: argparse.Namespace) -> int:
+    if args.action == "hook":
+        return voice.hook(sys.stdin.read())
+    try:
+        if args.action == "setup":
+            return _voice_setup(args)
+        if args.action == "test":
+            voice.say(" ".join(args.text) or "Good evening. Your bimai team is ready when you are.")
+            print("✓ Spoken.")
+            return 0
+        root = args.path.resolve()
+        settings_path = root / ".claude" / "settings.local.json"
+        settings = conn.read_json(settings_path)
+        config = voice.load_config()
+        if args.action == "on":
+            if not config.get("voice_id") or not voice.get_key():
+                print("error: set up your voice first: bimai voice setup", file=sys.stderr)
+                return 2
+            settings_path.parent.mkdir(parents=True, exist_ok=True)
+            settings_path.write_text(conn.json_text(voice.settings_with_hooks(settings, voice.hook_command())), encoding="utf-8")
+            _gitignore(root, ".claude/settings.local.json")
+            print(f"✓ Voice on in this project ({config.get('voice_name') or config['voice_id']}). "
+                  "Only for you: it's in .claude/settings.local.json, which isn't shared.")
+            print("  Start a new Claude Code session to hear it. Switch off with: bimai voice off")
+        elif args.action == "off":
+            if voice.is_on(settings):
+                settings_path.write_text(conn.json_text(voice.settings_without_hooks(settings)), encoding="utf-8")
+                print("✓ Voice off in this project.")
+            else:
+                print("Voice is not on in this project.")
+        else:
+            print(f"Voice: {config.get('voice_name') or 'not chosen'}" + (f" ({config['voice_id']})" if config.get("voice_id") else ""))
+            print(f"  Model: {config.get('model') or voice.DEFAULT_MODEL}, at most {config.get('max_chars') or voice.DEFAULT_MAX_CHARS} characters per reply")
+            print(f"  ElevenLabs key: {'stored in your keychain' if voice.get_key() else 'not stored (bimai voice setup)'}")
+            print(f"  In this project: {'on' if voice.is_on(settings) else 'off'}")
+            print(f"  Log: {voice.config_dir() / 'voice.log'}")
+    except voice.VoiceError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except conn.McpJsonError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    return 0
+
+
+def _voice_setup(args: argparse.Namespace) -> int:
+    print(voice.CONSENT)
+    if not args.yes and not _ask("Continue? (Y/n)", "y").lower().startswith("y"):
+        print("Nothing saved.")
+        return 1
+    if args.key_stdin:
+        key = sys.stdin.readline().strip()
+    else:
+        import getpass
+        key = getpass.getpass("ElevenLabs API key (Text to Speech: Access, Voices: Read; input hidden, Enter keeps "
+                              "the stored one): ").strip()
+    key = key or voice.get_key() or ""
+    if not key:
+        print("error: no key given", file=sys.stderr)
+        return 2
+    try:
+        voices = voice.list_voices(key)
+    except voice.KeyRejected as exc:
+        print(f"error: {exc} Nothing was saved.", file=sys.stderr)
+        return 2
+    if not voices:
+        print("error: this ElevenLabs account has no voices to choose from.", file=sys.stderr)
+        return 2
+    chosen = None
+    if args.voice:
+        wanted = args.voice.strip().lower()
+        chosen = next((v for v in voices if wanted in (v["voice_id"].lower(), v["name"].lower())), None) or \
+            {"voice_id": args.voice.strip(), "name": args.voice.strip()}
+    else:
+        suggestion = voice.suggest(voices)
+        if args.yes:
+            chosen = suggestion
+        else:
+            shown = [v for v in voices if voice.is_british(v)][:10] or voices[:10]
+            print("\nVoices in your ElevenLabs account" + (" (British)" if voice.is_british(shown[0]) else "") + ":")
+            for i, v in enumerate(shown, 1):
+                mark = "  (suggested)" if v is suggestion else ""
+                details = ", ".join(x for x in (v["gender"], v["accent"], v["description"]) if x)
+                print(f"  {i}. {v['name']}: {details}{mark}")
+            print("  Or paste a voice ID from your own ElevenLabs library (e.g. one made with Voice Design).")
+            default = str(shown.index(suggestion) + 1) if suggestion in shown else "1"
+            answer = _ask("Which voice?", default).strip()
+            if answer.isdigit() and 1 <= int(answer) <= len(shown):
+                chosen = shown[int(answer) - 1]
+            else:
+                chosen = next((v for v in voices if answer.lower() in (v["voice_id"].lower(), v["name"].lower())), None) or \
+                    {"voice_id": answer, "name": answer}
+    voice.store_key(key)
+    config = {**voice.load_config(), "voice_id": chosen["voice_id"], "voice_name": chosen["name"]}
+    config.setdefault("model", voice.DEFAULT_MODEL)
+    config.setdefault("max_chars", voice.DEFAULT_MAX_CHARS)
+    config.setdefault("notifications", True)
+    path = voice.save_config(config)
+    print(f"✓ Voice: {chosen['name']}. Key stored in your keychain; settings in {path}.")
+    print("  Hear it: bimai voice test    Switch it on in a project: bimai voice on")
+    return 0
+
+
+def _gitignore(root: Path, line: str) -> None:
+    path = root / ".gitignore"
+    current = path.read_text(encoding="utf-8") if path.exists() else ""
+    if line not in {l.strip() for l in current.splitlines()}:
+        prefix = (current.rstrip("\n") + "\n") if current.strip() else ""
+        path.write_text(prefix + line + "\n", encoding="utf-8")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bimai", description="An open-source BIM team that lives in your editor.")
     parser.add_argument("--version", action="version", version=f"bimai {__version__}")
@@ -675,6 +787,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--from", dest="from_zip", type=Path, help="install from a zip you have instead of downloading")
     p.add_argument("--yes", "-y", action="store_true", help="don't ask bimai's questions (Windows still asks for permission)")
     p.set_defaults(func=cmd_bridge)
+
+    p = sub.add_parser("voice", help="spoken replies with your own ElevenLabs key: setup, on, off, status, test")
+    p.add_argument("action", choices=["setup", "on", "off", "status", "test", "hook"])
+    p.add_argument("text", nargs="*", help="for test: what to say")
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--voice", help="for setup: a voice name or ID from your ElevenLabs account")
+    p.add_argument("--key-stdin", action="store_true", help="for setup: read the key from standard input")
+    p.add_argument("--yes", "-y", action="store_true", help="for setup: accept and take the suggested voice")
+    p.set_defaults(func=cmd_voice)
 
     p = sub.add_parser("auth", help="sign in to servers: login, status, logout")
     p.add_argument("action", choices=["login", "status", "logout", "headers"],
