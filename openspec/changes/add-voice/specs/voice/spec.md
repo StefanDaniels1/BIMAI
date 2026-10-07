@@ -30,8 +30,8 @@ sure that file is gitignored. `bimai voice off` SHALL remove exactly those hooks
 - **THEN** `.claude/settings.local.json` is as it was before
 
 ### Requirement: Spoken text
-For a `Stop` event the hook SHALL speak the reply's first sentences without code blocks, tables, inline
-code, Markdown markers and URLs, up to the configured limit (default 400 characters). For a
+For a `Stop` event the hook SHALL speak the reply's first sentences without code blocks, tables, Markdown
+markers (inline code keeps its words) and URLs, up to the configured limit (default 400 characters). For a
 `Notification` it SHALL speak a short sentence for permission and input requests. Any failure SHALL be
 logged and the hook SHALL exit 0.
 
