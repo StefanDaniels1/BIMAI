@@ -76,7 +76,8 @@ def test_catalogue_is_complete_and_consistent():
             "civil3d"} <= set(servers)
     for s in servers.values():
         assert s.label and s.vendor, s.name
-        official = {"Autodesk": "https://help.autodesk.com/", "bimai": "https://docs.bimai.nl/"}
+        official = {"Autodesk": "https://help.autodesk.com/", "bimai": "https://docs.bimai.nl/",
+                    "pyRevit Labs": "https://docs.bimai.nl/"}
         assert s.docs.startswith(official[s.vendor]), s.name
         assert set(s.provides) <= known, s.name
         if s.unavailable:
@@ -521,8 +522,8 @@ def test_tool_connection_statuses():
     def status(tools, platform, exists=lambda p: False):
         return {c["server"]: c["status"] for c in conn.tool_connections(tools, platform=platform, exists=exists, environ={})}
     assert status(["autocad"], "windows") == {"autocad-civil3d": "unavailable"}
-    assert status(["revit"], "windows") == {"revit": "needs-app"}
-    assert status(["revit"], "linux") == {"revit": "other-platform"}
+    assert status(["revit"], "windows") == {"revit": "needs-app", "pyrevit": "needs-install"}
+    assert status(["revit"], "linux") == {"revit": "other-platform", "pyrevit": "other-platform"}
     assert status(["ifc", "acc"], "windows") == {}                     # no server without sign-in for these
     note = conn.option_note(conn.tool_connections(["civil3d"], platform="macos")[0])
     assert note.startswith("Windows only")

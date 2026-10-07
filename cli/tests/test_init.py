@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from bimai import connections as conn
 from bimai.cli import main
 from bimai.init import BLOCK_END, BLOCK_START, Answers, apply, plan_files
 from bimai.scan import scan
@@ -286,6 +287,7 @@ def test_scan_prefills_tools(tmp_path, capsys):
 
 
 def test_interactive_shows_found_tools_and_uses_defaults(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(conn, "PLATFORM", "linux")          # no connection setup offered at the end
     touch(tmp_path, "models/bridge.rvt")
     replies = iter(["", "", "BIM modeller", "", "", "", "", ""])   # name, person, role, goals, tools, vscode, lang, write
     monkeypatch.setattr("builtins.input", lambda *_: next(replies))

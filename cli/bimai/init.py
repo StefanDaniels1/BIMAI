@@ -16,7 +16,7 @@ import yaml
 
 from bimai.claude import SeatContext, plan_claude_files
 from bimai.connections import (Connection, McpJsonError, connections_from, json_text, load_servers, mcp_with,
-                               read_json, server_config, tool_connections)
+                               read_json, server_config, settings_with_rules, tool_connections, write_rules)
 from bimai.files import BLOCK_END, BLOCK_START, FileWrite, apply, plan_write  # noqa: F401 (re-exported)
 from bimai.scan import Scan
 from bimai.team import Catalogue, Team, load_catalogue
@@ -99,32 +99,34 @@ def seat_context(a: Answers, team: Team, cat: Catalogue, conns: list[Connection]
                        connections=conns or [], tools=a.tools)
 
 
-def _plan_mcp(root: Path, tools: list[str]) -> tuple[FileWrite, list[Connection]]:
+def _plan_mcp(root: Path, tools: list[str]) -> tuple[FileWrite, list[Connection], list[str]]:
     """Every project gets the default servers (Autodesk Product Help) and the servers of chosen tools that are
-    ready on this computer; servers already listed are kept."""
+    ready on this computer; servers already listed are kept. Also returns the deny rules for the write tools
+    of the servers it adds (connected read-only)."""
     path = root / ".mcp.json"
     try:
         data = read_json(path)
     except McpJsonError as exc:
-        return FileWrite(".mcp.json", "", "conflict", str(exc)), []
-    new = data
+        return FileWrite(".mcp.json", "", "conflict", str(exc)), [], []
+    new, deny = data, []
     for server in load_servers().values():
         if server.default and server.name not in (data.get("mcpServers") or {}):
             new = mcp_with(new, server.name, server_config(server))
     for c in tool_connections(tools):
         if c["status"] == "ready" and c["server"] not in (data.get("mcpServers") or {}):
             new = mcp_with(new, c["server"], c["config"])
+            deny += write_rules(load_servers()[c["server"]])
     if new is data and path.exists():
-        return FileWrite(".mcp.json", path.read_text(encoding="utf-8"), "unchanged"), connections_from(data)
+        return FileWrite(".mcp.json", path.read_text(encoding="utf-8"), "unchanged"), connections_from(data), []
     return (plan_write(root, ".mcp.json", json_text(new), merge_note="bimai's servers added; other servers kept"),
-            connections_from(new))
+            connections_from(new), deny)
 
 
 def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None = None) -> list[FileWrite]:
     root = Path(root).resolve()
     cat = cat or load_catalogue()
     plan = [plan_write(root, rel, content) for rel, content in _bimai_files(a, team, cat).items()]
-    mcp, conns = _plan_mcp(root, a.tools)
+    mcp, conns, deny = _plan_mcp(root, a.tools)
     plan += plan_claude_files(root, seat_context(a, team, cat, conns), cat)
     plan.append(mcp)
 
@@ -136,16 +138,20 @@ def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None =
             plan.append(FileWrite(".claude/settings.json", "", "conflict", "not valid JSON; left as is"))
             data = None
         if isinstance(data, dict):
-            if "model" in data:
-                plan.append(FileWrite(".claude/settings.json", "", "unchanged", f"model stays '{data['model']}'"))
+            notes = [f"model stays '{data['model']}'" if "model" in data else "model set to sonnet"]
+            new = settings_with_rules({"model": "sonnet", **data}, "deny", deny) if deny else {"model": "sonnet", **data}
+            if deny:
+                notes.append("read-only rules added")
+            if new == data:
+                plan.append(FileWrite(".claude/settings.json", "", "unchanged", notes[0]))
             else:
-                data["model"] = "sonnet"
-                plan.append(FileWrite(".claude/settings.json", json.dumps(data, indent=2) + "\n", "update",
-                                      "model set to sonnet; other settings kept"))
+                plan.append(FileWrite(".claude/settings.json", json.dumps(new, indent=2) + "\n", "update",
+                                      "; ".join(notes) + "; other settings kept"))
         elif data is not None:
             plan.append(FileWrite(".claude/settings.json", "", "conflict", "not a JSON object; left as is"))
     else:
-        plan.append(FileWrite(".claude/settings.json", json.dumps({"model": "sonnet"}, indent=2) + "\n", "create"))
+        new = settings_with_rules({"model": "sonnet"}, "deny", deny) if deny else {"model": "sonnet"}
+        plan.append(FileWrite(".claude/settings.json", json.dumps(new, indent=2) + "\n", "create"))
 
     gitignore = root / ".gitignore"
     current = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""

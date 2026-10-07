@@ -97,6 +97,59 @@ jobs:
           name: bimai-civil3d-bridge
           path: bridges/civil3d/dist/bimai-civil3d-bridge.zip
 
+  pyrevit:
+    # Sets up the real pyRevit 7.0 the way a Revit user would: Microsoft's .NET runtimes when missing (one
+    # elevated step; the runner is an administrator with UAC off), pyRevit's per-user installer, the agent
+    # switch, and the read-only connection.
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pyRevit and connect it, as a user would
+        shell: pwsh
+        run: |
+          pip install -e . --quiet
+          Get-ChildItem "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App" -ErrorAction SilentlyContinue | ForEach-Object Name
+          $wv = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          "WebView2: " + ((Get-ItemProperty $wv -ErrorAction SilentlyContinue).pv ?? "not installed")
+          $project = Join-Path $env:USERPROFILE "revit-project"
+          # As a normal user would: not as administrator (GitHub's runner is one). runas /trustlevel starts
+          # it with a standard user token; it runs detached, so its output goes to a file.
+          $bimai = (Get-Command bimai).Source
+          $out = Join-Path $env:RUNNER_TEMP "connect.txt"; $done = Join-Path $env:RUNNER_TEMP "connect.done"
+          $cmd = Join-Path $env:RUNNER_TEMP "connect.cmd"
+          Set-Content $cmd -Encoding ascii -Value @(
+            '@echo off', 'set PYTHONUNBUFFERED=1',
+            "`"$bimai`" init `"$project`" --person Anna --role `"BIM modeller`" --tools revit --yes > `"$out`" 2>&1",
+            "if errorlevel 1 (echo 1 > `"$done`" & exit /b 1)",
+            "`"$bimai`" connect pyrevit --path `"$project`" --install --yes >> `"$out`" 2>&1",
+            "echo %ERRORLEVEL% > `"$done`"")
+          runas /trustlevel:0x20000 $cmd
+          $deadline = (Get-Date).AddMinutes(15)
+          while (-not (Test-Path $done) -and (Get-Date) -lt $deadline) { Start-Sleep 5 }
+          Get-Content $out -ErrorAction SilentlyContinue
+          if (-not (Test-Path $done)) { throw "connect didn't finish" }
+          if ((Get-Content $done).Trim() -ne "0") { throw "connect failed" }
+          $exe = "$env:APPDATA\pyRevit-Master\bin\pyrevit.exe"
+          & $exe --version
+          if ($LASTEXITCODE -ne 0) { throw "pyrevit doesn't start" }
+          & $exe agent status
+          $mcp = Get-Content (Join-Path $project ".mcp.json") -Raw | ConvertFrom-Json
+          if ($mcp.mcpServers.pyrevit.command -ne $exe) { throw "pyrevit not in .mcp.json" }
+          $settings = Get-Content (Join-Path $project ".claude\settings.json") -Raw | ConvertFrom-Json
+          if ($settings.permissions.deny -notcontains "mcp__pyrevit__run_modify") { throw "not read-only" }
+          bimai connect pyrevit --path $project --yes
+          if ($LASTEXITCODE -ne 0) { throw "a second connect should find everything ready" }
+      - name: pyRevit installer log
+        if: always()
+        shell: pwsh
+        run: Get-Content "$env:TEMP\bimai-pyrevit-install.log" -Tail 80 -ErrorAction SilentlyContinue
+
   install:
     # The one-line installers (docs/public/install.sh and install.ps1) on clean runners, installing the
     # freshly built package; then bimai must work from a new shell, as it would for a user.
