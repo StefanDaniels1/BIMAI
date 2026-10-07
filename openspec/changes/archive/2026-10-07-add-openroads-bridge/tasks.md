@@ -2,7 +2,7 @@
 
 ## 1. Verification inside OpenRoads (handed over)
 
-- [ ] 1.1 An OpenRoads user follows `bridges/openroads/TESTING.md` (install, autoload, every tool, values compared). Verify: their report; fixes in a follow-up change. Until then the bridge is labelled beta.
+- [x] 1.1 Handed over: an OpenRoads user follows `bridges/openroads/TESTING.md` (install, autoload, every tool, values compared). Verify: their report; fixes in a follow-up change (the bridge stays beta until then). Until then the bridge is labelled beta.
 
 ## 2. Bridge
 
@@ -18,4 +18,4 @@
 ## 4. Docs and checks
 
 - [x] 4.1 `guides/openroads-bridge.mdx`, connections page, "beta" badge, TESTING.md. Verify: check_docs, site build.
-- [ ] 4.2 Final check: pytest (strict), openspec validate --all --strict, CI green; pin the release hash.
+- [x] 4.2 Final check: pytest (strict), openspec validate --all --strict, CI green; pin the release hash.
