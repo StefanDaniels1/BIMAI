@@ -116,7 +116,7 @@ jobs:
           $ord = Join-Path $fake "Bentley\OpenRoads Designer 2025\OpenRoadsDesigner"
           New-Item -ItemType Directory -Force $ord | Out-Null
           Set-Content (Join-Path $ord "OpenRoadsDesigner.exe") "stand-in"
-          & $csc /nologo /target:library /langversion:5 "/out:$ord\Bentley.MstnPlatformNET.dll" bridges/openroads/stubs/*.cs
+          & $csc /nologo /target:library /langversion:5 "/out:$ord\Bentley.MstnPlatformNET.dll" (Get-ChildItem bridges\openroads\stubs\*.cs | ForEach-Object FullName)
           if ($LASTEXITCODE -ne 0) { throw "stub didn't compile" }
           python bridges/openroads/pack.py bridges/openroads/dist/bimai-openroads-bridge.zip
 
@@ -134,7 +134,7 @@ jobs:
 
           $exe = Join-Path $env:RUNNER_TEMP "bimai-openroads-dev.exe"
           $sources = Get-ChildItem bridges/openroads/src/*.cs | Where-Object Name -ne "AddIn.cs" | ForEach-Object FullName
-          & $csc /nologo /target:exe /langversion:5 "/out:$exe" /r:System.Windows.Forms.dll @sources bridges/openroads/dev/DevHost.cs
+          & $csc /nologo /target:exe /langversion:5 "/out:$exe" /r:System.Windows.Forms.dll @sources (Resolve-Path bridges\openroads\dev\DevHost.cs).Path
           if ($LASTEXITCODE -ne 0) { throw "dev host didn't compile" }
           $env:BIMAI_OPENROADS_DEVHOST = $exe
           python -m pytest -q cli/tests/test_openroads_protocol.py
