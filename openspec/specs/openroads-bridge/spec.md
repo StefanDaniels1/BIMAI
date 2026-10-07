@@ -1,7 +1,9 @@
 # openroads-bridge Specification
 
 ## Purpose
-TBD - created by archiving change add-openroads-bridge. Update Purpose after archive.
+Give a team read-only access to the drawing open in Bentley OpenRoads Designer (alignments, profiles,
+corridors, terrains) through a local MCP bridge that bimai builds on the user's PC, because Bentley's API
+assemblies can't be redistributed. Beta until verified inside OpenRoads Designer.
 
 ## Requirements
 
