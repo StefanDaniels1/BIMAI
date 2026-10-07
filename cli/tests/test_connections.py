@@ -77,7 +77,7 @@ def test_catalogue_is_complete_and_consistent():
     for s in servers.values():
         assert s.label and s.vendor, s.name
         official = {"Autodesk": "https://help.autodesk.com/", "bimai": "https://docs.bimai.nl/",
-                    "pyRevit Labs": "https://docs.bimai.nl/"}
+                    "pyRevit Labs": "https://docs.bimai.nl/", "Bentley": "https://www.bentley.com/"}
         assert s.docs.startswith(official[s.vendor]), s.name
         assert set(s.provides) <= known, s.name
         if s.unavailable:

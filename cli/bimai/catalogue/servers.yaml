@@ -146,6 +146,7 @@ civil3d:
   matches_tools: [civil3d]
   # bimai's own local bridge (bridges/civil3d): an add-in inside Civil 3D serving MCP on loopback.
   bundle: bimai-civil3d.bundle
+  program: Civil 3D
   port: 27184
   # Published by .github/workflows/release-civil3d-bridge.yml. `bimai bridge install civil3d` only installs
   # a download whose SHA-256 equals this pin; set it after the release is published.
@@ -156,6 +157,41 @@ civil3d:
     version: 0.1.0
     sha256: 913d8e1d086f07ab8b70618769c2791e38f4a1d5440f54cc9f9acb166472e0c9
   config: { type: http, url: "http://127.0.0.1:{port}/mcp" }
+
+openroads:
+  label: OpenRoads Designer (bimai bridge, read-only, beta)
+  vendor: bimai
+  docs: https://docs.bimai.nl/docs/guides/openroads-bridge
+  auth: none
+  access: read-only
+  platforms: [windows]
+  needs: the bimai OpenRoads bridge and OpenRoads Designer 2023 or newer running with a drawing open
+  provides: [model.query, alignment.query, surface.query, corridor.query]
+  matches_tools: [openroads]
+  # bimai's own bridge (bridges/openroads), built on the user's PC against the OpenRoads Designer installed
+  # there: Bentley's API assemblies can't be redistributed. Beta: not yet verified inside OpenRoads.
+  builds: openroads
+  program: OpenRoads Designer
+  port: 27185
+  release:
+    repo: StefanDaniels1/BIMAI
+    tag: openroads-bridge-v0.1.0
+    asset: bimai-openroads-bridge.zip
+    version: 0.1.0
+    sha256:
+  config: { type: http, url: "http://127.0.0.1:{port}/mcp" }
+
+microstation:
+  label: MicroStation (Bentley)
+  vendor: Bentley
+  docs: https://www.bentley.com/en/infrastructure-ai/mcp-servers/
+  unavailable: >-
+    Bentley's MicroStation MCP server is in early access: Bentley gives access on request (through Bentley
+    sales), and it has no OpenRoads (civil) tools. For OpenRoads Designer, use bimai's own OpenRoads bridge:
+    bimai connect openroads.
+  platforms: [windows]
+  provides: []
+  matches_tools: []
 
 autocad-civil3d:
   label: AutoCAD and Civil 3D

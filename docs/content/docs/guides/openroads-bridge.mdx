@@ -1,0 +1,67 @@
+---
+title: OpenRoads bridge
+description: Let your team read the drawing open in Bentley OpenRoads Designer, read-only. Beta.
+---
+
+<Status state="beta">It follows Bentley's OpenRoads Designer SDK documentation. Please report what works.</Status>
+
+The bimai OpenRoads bridge is a small add-in for **Bentley OpenRoads Designer** (2023 and newer, Windows).
+It lets your team read the drawing you have open, and **never changes it**. Bentley's own MicroStation
+server is early access only and has no road design tools, so bimai brings its own.
+
+## What your team can read
+
+| Tool | What it gives |
+|---|---|
+| `get_drawing_info` | the file, model, OpenRoads version, and how many alignments, corridors and terrains |
+| `list_alignments` | every alignment: name, length, start and end station, feature definition, active profile |
+| `get_alignment` | one alignment's elements and points along it (distance, station, x, y) |
+| `locate_on_alignment` | the station and offset of a point (right positive, left negative) |
+| `list_profiles` / `get_profile` | an alignment's profiles, and a profile's control points (station, elevation) |
+| `list_corridors` | every corridor with its alignment and station range |
+| `list_terrains` / `get_terrain_elevation` | terrain models, and the elevation at a point |
+
+Distances and coordinates are in metres, as OpenRoads' civil model stores them. Stations are formatted
+the way OpenRoads shows them, including station equations.
+
+## Install it
+
+On Windows, with OpenRoads Designer closed, in your project folder:
+
+```bash
+bimai connect openroads
+```
+
+If you chose OpenRoads during onboarding, Claude offers this straight away. bimai then:
+
+1. **Finds your OpenRoads Designer** versions under `C:\Program Files\Bentley`.
+2. **Builds the bridge on your PC.** Bentley's programming files can't be shared, so bimai downloads the
+   bridge's source (checked against a pinned fingerprint) and compiles it with the C# compiler that comes
+   with Windows, against your own OpenRoads Designer. This also matches each OpenRoads version exactly.
+3. **Registers it** with one small file, `config\appl\bimai-openroads.cfg`, in your OpenRoads folder. That
+   is Bentley's documented way to load an add-in at startup.
+
+### Why Windows asks for permission
+
+Windows asks *"Do you want to allow this app to make changes to your device?"* once. OpenRoads only loads
+add-ins named in its configuration folder inside `C:\Program Files`, and only administrators may write
+there. bimai writes that one text file and changes nothing else; the bridge itself goes into
+`C:\ProgramData\bimai\openroads`. No admin rights? Choose *No* and ask IT to run the same command.
+
+Then start OpenRoads Designer with a drawing, and start a new Claude Code session.
+
+## Check and remove
+
+```bash
+bimai bridge status openroads      # installed for which OpenRoads versions, and whether it's running
+bimai bridge uninstall openroads   # removes the file and the bridge
+```
+
+The bridge writes a log to `%LOCALAPPDATA%\bimai\openroads-bridge.log`. In OpenRoads you can also load it by
+hand with the key-in `mdl load BimaiOpenRoads`.
+
+## Beta: help us verify it
+
+The bridge follows Bentley's OpenRoads Designer SDK documentation, but nobody has run it inside OpenRoads
+yet. If you use OpenRoads, the [test guide](https://github.com/StefanDaniels1/BIMAI/blob/main/bridges/openroads/TESTING.md)
+takes about 20 minutes. Report what you find in a [GitHub issue](https://github.com/StefanDaniels1/BIMAI/issues).

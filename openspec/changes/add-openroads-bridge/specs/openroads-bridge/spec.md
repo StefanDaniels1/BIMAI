@@ -12,10 +12,11 @@ SHALL never change the drawing. All model access SHALL happen on OpenRoads' main
 - **THEN** the bridge answers with its name, version and read-only tools
 
 ### Requirement: Civil tools
-The bridge SHALL offer `get_drawing_info`, `list_alignments`, `get_alignment`, `list_profiles`,
-`get_profile`, `list_corridors`, `get_corridor`, `list_terrains`, `get_terrain_elevation` and
-`list_drainage`, reading the active model's civil data through Bentley's CifNET SDK, with lengths and
-stations in the drawing's units and the units named in every result.
+The bridge SHALL offer `get_drawing_info`, `list_alignments`, `get_alignment`, `locate_on_alignment`,
+`list_profiles`, `get_profile`, `list_corridors`, `list_terrains` and `get_terrain_elevation`, reading the
+active model's civil data through Bentley's CifNET SDK by reflection, with distances in metres (named in
+the results) and stations formatted as OpenRoads shows them. Outside OpenRoads Designer every tool SHALL
+answer that it only works inside OpenRoads Designer.
 
 #### Scenario: Alignments
 - **WHEN** the open drawing has two alignments and the client calls `list_alignments`
@@ -28,8 +29,10 @@ stations in the drawing's units and the units named in every result.
 ### Requirement: Built on the user's PC
 `bimai bridge install openroads` SHALL download the pinned release (SHA-256 checked), find the installed
 OpenRoads Designer versions, compile the add-in with the .NET Framework's C# compiler against each found
-version's assemblies, install it per user, and register it to load automatically. A failed compile SHALL
-name the OpenRoads version and install nothing for it.
+version's assemblies, put it in `C:\ProgramData\bimai\openroads\<version>`, and register it to load
+automatically with one `config\appl` file per version, written in one Windows permission step explained
+beforehand. A failed compile SHALL name the OpenRoads version and install nothing for it; it SHALL refuse
+while OpenRoads Designer is running. `bimai bridge uninstall openroads` SHALL remove both.
 
 #### Scenario: Two versions installed
 - **WHEN** OpenRoads Designer 2024 and 2025 are installed

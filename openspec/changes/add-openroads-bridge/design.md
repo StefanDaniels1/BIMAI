@@ -20,29 +20,37 @@ From Bentley's OpenRoads Designer SDK documentation (docs.bentley.com, SDK Help 
 
 - **C# add-in on CifNET**, not Python: only CifNET reaches alignments, profiles, corridors and terrains.
 - **Compile on the user's PC.** Bentley's assemblies can't be redistributed, so the release carries the
-  add-in source plus `Bimai.Mcp.dll` built for net48 in CI. bimai compiles the add-in with
-  `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe` (present on every Windows 10/11 PC, C# 5)
-  against that PC's OpenRoads assemblies. The Bentley-facing code stays small and C# 5; the protocol and
-  tool logic live in `Bimai.Mcp` (modern C#, multi-targeted to net48). CI compiles the add-in with the
-  same compiler flags against stub assemblies that mirror the Bentley types we use, so syntax and C# 5
-  limits are checked on every push; the real API is checked on a real PC.
-- **Protocol library shared with Civil 3D:** `Bimai.Mcp` gets a `net48` target (System.Text.Json from
-  NuGet, MIT, shipped next to the add-in through `MS_ADDIN_DEPENDENCYPATH`).
-- **Main thread** as in Civil 3D: a hidden WinForms control created in `Run`, requests marshalled with
-  `BeginInvoke`; reads only, no transactions.
-- **Per-user install, autoload:** files under `%LOCALAPPDATA%\bimai\openroads\<OpenRoads version>`; the
-  autoload lines go into the per-user configuration if OpenRoads reads it (to verify), otherwise into
-  `…\OpenRoadsDesigner\config\appl\bimai.cfg` (Bentley's documented location; needs Windows' permission,
-  explained as for Civil 3D).
-- **Port 27185** (Civil 3D uses 27184), loopback only.
+  add-in source. bimai compiles it with `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`
+  (present on every Windows 10/11 PC, C# 5) against that PC's `Bentley.MstnPlatformNET.dll`, adding any
+  assembly the compiler asks for (CS0012) from OpenRoads' own folders. One build per installed version.
+- **Only `AddIn.cs` touches Bentley types at compile time.** Everything civil goes through reflection
+  (`Reflect.cs`): the member names from Bentley's SDK examples (`Session.Instance.GetActiveDgnModel`,
+  `ConsensusConnection`, `GetActiveGeometricModel`, `Alignments`, `LinearGeometry`,
+  `GetPointAtDistanceOffset`, `ProjectPointOnPerpendicular`, `Profiles`/`ActiveProfile`,
+  `ProfileGeometry.GetVerticalControlPoints`, `Corridors`, `TerrainSurfaces`, `DTM.DrapePoint`,
+  `StationingFormatter`), so a member that differs in some version costs one value or one tool, not the
+  build. Results also include each object's simple properties (`properties`), so a tester sees what
+  OpenRoads offers where the bridge guessed wrong.
+- **Own protocol layer** (`Json.cs`, `Http.cs`, `Mcp.cs`), a C# 5 port of the Civil 3D bridge's dual-era
+  server without System.Text.Json: no assembly that could clash with OpenRoads' own versions inside
+  .NET Framework. Synchronous, one background thread per connection.
+- **Main thread** as in Civil 3D: a hidden WinForms control created in `Run`, work posted with
+  `BeginInvoke`, 30 s timeout; reads only.
+- **Where it goes:** `C:\ProgramData\bimai\openroads\<version>\BimaiOpenRoads.dll` (users may write there,
+  so updates need no admin) and `<OpenRoads>\config\appl\bimai-openroads.cfg` (Bentley's documented
+  autoload: `MS_ADDINPATH` and `MS_DGNAPPS` inside `%if exists`), written in one elevated step for all
+  versions, skipped when already right.
+- **Port 27185** (Civil 3D uses 27184), loopback only, Host/Origin checks.
+- **CI without OpenRoads:** a stand-in `Bentley.MstnPlatformNET.dll` (`stubs/`) in a fake OpenRoads folder;
+  CI runs the real `bimai bridge install openroads` (real csc, real elevation), then the bridge's real
+  MCP server (`dev/DevHost.cs`) against the protocol tests, then uninstall.
 
-## Open questions (verified on a real PC before building the tools)
+## Open questions (for the first test inside OpenRoads, see bridges/openroads/TESTING.md)
 
 1. Does OpenRoads Designer pump Windows messages on its main thread so `BeginInvoke` runs promptly?
 2. Which per-user configuration file does OpenRoads process for `MS_DGNAPPS` (Personal.ucf, prefs)?
-3. Does System.Text.Json (and its dependencies) load inside OpenRoads without binding conflicts? If not,
-   `Bimai.Mcp` uses a small built-in JSON writer/reader for net48.
-4. Exact CifNET members for stations, profile VPIs and corridor templates across 2023–2026.
+3. Are CifNET distances in metres in every version, and do the reflected member names match 2023–2026?
+4. Where is `Bentley.MstnPlatformNET.dll` in each version (next to the executable or in a subfolder)?
 
 ## Risks / Trade-offs
 

@@ -37,8 +37,8 @@ export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project
 7. Connect my tools. The dry run listed "connections" with a status for each tool I chose:
    - "ready": already connected by bimai init.
    - "needs-install": ask me with AskUserQuestion: "Install the <label> now?" with the options "Yes,
-     install it" and "Not now". Explain first that Windows asks permission once, because the bridge goes
-     into the folder Civil 3D trusts, and that Civil 3D must be closed. Only on yes, run its "command".
+     install it" and "Not now". Explain its "message" first: Windows may ask permission once, and the program
+     it runs in (such as Civil 3D, Revit or OpenRoads) must be closed. Only on yes, run its "command".
    - "needs-app", "other-platform", "unavailable": tell me its "message" in plain words. Don't suggest a
      command for these unless the connection gives one.
 

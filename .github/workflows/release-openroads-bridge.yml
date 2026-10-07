@@ -1,0 +1,68 @@
+# Publishes the bimai OpenRoads bridge (its sources; it is built on the user's PC) as a GitHub Release when a
+# tag like openroads-bridge-v0.1.0 is pushed. `bimai bridge install openroads` downloads the zip and only
+# uses it when its SHA-256 matches the hash pinned in cli/bimai/catalogue/servers.yaml (pin it after publishing).
+name: release-openroads-bridge
+
+on:
+  push:
+    tags: ["openroads-bridge-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: The tag matches the bridge version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = (Select-String -Path bridges/openroads/src/Bridge.cs -Pattern 'Version = "([^"]+)"').Matches[0].Groups[1].Value
+          if ($tag -ne "openroads-bridge-v$version") { throw "tag $tag does not match bridge version $version" }
+
+      - name: Pack and check that it compiles with the .NET Framework compiler
+        shell: pwsh
+        run: |
+          python bridges/openroads/pack.py bridges/openroads/dist/bimai-openroads-bridge.zip
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $out = Join-Path $env:RUNNER_TEMP "stub"; New-Item -ItemType Directory -Force $out | Out-Null
+          & $csc /nologo /target:library /langversion:5 "/out:$out\Bentley.MstnPlatformNET.dll" bridges/openroads/stubs/*.cs
+          if ($LASTEXITCODE -ne 0) { throw "stub didn't compile" }
+          & $csc /nologo /target:library /langversion:5 "/out:$out\BimaiOpenRoads.dll" /r:System.Windows.Forms.dll "/r:$out\Bentley.MstnPlatformNET.dll" bridges/openroads/src/*.cs
+          if ($LASTEXITCODE -ne 0) { throw "bridge didn't compile" }
+
+      - name: Checksum
+        shell: pwsh
+        working-directory: bridges/openroads/dist
+        run: |
+          $hash = (Get-FileHash bimai-openroads-bridge.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  bimai-openroads-bridge.zip" | Out-File -Encoding ascii SHA256SUMS.txt
+          Write-Host "SHA-256: $hash  (pin this in cli/bimai/catalogue/servers.yaml)"
+
+      - name: Publish the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $hash = (Get-Content bridges/openroads/dist/SHA256SUMS.txt).Split(' ')[0]
+          $notes = @"
+          bimai OpenRoads bridge (beta) for OpenRoads Designer 2023 and newer (Windows). Read-only.
+
+          Not yet verified inside OpenRoads Designer: please report what works and what doesn't.
+
+          Install from your project folder: ``bimai bridge install openroads`` (or ``bimai connect openroads``).
+          bimai builds it on your PC against your OpenRoads Designer; this zip holds its sources.
+
+          SHA-256 of bimai-openroads-bridge.zip: ``$hash``
+
+          Guide: https://docs.bimai.nl/docs/guides/openroads-bridge
+          "@
+          gh release create $tag bridges/openroads/dist/bimai-openroads-bridge.zip bridges/openroads/dist/SHA256SUMS.txt `
+            --title "OpenRoads bridge $($tag -replace 'openroads-bridge-v','') (beta)" --notes $notes --prerelease

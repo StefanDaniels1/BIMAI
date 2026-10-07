@@ -13,20 +13,23 @@ read-only access to alignments, profiles, corridors and terrains in the open dra
 - **OpenRoads bridge** (`bridges/openroads`): an add-in that runs inside OpenRoads Designer (2023 and
   newer, Windows) and serves MCP on `127.0.0.1:27185`, read-only, with the same protocol support as the
   Civil 3D bridge (2026-07-28 stateless and the older handshake).
-  - Tools: `get_drawing_info`, `list_alignments`, `get_alignment` (horizontal elements, stations),
-    `list_profiles`, `get_profile` (vertical intersection points, grades), `list_corridors`,
-    `get_corridor` (templates and station ranges), `list_terrains`, `get_terrain_elevation` (at x,y),
-    `list_drainage` (nodes and conduits, read-only in Bentley's SDK).
+  - Tools: `get_drawing_info`, `list_alignments`, `get_alignment` (elements, points with stations),
+    `locate_on_alignment` (station and offset of a point), `list_profiles`, `get_profile` (control
+    points with station and elevation), `list_corridors` (alignment and station range), `list_terrains`,
+    `get_terrain_elevation` (at x,y).
   - Built on Bentley's civil API (CifNET, as documented in the OpenRoads Designer SDK), on OpenRoads'
     main thread, never changing the drawing.
 - **Built on the user's PC.** Bentley's API assemblies aren't redistributable and aren't on NuGet, so
-  bimai can't ship a compiled add-in. The release contains the add-in's source (small, C# 5) and the
-  prebuilt protocol library; `bimai bridge install openroads` compiles the source with the C# compiler
-  that ships with Windows' .NET Framework 4.8, against the OpenRoads Designer installed on that PC. This
-  also matches each OpenRoads version automatically. The release zip is pinned by SHA-256 as usual.
-- **Seamless install:** detects installed OpenRoads Designer versions, installs per user (no administrator
-  rights where the per-user configuration allows it), registers autoloading, and is offered during
-  onboarding when someone picks OpenRoads (status `needs-install`, like Civil 3D).
+  bimai can't ship a compiled add-in. The release contains the add-in's source (C# 5, no dependencies);
+  `bimai bridge install openroads` compiles it with the C# compiler that ships with Windows' .NET
+  Framework 4.8, against each OpenRoads Designer installed on that PC. The release zip is pinned by SHA-256.
+- **Seamless install:** detects installed OpenRoads Designer versions, puts the bridge in
+  `C:\ProgramData\bimai\openroads`, registers it with one `config\appl` file (Bentley's documented way,
+  one explained Windows permission prompt), and is offered during onboarding when someone picks
+  OpenRoads (status `needs-install`, like Civil 3D).
+- **Beta:** written from Bentley's documentation and tested in CI with the real compiler, the real
+  permission step and the bridge's real MCP server, but not yet inside OpenRoads Designer. A test guide
+  (`bridges/openroads/TESTING.md`) lets an OpenRoads user verify it in about 20 minutes.
 - **Catalogue:** `openroads` (bimai bridge, Windows, matches the `openroads` tool) and Bentley's
   MicroStation MCP server as unavailable (early access through Bentley).
 - **Docs:** an OpenRoads bridge guide.
@@ -47,7 +50,7 @@ read-only access to alignments, profiles, corridors and terrains in the open dra
 
 ## Impact
 
-- New `bridges/openroads/` (C# add-in source, net48 build of the protocol library, install scripts,
-  stub assemblies for compiling in CI), `bridges.py` (compile step, OpenRoads detection), catalogue, CI,
-  release workflow, docs.
+- New `bridges/openroads/` (C# 5 sources, a stand-in Bentley assembly and a development host for CI,
+  pack script, test guide), `openroads.py` (find, build, register, remove), catalogue, CLI, CI, release
+  workflow, docs (new "beta" status badge).
 - Needs a real Windows PC with OpenRoads Designer for verification (CI has no OpenRoads).

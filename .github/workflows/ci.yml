@@ -97,6 +97,53 @@ jobs:
           name: bimai-civil3d-bridge
           path: bridges/civil3d/dist/bimai-civil3d-bridge.zip
 
+  openroads-bridge:
+    # The OpenRoads bridge as bimai installs it on a user's PC, minus OpenRoads itself (CI has none): the real
+    # .NET Framework compiler, the real permission step, against a fake OpenRoads folder with a stand-in
+    # Bentley.MstnPlatformNET.dll. Then the bridge's MCP server (development host) against the protocol tests.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install, check, protocol tests, uninstall
+        shell: pwsh
+        run: |
+          pip install -e . pytest --quiet
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $fake = Join-Path $env:RUNNER_TEMP "PF"
+          $ord = Join-Path $fake "Bentley\OpenRoads Designer 2025\OpenRoadsDesigner"
+          New-Item -ItemType Directory -Force $ord | Out-Null
+          Set-Content (Join-Path $ord "OpenRoadsDesigner.exe") "stand-in"
+          & $csc /nologo /target:library /langversion:5 "/out:$ord\Bentley.MstnPlatformNET.dll" bridges/openroads/stubs/*.cs
+          if ($LASTEXITCODE -ne 0) { throw "stub didn't compile" }
+          python bridges/openroads/pack.py bridges/openroads/dist/bimai-openroads-bridge.zip
+
+          $env:ProgramFiles = $fake
+          $env:ProgramData = Join-Path $env:RUNNER_TEMP "PD"
+          bimai bridge install openroads --from bridges/openroads/dist/bimai-openroads-bridge.zip --yes
+          if ($LASTEXITCODE -ne 0) { throw "install failed" }
+          $dll = Join-Path $env:ProgramData "bimai\openroads\openroads-designer-2025\BimaiOpenRoads.dll"
+          $cfg = Join-Path $ord "config\appl\bimai-openroads.cfg"
+          if (-not (Test-Path $dll)) { throw "dll missing" }
+          if (-not (Select-String -Path $cfg -Pattern "MS_DGNAPPS < BimaiOpenRoads.dll" -Quiet)) { throw "cfg missing" }
+          Get-Content $cfg
+          bimai bridge status openroads
+          if ($LASTEXITCODE -ne 0) { throw "status failed" }
+
+          $exe = Join-Path $env:RUNNER_TEMP "bimai-openroads-dev.exe"
+          $sources = Get-ChildItem bridges/openroads/src/*.cs | Where-Object Name -ne "AddIn.cs" | ForEach-Object FullName
+          & $csc /nologo /target:exe /langversion:5 "/out:$exe" /r:System.Windows.Forms.dll @sources bridges/openroads/dev/DevHost.cs
+          if ($LASTEXITCODE -ne 0) { throw "dev host didn't compile" }
+          $env:BIMAI_OPENROADS_DEVHOST = $exe
+          python -m pytest -q cli/tests/test_openroads_protocol.py
+          if ($LASTEXITCODE -ne 0) { throw "protocol tests failed" }
+
+          bimai bridge uninstall openroads
+          if ($LASTEXITCODE -ne 0) { throw "uninstall failed" }
+          if ((Test-Path $cfg) -or (Test-Path $dll)) { throw "still installed after uninstall" }
+
   pyrevit:
     # Sets up the real pyRevit 7.0 the way a Revit user would: Microsoft's .NET runtimes when missing (one
     # elevated step; the runner is an administrator with UAC off), pyRevit's per-user installer, the agent

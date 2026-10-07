@@ -1,21 +1,21 @@
 # Tasks
 
-## 1. Spike on a real PC (needs OpenRoads Designer)
+## 1. Verification inside OpenRoads (handed over)
 
-- [ ] 1.1 Minimal add-in (compiled with csc.exe on the PC) that starts the HTTP server, answers `server/discover` and `list_alignments` on the main thread. Verify: answers the open questions in design.md; notes in the PR.
+- [ ] 1.1 An OpenRoads user follows `bridges/openroads/TESTING.md` (install, autoload, every tool, values compared). Verify: their report; fixes in a follow-up change. Until then the bridge is labelled beta.
 
 ## 2. Bridge
 
-- [ ] 2.1 `Bimai.Mcp` multi-targets net48 (or built-in JSON). Verify: protocol tests on net48 and net8.
-- [ ] 2.2 Add-in source (C# 5): AddIn, dispatcher, tools. Verify: CI compiles it with csc flags against stubs; real PC test of every tool.
-- [ ] 2.3 Release workflow (`openroads-bridge-v*`): zip with source, Bimai.Mcp, scripts; SHA-256 pin. Verify: release run.
+- [x] 2.1 Protocol layer in C# 5 (`Json.cs`, `Http.cs`, `Mcp.cs`, `Tools.cs`), same behaviour as the Civil 3D bridge. Verify: protocol tests against the development host (locally and on Windows CI with csc.exe).
+- [x] 2.2 Add-in (`AddIn.cs`), dispatcher, reflection helpers and the nine civil tools. Verify: compiles as C# 5 for .NET Framework 4.8 against the stand-in assembly (CI); tools answer clearly outside OpenRoads.
+- [x] 2.3 Pack script and release workflow (`openroads-bridge-v*`). Verify: reproducible zip test; release run.
 
 ## 3. Install and connect
 
-- [ ] 3.1 `bridges.py`: detect OpenRoads versions, compile, install per user, autoload, uninstall, status. Verify: tests with a fake Windows; real PC.
-- [ ] 3.2 Catalogue `openroads` and Bentley MicroStation (unavailable); onboarding status. Verify: tests.
+- [x] 3.1 `openroads.py`: find versions, build (CS0012 retries), ProgramData + config\appl in one prompt, status, uninstall; `bimai bridge … openroads`. Verify: tests with a simulated Windows; Windows CI with the real compiler and elevation.
+- [x] 3.2 Catalogue `openroads` and Bentley MicroStation (unavailable); onboarding status; start prompt. Verify: tests.
 
 ## 4. Docs and checks
 
-- [ ] 4.1 `guides/openroads-bridge.mdx`, connections page. Verify: check_docs, site build.
-- [ ] 4.2 Final check: pytest (strict), openspec validate --all --strict, dotnet test, CI green.
+- [x] 4.1 `guides/openroads-bridge.mdx`, connections page, "beta" badge, TESTING.md. Verify: check_docs, site build.
+- [ ] 4.2 Final check: pytest (strict), openspec validate --all --strict, CI green; pin the release hash.
