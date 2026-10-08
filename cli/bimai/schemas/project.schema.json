@@ -75,6 +75,41 @@
           }
         }
       }
+    },
+    "memory": {
+      "type": "object",
+      "description": "The nap: history budget and the model that proposes merges",
+      "properties": {
+        "history_tokens": {
+          "type": "integer",
+          "minimum": 200
+        },
+        "model": {
+          "type": "string",
+          "description": "Claude Code model alias or name (default: haiku)"
+        },
+        "effort": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "log": {
+      "type": "object",
+      "description": "The session log",
+      "properties": {
+        "share": {
+          "type": "boolean",
+          "description": "commit .bimai/log/ so the team shares it (default: false)"
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
