@@ -1,5 +1,5 @@
 import sys
 
-from bimai.cli import main
+from bimai._entry import main
 
 sys.exit(main())

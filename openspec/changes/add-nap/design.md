@@ -30,6 +30,12 @@
 - **Digests:** weekly (`.bimai/log/<seat>/weeks/2026-W41.md`), a few lines per day, written by Haiku from the
   log entries only; day files older than 30 days are removed once their week has a digest.
 
+- **Log hooks are synchronous** (found in a real run): background hooks can finish out of order on a quick
+  turn, and Claude Code cancels them when a headless run ends. `bimai._entry` loads only the log module for
+  hook calls, so one takes about 0.06 s instead of 0.35 s.
+- **Model:** Claude Code's `haiku` alias with `--effort high`; in the real run it resolved to
+  `claude-haiku-5-5` and accepted high effort (one tidy of an 8-line history: about 12 s, cents).
+
 ## Risks / Trade-offs
 
 - Haiku's proposal can be poor → it can only shrink and merge with sources, never invent; the diff is shown;
