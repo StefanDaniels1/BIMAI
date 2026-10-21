@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 import urllib.error
 import urllib.request
 import wave
@@ -174,7 +175,7 @@ def _current_file(environ=None) -> Path:
 
 def _claim(environ=None) -> str:
     """Marks this utterance as the latest; an older one still playing notices and stops."""
-    token = f"{os.getpid()}-{time.time_ns()}"
+    token = uuid.uuid4().hex                     # unique even within one clock tick (Windows' clock is coarse)
     path = _current_file(environ)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(token, encoding="utf-8")
