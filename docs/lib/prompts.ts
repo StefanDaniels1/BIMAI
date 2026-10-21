@@ -62,8 +62,8 @@ export const joinPrompt = `Add me to the bimai project (https://docs.bimai.nl) a
    .local/bin folder in my user folder). Check it worked with: bimai --version
 
 2. Find the project. It is the folder with a .bimai folder in it. If this folder isn't it, ask me where it
-   is. If I give you a git link from my colleague, clone it into my Documents folder (git clone <link>) and
-   continue in that folder.
+   is. If I give you a link from my colleague, run: bimai join "<link>"
+   It puts the project in my Documents/bimai folder and prints where; continue in that folder.
 
 3. Get the joining questions: bimai join --interview
    It prints the questions as JSON, made for your AskUserQuestion tool, and who is already on the project.
@@ -96,6 +96,7 @@ export const joinPrompt = `Add me to the bimai project (https://docs.bimai.nl) a
      command for these unless the connection gives one.
 
 9. Run: bimai validate
+   Then run: bimai sync  (it saves my setup and shares it with the team; tell me what it says in plain words)
    Then tell me to start a new Claude Code session: my seat brief then tells my team who I am and what's
    new. Give me three example questions, including "What's new for me?" and handing work to a colleague.
 

@@ -192,7 +192,8 @@ def shared(root: Path) -> bool:
 
 def _ours(entry: dict) -> bool:
     args = entry.get("args") if isinstance(entry, dict) else None
-    return isinstance(args, list) and args[:2] in (["log", "hook"], ["nap", "--if-due"], ["brief", "--seat"])
+    return isinstance(args, list) and args[:2] in (["log", "hook"], ["nap", "--if-due"], ["brief", "--seat"],
+                                                   ["save", "--share"])
 
 
 def without_team_hooks(data: dict) -> dict:
@@ -230,8 +231,11 @@ def with_team_hooks(data: dict, command: str, seat: str) -> dict:
         {"matcher": "startup", "hooks": [{"type": "command", "command": command, "args": ["nap", "--if-due"]}]})
     # The seat brief goes into Claude's context: who you work for, and what's new (also after /clear or compaction).
     hooks["SessionStart"].append({"matcher": "startup|resume|clear|compact", "hooks": [
-        {"type": "command", "command": command, "args": ["brief", "--seat", seat], "timeout": 15}]})
+        {"type": "command", "command": command, "args": ["brief", "--seat", seat, "--sync"], "timeout": 30}]})
     hooks.setdefault("UserPromptSubmit", []).append({"hooks": [dict(log)]})
     hooks.setdefault("PostToolUse", []).append({"matcher": HOOK_MATCHER, "hooks": [dict(log)]})
     hooks.setdefault("Stop", []).append({"hooks": [dict(log)]})
+    # Save what the turn produced and share it in the background (bimai sync, detached).
+    hooks["Stop"].append({"hooks": [{"type": "command", "command": command, "args": ["save", "--share", "--seat", seat],
+                                     "timeout": 20}]})
     return out

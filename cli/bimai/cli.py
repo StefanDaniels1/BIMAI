@@ -17,6 +17,7 @@ from bimai import voice
 from bimai import nap as napping
 from bimai import sessionlog
 from bimai import collab
+from bimai import sync as syncing
 from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
@@ -618,6 +619,16 @@ def cmd_update(args: argparse.Namespace) -> int:
 
 
 def cmd_join(args: argparse.Namespace) -> int:
+    target = str(args.path)
+    if re.match(r"^(https?://|git@|ssh://)", target) or target.endswith(".git"):
+        try:
+            folder = syncing.clone(target, args.into.resolve() if args.into else None)
+        except syncing.SyncError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        print(f"✓ The project is in {folder}")
+        print(f"Next, in that folder: bimai join --interview  (or: bimai join \"{folder}\" --person ... --role ...)")
+        return 0
     root = args.path.resolve()
     try:
         if args.interview:
@@ -676,10 +687,67 @@ def cmd_brief(args: argparse.Namespace) -> int:
             pass
     try:
         seat = collab.resolve_seat(root, args.seat)
+        if args.sync and advance and syncing.auto_enabled(root):
+            try:                                        # first bring in the team's work, so "what's new" is complete
+                r = syncing.sync(root, seat, timeout=20)
+                line = (f"Updated from the team: {r.incoming} change{'s' if r.incoming != 1 else ''}." if r.incoming
+                        else "Up to date with the team.")
+                if r.conflict:
+                    line = "Not updated: " + r.text().splitlines()[-1].lstrip("! ")
+                elif r.notes:
+                    line = r.notes[-1]
+                print(f"(bimai sync) {line}")
+            except syncing.SyncError as exc:
+                print(f"(bimai sync) {exc}")
         print(collab.brief(root, seat, advance=advance))
     except collab.CollabError as exc:
         print(f"(bimai: {exc})")
     return 0
+
+
+def cmd_save(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path)
+    if root is None:
+        if args.share:
+            return 0                                    # a hook outside a bimai project: say nothing
+        print(f"error: no bimai project in {args.path.resolve()}", file=sys.stderr)
+        return 2
+    try:
+        seat = collab.resolve_seat(root, args.seat)
+        if args.share:                                  # Stop hook: commit now, share in the background, silently
+            if syncing.auto_enabled(root):
+                syncing.save(root, seat)
+                syncing.start_background(root, seat)
+            return 0
+        print(syncing.save(root, seat).text())
+    except (syncing.SyncError, collab.CollabError) as exc:
+        if args.share:
+            return 0
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def cmd_sync(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path)
+    if root is None:
+        print(f"error: no bimai project in {args.path.resolve()}", file=sys.stderr)
+        return 2
+    try:
+        seat = collab.resolve_seat(root, args.seat)
+        if args.background:
+            try:
+                result = syncing.sync(root, seat)
+                (root / ".bimai" / "state" / "sync.log").write_text(result.text() + "\n", encoding="utf-8")
+            finally:
+                syncing.release(root)
+            return 0
+        result = syncing.sync(root, seat)
+    except (syncing.SyncError, collab.CollabError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(result.text())
+    return 1 if result.conflict else 0
 
 
 def cmd_handoff(args: argparse.Namespace) -> int:
@@ -1019,7 +1087,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_log)
 
     p = sub.add_parser("join", help="join an existing bimai project as another person (a seat and a position)")
-    p.add_argument("path", nargs="?", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("path", nargs="?", type=Path, default=Path("."),
+                   help="project folder (default: current folder), or a link to clone the project from")
+    p.add_argument("--into", type=Path, help="with a link: where to put the project (default: Documents/bimai/<name>)")
     p.add_argument("--interview", action="store_true", help="print the joining questions as JSON (for Claude Code)")
     p.add_argument("--person", help="your name")
     p.add_argument("--role", help="your role, e.g. constructeur")
@@ -1034,8 +1104,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("brief", help="your seat brief: who you work for and what's new (read at session start)")
     p.add_argument("--seat")
+    p.add_argument("--sync", action="store_true", help="first bring in the team's changes (at session start)")
     p.add_argument("--path", type=Path, default=Path("."))
     p.set_defaults(func=cmd_brief)
+
+    p = sub.add_parser("save", help="save the team's work in this project (bimai's files and outputs only)")
+    p.add_argument("--share", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--seat")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_save)
+
+    p = sub.add_parser("sync", help="save, bring in the team's changes and share yours (no git commands needed)")
+    p.add_argument("--background", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--seat")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_sync)
 
     p = sub.add_parser("handoff", help="hand work to another position (--to, --title), or close one of yours (--done)")
     p.add_argument("--done", metavar="ID", help="close a handoff in your inbox (bimai inbox lists the ids)")

@@ -56,7 +56,7 @@ def mcp(root: Path) -> dict:
 
 
 def settings(root: Path) -> dict:
-    return json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8"))
+    return without_rails(json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8")))
 
 
 def connect(root: Path, *args: str) -> int:
@@ -527,3 +527,17 @@ def test_tool_connection_statuses():
     assert status(["ifc", "acc"], "windows") == {}                     # no server without sign-in for these
     note = conn.option_note(conn.tool_connections(["civil3d"], platform="macos")[0])
     assert note.startswith("Windows only")
+
+
+def without_rails(settings: dict) -> dict:
+    """The settings without bimai's git safety rules (present in every project; tested in test_sync)."""
+    from bimai.sync import GIT_RAILS
+    out = json.loads(json.dumps(settings))
+    perms = out.get("permissions") or {}
+    if "deny" in perms:
+        perms["deny"] = [r for r in perms["deny"] if r not in GIT_RAILS]
+        if not perms["deny"]:
+            del perms["deny"]
+    if "permissions" in out and not perms:
+        del out["permissions"]
+    return out

@@ -110,8 +110,9 @@ def test_bimai_log_shows_days_and_digests(project, capsys):
 def test_init_writes_personal_hooks_and_routing(project):
     settings = json.loads((project / ".claude" / "settings.local.json").read_text(encoding="utf-8"))
     events = {e: [h["args"] for g in groups for h in g["hooks"]] for e, groups in settings["hooks"].items()}
-    assert events["SessionStart"] == [["nap", "--if-due"], ["brief", "--seat", "anna"]]
-    assert events["UserPromptSubmit"] == events["Stop"] == [["log", "hook", "--seat", "anna"]]
+    assert events["SessionStart"] == [["nap", "--if-due"], ["brief", "--seat", "anna", "--sync"]]
+    assert events["UserPromptSubmit"] == [["log", "hook", "--seat", "anna"]]
+    assert events["Stop"] == [["log", "hook", "--seat", "anna"], ["save", "--share", "--seat", "anna"]]
     assert settings["hooks"]["PostToolUse"][0]["matcher"] == sessionlog.HOOK_MATCHER
     assert not any(h.get("async") for g in settings["hooks"]["Stop"] for h in g["hooks"])   # in order, never cancelled
     gitignore = (project / ".gitignore").read_text(encoding="utf-8")
