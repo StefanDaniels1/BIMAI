@@ -13,4 +13,4 @@
 ## 3. Docs and checks
 
 - [x] 3.1 "Saving and sharing" page, join page and prompt. Verify: prompt test, check_docs, build.
-- [ ] 3.2 Final check: pytest (strict), openspec validate --all --strict, CI green (Windows git included).
+- [x] 3.2 Final check: pytest (strict), openspec validate --all --strict, CI green (Windows git included).
