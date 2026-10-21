@@ -273,7 +273,8 @@ def release(root: Path) -> None:
 # ------------------------------------------------------------------ join from a link
 
 def clone(link: str, into: Path | None = None) -> Path:
-    name = re.sub(r"\.git$", "", link.rstrip("/").split("/")[-1].split(":")[-1]) or "project"
+    parts = [p for p in re.split(r"[\\/:]", link.rstrip("/\\")) if p]       # https, ssh and Windows paths alike
+    name = re.sub(r"\.git$", "", parts[-1] if parts else "") or "project"
     target = into or Path.home() / "Documents" / "bimai" / name
     if target.exists() and any(target.iterdir()):
         if (target / ".bimai" / "project.yaml").is_file():
