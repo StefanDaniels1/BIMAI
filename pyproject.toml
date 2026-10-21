@@ -32,7 +32,7 @@ classifiers = [
 dev = ["pytest", "python-docx"]
 
 [project.scripts]
-bimai = "bimai.cli:main"
+bimai = "bimai._entry:main"
 
 [project.urls]
 Homepage = "https://docs.bimai.nl"

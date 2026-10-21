@@ -21,7 +21,7 @@ from bimai.files import BLOCK_END, BLOCK_START, FileWrite, apply, plan_write  # 
 from bimai.scan import Scan
 from bimai.team import Catalogue, Team, load_catalogue
 
-GITIGNORE = (".bimai/state/", ".bimai/site/", ".bimai/data/")
+GITIGNORE = (".bimai/state/", ".bimai/site/", ".bimai/data/", ".bimai/log/", ".claude/settings.local.json")
 
 
 class AlreadyInitialised(Exception):

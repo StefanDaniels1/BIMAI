@@ -1,0 +1,74 @@
+---
+title: Memory and history
+description: How your team remembers what it learned, stays lean with a daily nap, and tells you what it did yesterday or last week.
+---
+
+<Status state="available">Set up by <code>bimai init</code> and <code>bimai team</code>. The nap's Haiku step uses your Claude Code login.</Status>
+
+Your team keeps four kinds of knowledge, each with one owner, so nothing is stored twice:
+
+| | Where | Read when | Kept small by |
+|---|---|---|---|
+| **Charters**: who each member is and how it works | `.claude/agents/`, `CLAUDE.md` | every task | bimai generates them; a size budget is checked in every release |
+| **Routing**: who handles what | `CLAUDE.md` | every task | generated from your team |
+| **History**: what each member learned | `.bimai/positions/<position>/agents/<member>/history.md` | the start of each task | the daily nap |
+| **Session log**: what was done, per day | `.bimai/log/<seat>/` | only when you ask | weekly digests |
+
+Decisions live in `.bimai/decisions/`, one file each, and are never copied into history.
+
+## What did we do?
+
+Ask your team in plain words: *"What did we do yesterday?"*, *"What did we work on last week?"*. The
+Coordinator looks it up with `bimai log`, which you can also run yourself:
+
+```bash
+bimai log --since yesterday
+bimai log --since 7d
+bimai log --since 2026-09-01 --until 2026-09-30
+```
+
+Every turn becomes one short entry, written by Claude Code hooks without any AI, so it costs nothing:
+
+```
+## 14:32
+- Asked: check the structure model for missing fire ratings
+- Team: Model Checker
+- Files: outputs/fire-rating-check.md
+- Answer: 12 walls have no fire rating, all on level 2. Details are in the report.
+```
+
+The log is **yours**: it isn't committed (questions can contain personal remarks). Each finished week gets a
+short digest; days older than 30 days are folded into it, so you can always look back. To share the log with
+your team instead, set `log: { share: true }` in `.bimai/project.yaml`.
+
+## The daily nap
+
+Every team member reads its history at the start of a task. To keep that small and current, bimai naps once a
+day: when the first Claude Code session of the day starts, it checks (in milliseconds) whether a nap is due and,
+if so, runs it in the background. Nothing runs on days nobody works.
+
+1. **The script part (free):** duplicate lines and lines about reversed decisions are moved out; if a history
+   is still over its budget (2,000 tokens), the oldest lines are moved out.
+2. **The Haiku part:** when a history is over budget, or once a week, Claude Code with Haiku (high effort)
+   proposes merges ("these two lines say the same"), contradicted lines ("the clash tolerance changed"), stale
+   lines ("a review date that has passed") and personal remarks. bimai applies a merge only if it keeps the
+   sources of the lines it replaces, so nothing new is invented.
+
+**Nothing is deleted.** Every line the nap moves out goes to `history-archive.md` next to the history, with
+the date and the reason. See for yourself, or tidy up now:
+
+```bash
+bimai nap --dry-run     # what each member reads at the start, in tokens, and what a nap would change
+bimai nap               # nap now
+```
+
+Settings in `.bimai/project.yaml` (all optional):
+
+```yaml
+memory:
+  history_tokens: 2000   # budget per history
+  model: haiku           # Claude Code's newest Haiku
+  effort: high
+log:
+  share: false
+```

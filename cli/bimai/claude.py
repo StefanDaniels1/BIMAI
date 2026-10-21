@@ -5,11 +5,14 @@ always write the same thing. Pure: returns a plan, never writes.
 """
 from __future__ import annotations
 
+import json
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
 
+from bimai import sessionlog
 from bimai.connections import Connection, connections, load_servers
 from bimai.files import BLOCK_END, BLOCK_START, GENERATED, FileWrite, plan_create_only, plan_write, with_block
 from bimai.team import Catalogue, Member, load_catalogue
@@ -91,6 +94,8 @@ def routing_section(ctx: SeatContext, cat: Catalogue) -> str:
         "Quick facts from the project files: answer them yourself; don't hand them to a team member.",
         "Every task has exactly one accountable team member. Tell the person who is handling it.",
         "Work no team member covers: do it yourself, and say that no team member covers it.",
+        "Questions about earlier work (\"what did we do yesterday?\", \"last week?\"): run "
+        "`bimai log --since yesterday` (or `7d`, or a date) and answer from its output.",
     ]
     if any(m.role == "scribe" for m in ctx.team):
         rules.append("Decisions and actions from meetings are recorded by the Scribe.")
@@ -168,11 +173,28 @@ def plan_claude_files(root: str | Path, ctx: SeatContext, cat: Catalogue | None 
     plan.append(plan_write(root, "CLAUDE.md", with_block(current, claude_block(ctx, cat)),
                            merge_note="bimai block added or refreshed; your content is kept"))
 
+    local = root / ".claude" / "settings.local.json"
+    try:
+        current_local = json.loads(local.read_text(encoding="utf-8") or "{}") if local.exists() else {}
+    except json.JSONDecodeError:
+        current_local = None
+    if isinstance(current_local, dict):
+        merged = sessionlog.with_team_hooks(current_local, hook_command(), ctx.seat)
+        plan.append(plan_write(root, ".claude/settings.local.json", json.dumps(merged, indent=2) + "\n",
+                               merge_note="session log and daily nap hooks; your settings are kept"))
+    else:
+        plan.append(FileWrite(".claude/settings.local.json", "", "conflict", "not valid JSON; left as is"))
+
     for position in ctx.positions:
         for m in ctx.team:
             rel = history_path(position, m.role)
             plan.append(plan_create_only(root, rel, history_template(ctx, position, m.role, cat)))
     return plan
+
+
+def hook_command() -> str:
+    """How Claude Code starts bimai from a hook (the full path when bimai is on PATH)."""
+    return shutil.which("bimai") or "bimai"
 
 
 class SeatError(Exception):

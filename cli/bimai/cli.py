@@ -14,6 +14,8 @@ from bimai import __version__
 from bimai import apps, bridges, openroads
 from bimai import interview as onboarding
 from bimai import voice
+from bimai import nap as napping
+from bimai import sessionlog
 from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
@@ -284,6 +286,9 @@ def cmd_team(args: argparse.Namespace) -> int:
         return 0
     changed = apply_plan(root, plan)
     print(f"Changed {len(changed)} file{'s' if len(changed) != 1 else ''}.")
+    _gitignore(root, ".claude/settings.local.json")
+    if not sessionlog.shared(root):
+        _gitignore(root, ".bimai/log/")
     remaining = validate(root)
     for p in remaining:
         print(f"  ✗ {p}")
@@ -611,6 +616,76 @@ def cmd_update(args: argparse.Namespace) -> int:
     return code
 
 
+def cmd_log(args: argparse.Namespace) -> int:
+    if args.action == "hook":
+        # Called by Claude Code's hooks for every turn. Must never fail or print: Claude carries on regardless.
+        try:
+            sessionlog.handle(json.loads(sys.stdin.read() or "{}"), args.seat or "me")
+        except Exception:
+            pass
+        return 0
+    root = sessionlog.project_root(args.path)
+    if root is None:
+        print(f"error: no bimai project in {args.path.resolve()}", file=sys.stderr)
+        return 2
+    try:
+        seat = find_seat(root, args.seat)
+        start, end = sessionlog.parse_period(args.since, args.until)
+    except (SeatError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    text = sessionlog.read(root, seat, start, end)
+    print(text if text else f"No log entries between {start} and {end} for seat {seat}.")
+    return 0
+
+
+def cmd_nap(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path)
+    if root is None:
+        if args.if_due:
+            return 0                                   # a SessionStart hook outside a bimai project: say nothing
+        print(f"error: no bimai project in {args.path.resolve()}", file=sys.stderr)
+        return 2
+    if args.if_due:
+        # SessionStart hook: return at once and print nothing (its output would go into Claude's context).
+        try:
+            if napping.is_due(root):
+                napping.start_background(root)
+        except Exception:
+            pass
+        return 0
+    if args.background:
+        try:
+            report = napping.nap(root)
+            log = root / ".bimai" / "state" / "nap.log"
+            log.write_text(_nap_text(report, done=True), encoding="utf-8")
+        finally:
+            napping.release(root)
+        return 0
+    report = napping.nap(root, dry_run=args.dry_run, use_model=not args.no_model, force_model=args.model_now)
+    print(_nap_text(report, done=not args.dry_run))
+    return 0
+
+
+def _nap_text(report, done: bool) -> str:
+    lines = []
+    for row in report.rows:
+        mark = "over budget" if row["tokens"] > row["budget"] else "ok"
+        lines.append(f"{row['history']}: {row['tokens']} tokens (budget {row['budget']}, {mark})"
+                     + (f" → {row['after']} tokens" if row["changes"] else ""))
+        for reason, removed, added in row["changes"]:
+            for r in removed:
+                lines.append(f"    - {r[:110]}  ⟵ {reason[:80]}")
+            if added:
+                lines.append(f"    + {added[:110]}")
+    if not report.rows:
+        lines.append("No histories yet.")
+    lines += [f"  {n}" for n in report.notes]
+    lines.append("Done: archived lines are in history-archive.md next to each history." if done
+                 else "Dry run: nothing was changed. Run `bimai nap` to tidy up.")
+    return "\n".join(lines)
+
+
 def cmd_voice(args: argparse.Namespace) -> int:
     if args.action == "hook":
         return voice.hook(sys.stdin.read())
@@ -787,6 +862,23 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--from", dest="from_zip", type=Path, help="install from a zip you have instead of downloading")
     p.add_argument("--yes", "-y", action="store_true", help="don't ask bimai's questions (Windows still asks for permission)")
     p.set_defaults(func=cmd_bridge)
+
+    p = sub.add_parser("log", help="what the team did: bimai log --since yesterday | 7d | YYYY-MM-DD")
+    p.add_argument("action", nargs="?", default="show", choices=["show", "hook"], help=argparse.SUPPRESS)
+    p.add_argument("--since", help="today, yesterday, 7d, 2w or YYYY-MM-DD (default: the last 7 days)")
+    p.add_argument("--until", help="end of the period (default: today)")
+    p.add_argument("--seat", help="seat (default: the only seat)")
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.set_defaults(func=cmd_log)
+
+    p = sub.add_parser("nap", help="tidy the team's memory: budgets, archive, Haiku merges, weekly log digests")
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--dry-run", action="store_true", help="show tokens per history and what would change")
+    p.add_argument("--no-model", action="store_true", help="only the script part, no Haiku")
+    p.add_argument("--model-now", action="store_true", help="ask Haiku now, even under budget")
+    p.add_argument("--if-due", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--background", action="store_true", help=argparse.SUPPRESS)
+    p.set_defaults(func=cmd_nap)
 
     p = sub.add_parser("voice", help="spoken replies with your own ElevenLabs key: setup, on, off, status, test")
     p.add_argument("action", choices=["setup", "on", "off", "status", "test", "hook"])
