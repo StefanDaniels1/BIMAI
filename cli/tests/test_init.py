@@ -41,7 +41,7 @@ def test_roles_have_the_architecture_model_tiers():
     tiers = {r.id: r.model for r in load_catalogue().roles.values()}
     assert tiers == {
         "coordinator": "sonnet", "requirements-risk-manager": "sonnet", "information-manager": "sonnet",
-        "scribe": "sonnet", "planning-analyst": "haiku", "model-checker": "haiku", "issue-manager": "haiku",
+        "scribe": "sonnet", "structural-analyst": "sonnet", "planning-analyst": "haiku", "model-checker": "haiku", "issue-manager": "haiku",
         "mentor": "haiku",
     }
 

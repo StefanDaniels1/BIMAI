@@ -16,7 +16,7 @@ BEP_WORDS = ("bep", "eir", "execution plan", "uitvoeringsplan")
 
 CATEGORIES = ("models", "issues", "requirements_checks", "bep", "planning", "relatics", "transcripts")
 BY_EXTENSION = {
-    ".ifc": "models", ".rvt": "models", ".nwd": "models", ".nwc": "models", ".dgn": "models", ".dwg": "models",
+    ".ifc": "models", ".rvt": "models", ".nwd": "models", ".nwc": "models", ".dgn": "models", ".dwg": "models", ".esa": "models",
     ".bcf": "issues", ".bcfzip": "issues",
     ".ids": "requirements_checks",
     ".xer": "planning",

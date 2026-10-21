@@ -1,0 +1,70 @@
+---
+title: SCIA Engineer bridge
+description: Let a constructeur's team read calculation results from SCIA Engineer, read-only. Beta.
+---
+
+<Status state="beta">Built from SCIA's own OpenAPI examples. Please report what works.</Status>
+
+For the **constructeur** (structural engineer), bimai's team gets a **Structural Analyst** that reads the
+results of your SCIA Engineer calculation and explains them with the numbers:
+
+> *"What is the largest bending moment in beam B3 for CO1?"*
+> *"How much does slab S1 deflect in load case LC2?"*
+> *"What are the reactions at support Sn1?"*
+
+It **never changes your model**: the bridge opens a **copy** of your `.esa` file and closes it without saving.
+
+## What it can read
+
+| Tool | What it gives |
+|---|---|
+| `open_project` | opens a copy of a `.esa` file in your project folder (the only one, or the one you name) |
+| `get_member_results` | internal forces, deformations or relative deformations along a member, per section, with the extremes |
+| `get_surface_results` | internal forces, deformations, stresses, strains or contact stresses of a slab or wall: minimum and maximum per magnitude |
+| `get_support_reactions` | the reactions of a point support |
+| `run_calculation` | a linear calculation **of the copy** when your project has no results yet (your team asks you first) |
+
+Use the names as SCIA shows them: members (`B3`), surfaces (`S1`), supports (`Sn1`), load cases (`LC1`) and
+combinations (`CO1`). Values are in the units of SCIA's result API (SI); the Structural Analyst says so.
+
+## Set it up
+
+You need **Windows** and **SCIA Engineer 21 or newer** with a license; SCIA's OpenAPI comes with it. In your
+project folder:
+
+```bash
+bimai init          # choose "Constructeur"; a folder with .esa files suggests it
+bimai connect scia  # if you didn't choose SCIA Engineer during onboarding
+bimai scia status   # which SCIA Engineer bimai found
+```
+
+Nothing to install: bimai loads SCIA's OpenAPI from your SCIA installation when your team first asks for a
+result. That starts a SCIA Engineer of its own in the background (not your open window); it closes when the
+Claude Code session ends.
+
+## How it works
+
+SCIA Engineer's OpenAPI starts its own SCIA Engineer and opens a project file; it can't look into the window you
+have open. So when your team asks:
+
+1. bimai copies your `.esa` file to a temporary folder,
+2. starts SCIA Engineer in the background and opens the copy,
+3. reads the results you asked for, and later closes the copy **without saving**.
+
+If your file has changed since, ask your team to open it again: it then reads a fresh copy. Save your project in
+SCIA first, so the copy includes your latest results.
+
+## Beta: help us verify it
+
+The bridge follows SCIA's own [OpenAPI examples](https://github.com/scia-garage), but nobody has run it with SCIA
+Engineer yet. If you are a constructeur with SCIA, this takes about 15 minutes:
+
+1. Install bimai (see [Install](/docs/start/install)) and run `bimai scia status`: does it find your SCIA?
+2. In a folder with a calculated `.esa` project: `bimai init` (Constructeur, Structural results, SCIA Engineer).
+3. Start a new Claude Code session and ask, with names from your model:
+   - *"Open the SCIA project and give the internal forces in member B1 for load case LC1."*
+   - *"What is the maximum deflection of slab S1 in LC1?"*
+   - *"Give the reactions of support Sn1 in LC1."*
+4. Compare the numbers with SCIA's own results tables. Are the units what you expect?
+5. Report what you found in a [GitHub issue](https://github.com/StefanDaniels1/BIMAI/issues), with your SCIA
+   version and the bridge log (`%TEMP%\bimai-scia.log`). Remove anything confidential first.

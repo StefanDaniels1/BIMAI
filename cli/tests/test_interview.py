@@ -10,7 +10,7 @@ from bimai.interview import MAX_HEADER, MAX_OPTIONS, MAX_QUESTIONS, interview
 from bimai.team import UnknownRole, load_catalogue, match_preset
 
 CAT = load_catalogue()
-ROLES = [p.label for p in CAT.presets.values()]
+ROLES = [p.label for p in CAT.presets.values()][:4]       # an empty folder: catalogue order, four options
 
 
 def questions(spec):
@@ -91,7 +91,7 @@ def test_goals_for_a_design_coordinator(tmp_path):
     goals = questions(interview(tmp_path, role="design coordinator"))["goals"]
     assert [o["value"] for o in goals["options"]] == ["requirements", "risks", "planning", "reporting"]
     assert goals["recommended"] == ["requirements", "risks", "planning", "reporting"]
-    assert len(goals["allowed"]) == 8
+    assert len(goals["allowed"]) == len(CAT.goals)
 
 
 def test_role_typed_in_dutch_or_with_hyphen(tmp_path):
@@ -161,3 +161,24 @@ def test_civil3d_option_on_a_mac_says_windows_only(tmp_path, monkeypatch):
     assert civil3d["description"].startswith("Windows only")
     ifc = next(o for o in tools if o["value"] == "ifc")
     assert not ifc["description"].startswith("Windows only")
+
+
+def test_a_scia_folder_puts_the_constructeur_first(tmp_path):
+    (tmp_path / "Viaduct.esa").write_bytes(b"esa")
+    q = questions(interview(tmp_path, git_user="Anna"))["role"]
+    assert q["options"][0]["label"] == "Constructeur" and len(q["options"]) == 4
+    assert "Choose Other and type it" in q["question"]
+    assert {"value": "Constructeur", "label": "Constructeur", "also": list(CAT.presets["constructeur"].matches)} in q["allowed"]
+    tools = questions(interview(tmp_path, role="constructeur"))["tools"]["options"]
+    assert tools[0]["value"] == "scia" and "Viaduct.esa" in tools[0]["description"]
+
+
+def test_constructeur_team_and_dutch_names():
+    from bimai.team import match_preset, propose
+    assert match_preset("constructief ontwerper", CAT).id == "constructeur"
+    assert match_preset("Structural engineer", CAT).id == "constructeur"
+    team = propose("constructeur", ["calculations", "meetings"], ["scia"], False, CAT)
+    assert [m.role for m in team.members] == ["coordinator", "structural-analyst", "scribe"]
+    assert "SCIA Engineer" in team.members[1].why
+    without = propose("constructeur", ["calculations"], [], False, CAT)
+    assert "Structural Analyst would join with: SCIA Engineer" in without.hints

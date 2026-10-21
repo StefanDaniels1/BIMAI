@@ -686,6 +686,20 @@ def _nap_text(report, done: bool) -> str:
     return "\n".join(lines)
 
 
+def cmd_scia(args: argparse.Namespace) -> int:
+    from bimai import scia
+    if args.action == "serve":
+        return scia.serve(args.path.resolve(), show=args.show)
+    found = scia.installations()
+    if not found:
+        print(f"SCIA Engineer with the OpenAPI wasn't found on this computer. {scia.DOWNLOAD}")
+        return 1
+    for inst in found:
+        print(f"SCIA Engineer {inst.version}: {inst.path}")
+    print("The bridge uses the newest one. Connect it in a project: bimai connect scia")
+    return 0
+
+
 def cmd_voice(args: argparse.Namespace) -> int:
     if args.action == "hook":
         return voice.hook(sys.stdin.read())
@@ -879,6 +893,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--if-due", action="store_true", help=argparse.SUPPRESS)
     p.add_argument("--background", action="store_true", help=argparse.SUPPRESS)
     p.set_defaults(func=cmd_nap)
+    p = sub.add_parser("scia", help="the SCIA Engineer bridge: status (which SCIA is found), serve (for Claude Code)")
+    p.add_argument("action", choices=["status", "serve"])
+    p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--show", action="store_true", help="for serve: show SCIA Engineer's window")
+    p.set_defaults(func=cmd_scia)
 
     p = sub.add_parser("voice", help="spoken replies with your own ElevenLabs key: setup, on, off, status, test")
     p.add_argument("action", choices=["setup", "on", "off", "status", "test", "hook"])

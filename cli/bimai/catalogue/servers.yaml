@@ -193,6 +193,21 @@ microstation:
   provides: []
   matches_tools: []
 
+scia:
+  label: SCIA Engineer (bimai bridge, read-only, beta)
+  vendor: bimai
+  docs: https://docs.bimai.nl/docs/guides/scia-bridge
+  auth: none
+  access: read-only
+  platforms: [windows]
+  needs: SCIA Engineer 21 or newer with a license (the OpenAPI ships with it)
+  provides: [analysis.results]
+  matches_tools: [scia]
+  # bimai's own stdio server (cli/bimai/scia.py): it starts a SCIA Engineer of its own through SCIA's OpenAPI
+  # and opens a copy of the project. Beta: not yet verified inside SCIA Engineer.
+  detect: scia
+  config: { type: stdio, command: bimai, args: [scia, serve] }
+
 autocad-civil3d:
   label: AutoCAD and Civil 3D
   vendor: Autodesk
