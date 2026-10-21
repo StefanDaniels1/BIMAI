@@ -17,6 +17,7 @@ import yaml
 from bimai.claude import SeatContext, plan_claude_files
 from bimai.connections import (Connection, McpJsonError, connections_from, json_text, load_servers, mcp_with,
                                read_json, server_config, settings_with_rules, tool_connections, write_rules)
+from bimai.sync import GIT_RAILS
 from bimai.files import BLOCK_END, BLOCK_START, FileWrite, apply, plan_write  # noqa: F401 (re-exported)
 from bimai.scan import Scan
 from bimai.team import Catalogue, Team, load_catalogue
@@ -128,6 +129,7 @@ def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None =
     cat = cat or load_catalogue()
     plan = [plan_write(root, rel, content) for rel, content in _bimai_files(a, team, cat).items()]
     mcp, conns, deny = _plan_mcp(root, a.tools)
+    deny = deny + list(GIT_RAILS)                 # the team's agents never rewrite or force git history
     plan += plan_claude_files(root, seat_context(a, team, cat, conns), cat)
     plan.append(mcp)
 
@@ -140,9 +142,9 @@ def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None =
             data = None
         if isinstance(data, dict):
             notes = [f"model stays '{data['model']}'" if "model" in data else "model set to sonnet"]
-            new = settings_with_rules({"model": "sonnet", **data}, "deny", deny) if deny else {"model": "sonnet", **data}
+            new = settings_with_rules({"model": "sonnet", **data}, "deny", deny)
             if deny:
-                notes.append("read-only rules added")
+                notes.append("safety rules added")
             if new == data:
                 plan.append(FileWrite(".claude/settings.json", "", "unchanged", notes[0]))
             else:
@@ -151,7 +153,7 @@ def plan_files(root: str | Path, a: Answers, team: Team, cat: Catalogue | None =
         elif data is not None:
             plan.append(FileWrite(".claude/settings.json", "", "conflict", "not a JSON object; left as is"))
     else:
-        new = settings_with_rules({"model": "sonnet"}, "deny", deny) if deny else {"model": "sonnet"}
+        new = settings_with_rules({"model": "sonnet"}, "deny", deny)
         plan.append(FileWrite(".claude/settings.json", json.dumps(new, indent=2) + "\n", "create"))
 
     gitignore = root / ".gitignore"

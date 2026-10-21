@@ -206,7 +206,7 @@ def test_subagents_and_models(tmp_path):
     assert sorted(p.name for p in agents.iterdir()) == ["issue-manager.md", "model-checker.md", "scribe.md"]
     meta = yaml.safe_load((agents / "model-checker.md").read_text(encoding="utf-8").split("---\n")[1])
     assert meta["model"] == "haiku" and meta["name"] == "model-checker" and meta["description"]
-    assert json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")) == {"model": "sonnet"}
+    assert without_rails(json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8"))) == {"model": "sonnet"}
 
 
 def test_existing_claude_md_is_kept_and_block_is_replaced_not_duplicated(tmp_path):
@@ -230,14 +230,15 @@ def test_existing_settings_are_kept(tmp_path):
     settings = {"model": "opus", "permissions": {"allow": ["Bash(npm test)"]}}
     touch(tmp_path, ".claude/settings.json", json.dumps(settings))
     plan = write(tmp_path)
-    assert json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")) == settings
-    assert next(f for f in plan if f.path == ".claude/settings.json").action == "unchanged"
+    assert without_rails(json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8"))) == settings
+    change = next(f for f in plan if f.path == ".claude/settings.json")
+    assert change.action == "update" and "model stays 'opus'" in change.note and "safety rules added" in change.note
 
 
 def test_settings_without_model_get_sonnet_and_keep_the_rest(tmp_path):
     touch(tmp_path, ".claude/settings.json", json.dumps({"permissions": {"allow": ["Read"]}}))
     write(tmp_path)
-    assert json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8")) == {
+    assert without_rails(json.loads((tmp_path / ".claude" / "settings.json").read_text(encoding="utf-8"))) == {
         "permissions": {"allow": ["Read"]}, "model": "sonnet"}
 
 
@@ -366,3 +367,17 @@ def test_person_flag_skips_the_login_lookup(tmp_path, monkeypatch):
     monkeypatch.setattr(cli.getpass, "getuser", lambda: (_ for _ in ()).throw(AssertionError("should not be called")))
     monkeypatch.setattr(cli, "_git_user", lambda root: (_ for _ in ()).throw(AssertionError("should not be called")))
     assert main(["init", str(tmp_path), "--person", "Anna", "--role", "bim modeller", "--yes"]) == 0
+
+
+def without_rails(settings: dict) -> dict:
+    """The settings without bimai's git safety rules (present in every project; tested in test_sync)."""
+    from bimai.sync import GIT_RAILS
+    out = json.loads(json.dumps(settings))
+    perms = out.get("permissions") or {}
+    if "deny" in perms:
+        perms["deny"] = [r for r in perms["deny"] if r not in GIT_RAILS]
+        if not perms["deny"]:
+            del perms["deny"]
+    if "permissions" in out and not perms:
+        del out["permissions"]
+    return out

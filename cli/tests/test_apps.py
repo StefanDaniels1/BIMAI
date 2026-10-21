@@ -275,7 +275,7 @@ def mcp(root):
 
 
 def permissions(root):
-    return json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8")).get("permissions", {})
+    return without_rails(json.loads((root / ".claude" / "settings.json").read_text(encoding="utf-8"))).get("permissions", {})
 
 
 def test_connect_read_only_by_default(project, windows, capsys):
@@ -324,3 +324,17 @@ def test_onboarding_connects_ready_pyrevit_read_only(tmp_path, windows):
     assert main(["init", str(root), "--person", "Anna", "--role", "bim modeller", "--tools", "revit", "--yes"]) == 0
     assert mcp(root)["pyrevit"]["command"] == windows.user_exe
     assert permissions(root)["deny"] == ["mcp__pyrevit__run_modify"]
+
+
+def without_rails(settings: dict) -> dict:
+    """The settings without bimai's git safety rules (present in every project; tested in test_sync)."""
+    from bimai.sync import GIT_RAILS
+    out = json.loads(json.dumps(settings))
+    perms = out.get("permissions") or {}
+    if "deny" in perms:
+        perms["deny"] = [r for r in perms["deny"] if r not in GIT_RAILS]
+        if not perms["deny"]:
+            del perms["deny"]
+    if "permissions" in out and not perms:
+        del out["permissions"]
+    return out

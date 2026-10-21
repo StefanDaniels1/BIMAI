@@ -48,10 +48,11 @@ def _prompt(name: str) -> str:
 def test_join_prompt_is_aligned_with_the_start_prompt():
     start, join = _prompt("startPrompt"), _prompt("joinPrompt")
     for needed in ("bimai join --interview", "--interview --role", "AskUserQuestion", "Join this project?", "--dry-run",
-                   "needs-install", "seat brief", "install.ps1", "install.sh"):
+                   "needs-install", "seat brief", "install.ps1", "install.sh", 'bimai join "<link>"', "bimai sync"):
         assert needed in join, needed
     for shared in ("Install bimai with its one-line installer", "Leave \"Other\" to me for my own answer",
                    "map my words to the closest value", "Windows may ask permission once"):
         assert shared in start and shared in join, shared                      # the same wording in both
     assert "docs/start/join" in start                                            # an existing project: join instead
     assert "`" not in join and "${" not in join
+    assert "git clone" not in join                                              # bimai does the git work

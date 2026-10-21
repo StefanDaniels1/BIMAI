@@ -3,7 +3,7 @@ title: Join a project
 description: When a colleague already started the project. A few questions, and you have your own team.
 ---
 
-<Status state="available">Joining, your seat brief, handoffs and decisions work today. Sharing changes still goes through your project's git (the next step is bimai doing that for you).</Status>
+<Status state="available">Joining, your seat brief, handoffs, decisions and saving and sharing work today.</Status>
 
 A colleague started a bimai project and you'll work in it too, for example as constructeur next to the BIM
 coordinator. Copy this prompt into Claude Code, in the project folder (or anywhere: Claude asks where the
@@ -13,7 +13,8 @@ project is):
 
 ## What happens
 
-1. **Claude installs bimai** and finds the project.
+1. **Claude installs bimai** and gets the project: give it the link your colleague sent (`bimai join <link>` puts
+   it in your Documents/bimai folder).
 2. **It asks a few questions** as clickable choices: your name, your role, what you want help with and your
    tools. The project's settings are already there, so there's no project setup.
 3. **You get a position**: your job on the project, such as `constructeur` or `bim-modeller`. If someone
@@ -32,6 +33,7 @@ time: handoffs from colleagues, new decisions, and (if your project shares it) w
 ## Doing it yourself
 
 ```bash
+bimai join https://github.com/your-org/viaduct   # get the project
 bimai join --interview                       # the questions, as JSON
 bimai join --person Joris --role constructeur --tools scia --dry-run
 bimai join --person Joris --role constructeur --tools scia --yes
