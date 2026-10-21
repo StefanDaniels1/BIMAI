@@ -32,8 +32,26 @@ def test_install_sh_is_posix_sh():
 
 def test_start_prompt_runs_the_guided_interview():
     text = (ROOT / "docs" / "lib" / "prompts.ts").read_text(encoding="utf-8")
-    prompt = text[text.index("export const startPrompt = `") + len("export const startPrompt = `"):text.rindex("`;")]
+    prompt = _prompt("startPrompt")
     for needed in ("bimai init --interview", "--interview --role", "AskUserQuestion", "Other", '"allowed"',
                    "--dry-run", "Set up this team?", "needs-install", "Windows may ask permission once", "install.ps1", "install.sh"):
         assert needed in prompt, needed
     assert "`" not in prompt and "${" not in prompt     # it lives inside a JavaScript template string
+
+
+def _prompt(name: str) -> str:
+    text = (ROOT / "docs" / "lib" / "prompts.ts").read_text(encoding="utf-8")
+    start = text.index(f"export const {name} = `") + len(f"export const {name} = `")
+    return text[start:text.index("`;", start)]
+
+
+def test_join_prompt_is_aligned_with_the_start_prompt():
+    start, join = _prompt("startPrompt"), _prompt("joinPrompt")
+    for needed in ("bimai join --interview", "--interview --role", "AskUserQuestion", "Join this project?", "--dry-run",
+                   "needs-install", "seat brief", "install.ps1", "install.sh"):
+        assert needed in join, needed
+    for shared in ("Install bimai with its one-line installer", "Leave \"Other\" to me for my own answer",
+                   "map my words to the closest value", "Windows may ask permission once"):
+        assert shared in start and shared in join, shared                      # the same wording in both
+    assert "docs/start/join" in start                                            # an existing project: join instead
+    assert "`" not in join and "${" not in join

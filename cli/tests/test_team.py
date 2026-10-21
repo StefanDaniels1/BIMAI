@@ -95,19 +95,21 @@ def test_existing_history_is_kept(project):
 
 def test_subagent_names_its_history_and_the_rules():
     text = subagent(ctx("coordinator", "model-checker"), "model-checker", load_catalogue())
-    assert "`.bimai/positions/bim-coordinator/agents/model-checker/history.md`" in text
+    assert "`.bimai/positions/<position>/agents/model-checker/history.md`" in text
+    assert "the position the Coordinator names" in text
     for rule in ("Only confirmed outcomes", "YYYY-MM-DD", "personal remarks", "correct that line",
-                 "`.bimai/decisions/`"):
+                 "`bimai decide`"):
         assert rule in text
     front = yaml.safe_load(text.split("---\n")[1])
     assert set(front) == {"name", "description", "model"}
     assert text.split("---\n", 2)[2].startswith(GENERATED)
 
 
-def test_several_positions_list_every_history():
-    text = subagent(ctx("model-checker", positions=("modeller-a", "modeller-b")), "model-checker", load_catalogue())
-    assert "modeller-a/agents/model-checker" in text and "modeller-b/agents/model-checker" in text
-    assert "of the position the work belongs to" in text
+def test_an_agent_is_the_same_for_every_seat():
+    cat = load_catalogue()
+    one = subagent(ctx("model-checker", positions=("modeller-a",)), "model-checker", cat)
+    other = subagent(ctx("model-checker", positions=("modeller-a", "modeller-b")), "model-checker", cat)
+    assert one == other and "modeller-a" not in one                       # shared in git: names no seat or position
 
 
 def test_coordinator_memory_is_in_the_block(project):

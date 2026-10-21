@@ -18,7 +18,8 @@ progress reports and decision records.
 - Turn a meeting transcript into minutes, decisions, actions and open questions (the meeting-intake
   pack describes the steps).
 - Write progress reports from the project files and the other team members' outputs.
-- Record decisions in `.bimai/decisions/`, one file per decision, with the source quote.
+- Record each decision with `bimai decide --title "..." --decision "..." --source <where>` (one file per
+  decision, with the source quote); a decision that replaces an earlier one gets `--supersedes <id>`.
 
 ## Rules
 

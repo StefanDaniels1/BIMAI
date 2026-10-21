@@ -16,6 +16,7 @@ from bimai import interview as onboarding
 from bimai import voice
 from bimai import nap as napping
 from bimai import sessionlog
+from bimai import collab
 from bimai import update as self_update
 from bimai import connections as conn
 from bimai.claude import SeatError, find_seat, load_seat_context, plan_claude_files
@@ -616,6 +617,135 @@ def cmd_update(args: argparse.Namespace) -> int:
     return code
 
 
+def cmd_join(args: argparse.Namespace) -> int:
+    root = args.path.resolve()
+    try:
+        if args.interview:
+            spec = collab.join_interview(root, _git_user(root) or None, role=args.role)
+            print(json.dumps(spec, indent=2, ensure_ascii=False))
+            return 0
+        if not args.person or not args.role:
+            raise collab.CollabError("bimai join needs --person and --role (or --interview for the questions)")
+        cat = load_catalogue()
+        preset = match_preset(args.role, cat)
+        goals = _split(args.goals) if args.goals else list(preset.goals)
+        tools = _split(args.tools) if args.tools is not None else list(suggested_tools(scan(root), cat))
+        plan = collab.plan_join(root, args.person, args.role, goals, tools, args.new_to_vscode, args.position, cat)
+    except (collab.CollabError, UnknownRole) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    summary = {"person": plan.name, "seat": plan.seat, "role": cat.presets[plan.preset].label, "position": plan.position,
+               "shared_with": plan.shared_with, "goals": goals, "tools": tools, "team": plan.team.as_dict(),
+               "people": [f"{p.get('name')} ({p.get('title')})" for p in collab.people(root).values()],
+               "connections": [{k: v for k, v in c.items() if k != "config"} for c in conn.tool_connections(tools)]}
+    if args.dry_run:
+        print(json.dumps(summary, indent=2, ensure_ascii=False) if args.json else
+              f"{plan.name} would join as {summary['role']}, position {plan.position}"
+              + (f" (shared with {', '.join(plan.shared_with)})" if plan.shared_with else "")
+              + "\nTeam: " + ", ".join(m.role for m in plan.team.members) + "\nDry run: nothing was written.")
+        return 0
+    if not args.yes and not _ask(f"Add {plan.name} as {summary['role']} (position {plan.position})? (Y/n)", "y").lower().startswith("y"):
+        print("Nothing written.")
+        return 1
+    joined = collab.join(root, args.person, args.role, goals, tools, args.new_to_vscode, args.position, cat)
+    ctx = load_seat_context(root, joined.seat, cat)
+    written = apply_plan(root, plan_claude_files(root, ctx, cat))
+    _gitignore(root, ".claude/settings.local.json")
+    if not sessionlog.shared(root):
+        _gitignore(root, ".bimai/log/")
+    problems = validate(root)
+    for problem in problems:
+        print(f"  ✗ {problem}")
+    print(f"✓ {plan.name} joined as {summary['role']}, position {joined.position}"
+          + (f", shared with {', '.join(joined.shared_with)}" if joined.shared_with else "") + f" ({len(written)} files).")
+    print("  Team: " + ", ".join(cat.roles[m.role].label for m in plan.team.members))
+    print("Next: start a new Claude Code session in this folder; your seat brief tells the team who you are.")
+    return 1 if problems else 0
+
+
+def cmd_brief(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path)
+    if root is None:
+        return 0 if args.seat else 2                    # a hook outside a bimai project: say nothing
+    advance = False
+    if not sys.stdin.isatty():
+        try:                                            # from the SessionStart hook: only a new session counts
+            event = json.loads(sys.stdin.read() or "{}")
+            advance = event.get("source", "startup") == "startup"
+        except ValueError:
+            pass
+    try:
+        seat = collab.resolve_seat(root, args.seat)
+        print(collab.brief(root, seat, advance=advance))
+    except collab.CollabError as exc:
+        print(f"(bimai: {exc})")
+    return 0
+
+
+def cmd_handoff(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path) or args.path.resolve()
+    try:
+        seat = collab.resolve_seat(root, args.seat)
+        if args.done:
+            path = collab.handoff_done(root, seat, args.done, args.note or "")
+            print(f"✓ Closed: {path.relative_to(root).as_posix()}")
+            return 0
+        if not args.to or not args.title:
+            raise collab.CollabError("bimai handoff needs --to <position> and --title")
+        path = collab.handoff(root, seat, args.to, args.title, args.body or "", [e.strip() for e in args.evidence.split(",") if e.strip()] if args.evidence else [])
+    except collab.CollabError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"✓ Handed over to {args.to}: {path.relative_to(root).as_posix()}")
+    return 0
+
+
+def cmd_inbox(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path) or args.path.resolve()
+    try:
+        items = collab.inbox(root, collab.resolve_seat(root, args.seat), include_done=args.all)
+    except collab.CollabError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        print(json.dumps(items, indent=2, ensure_ascii=False, default=str))
+        return 0
+    if not items:
+        print("No open handoffs for your positions.")
+    for i in items:
+        print(f"- {i['id']} [{i.get('status')}] to {i['position']} from {i.get('from')}: {i.get('title')}")
+        if i.get("evidence"):
+            print(f"    evidence: {', '.join(i['evidence'])}")
+    return 0
+
+
+def cmd_decide(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path) or args.path.resolve()
+    try:
+        seat = collab.resolve_seat(root, args.seat)
+        path = collab.decide(root, seat, args.title, args.decision, args.source or "", args.supersedes)
+    except collab.CollabError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"✓ Decision recorded: {path.relative_to(root).as_posix()}")
+    return 0
+
+
+def cmd_decisions(args: argparse.Namespace) -> int:
+    root = sessionlog.project_root(args.path) or args.path.resolve()
+    items = collab.decisions(root)
+    if args.json:
+        print(json.dumps(items, indent=2, ensure_ascii=False, default=str))
+        return 0
+    if not items:
+        print("No decisions recorded yet.")
+    for d in items[: args.limit]:
+        mark = " (superseded)" if d["status"] == "superseded" else ""
+        print(f"- {d['id']}{mark}: {d.get('title')} — {d['decision'][:160]} (by {d.get('by')}"
+              + (f", source: {d['source']}" if d.get("source") else "") + ")")
+    return 0
+
+
 def cmd_log(args: argparse.Namespace) -> int:
     if args.action == "hook":
         # Called by Claude Code's hooks for every turn. Must never fail or print: Claude carries on regardless.
@@ -629,13 +759,15 @@ def cmd_log(args: argparse.Namespace) -> int:
         print(f"error: no bimai project in {args.path.resolve()}", file=sys.stderr)
         return 2
     try:
-        seat = find_seat(root, args.seat)
         start, end = sessionlog.parse_period(args.since, args.until)
-    except (SeatError, ValueError) as exc:
+        seats = (sorted(d.name for d in (root / ".bimai" / "log").glob("*/")) if args.team
+                 else [collab.resolve_seat(root, args.seat)])
+    except (collab.CollabError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    text = sessionlog.read(root, seat, start, end)
-    print(text if text else f"No log entries between {start} and {end} for seat {seat}.")
+    texts = [t for t in (sessionlog.read(root, s, start, end) for s in seats) if t]
+    print("\n\n".join(texts) if texts else f"No log entries between {start} and {end}"
+          + (" (the team's logs are only here when the project shares them: log.share)" if args.team else "."))
     return 0
 
 
@@ -881,9 +1013,62 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("action", nargs="?", default="show", choices=["show", "hook"], help=argparse.SUPPRESS)
     p.add_argument("--since", help="today, yesterday, 7d, 2w or YYYY-MM-DD (default: the last 7 days)")
     p.add_argument("--until", help="end of the period (default: today)")
-    p.add_argument("--seat", help="seat (default: the only seat)")
+    p.add_argument("--seat", help="seat (default: yours)")
+    p.add_argument("--team", action="store_true", help="every seat's log that the project shares")
     p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")
     p.set_defaults(func=cmd_log)
+
+    p = sub.add_parser("join", help="join an existing bimai project as another person (a seat and a position)")
+    p.add_argument("path", nargs="?", type=Path, default=Path("."), help="project folder (default: current folder)")
+    p.add_argument("--interview", action="store_true", help="print the joining questions as JSON (for Claude Code)")
+    p.add_argument("--person", help="your name")
+    p.add_argument("--role", help="your role, e.g. constructeur")
+    p.add_argument("--goals", help="comma-separated goals (default: the role's)")
+    p.add_argument("--tools", help="comma-separated tools (default: what the folder shows)")
+    p.add_argument("--position", help="an existing position to share, or the id of a new one")
+    p.add_argument("--new-to-vscode", action="store_true")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--yes", "-y", action="store_true")
+    p.set_defaults(func=cmd_join)
+
+    p = sub.add_parser("brief", help="your seat brief: who you work for and what's new (read at session start)")
+    p.add_argument("--seat")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_brief)
+
+    p = sub.add_parser("handoff", help="hand work to another position (--to, --title), or close one of yours (--done)")
+    p.add_argument("--done", metavar="ID", help="close a handoff in your inbox (bimai inbox lists the ids)")
+    p.add_argument("--to", help="the receiving position")
+    p.add_argument("--title")
+    p.add_argument("--body")
+    p.add_argument("--evidence", help="comma-separated files")
+    p.add_argument("--note", help="for done: what was done")
+    p.add_argument("--seat")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_handoff)
+
+    p = sub.add_parser("inbox", help="open handoffs for your positions")
+    p.add_argument("--all", action="store_true", help="include closed ones")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--seat")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_inbox)
+
+    p = sub.add_parser("decide", help="record a decision: bimai decide --title ... --decision ...")
+    p.add_argument("--title", required=True)
+    p.add_argument("--decision", required=True)
+    p.add_argument("--source", help="where it was decided: meeting, file or message")
+    p.add_argument("--supersedes", help="the id of a decision this one replaces")
+    p.add_argument("--seat")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_decide)
+
+    p = sub.add_parser("decisions", help="the project's decisions, newest first")
+    p.add_argument("--limit", type=int, default=30)
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--path", type=Path, default=Path("."))
+    p.set_defaults(func=cmd_decisions)
 
     p = sub.add_parser("nap", help="tidy the team's memory: budgets, archive, Haiku merges, weekly log digests")
     p.add_argument("--path", type=Path, default=Path("."), help="project folder (default: current folder)")

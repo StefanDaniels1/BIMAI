@@ -1,20 +1,38 @@
 ---
 title: Join a project
-description: When a colleague already started the project. About one minute.
+description: When a colleague already started the project. A few questions, and you have your own team.
 ---
 
-<Status state="planned" />
+<Status state="available">Joining, your seat brief, handoffs and decisions work today. Sharing changes still goes through your project's git (the next step is bimai doing that for you).</Status>
+
+A colleague started a bimai project and you'll work in it too, for example as constructeur next to the BIM
+coordinator. Copy this prompt into Claude Code, in the project folder (or anywhere: Claude asks where the
+project is):
+
+<JoinPrompt />
+
+## What happens
+
+1. **Claude installs bimai** and finds the project.
+2. **It asks a few questions** as clickable choices: your name, your role, what you want help with and your
+   tools. The project's settings are already there, so there's no project setup.
+3. **You get a position**: your job on the project, such as `constructeur` or `bim-modeller`. If someone
+   already has that job, you choose: a position of your own (another zone or discipline) or sharing theirs.
+4. **Claude shows your team** and who else is on the project, and only adds you after your yes.
+
+Nothing of your colleagues' setup changes: everyone has their own seat, and the files you share are the same
+for everybody.
+
+## Every session after that
+
+When you open Claude Code, your **seat brief** tells your team who you are and what's new for you since last
+time: handoffs from colleagues, new decisions, and (if your project shares it) what the team did. Just ask
+*"What's new for me?"* See [Working together](/docs/guides/working-together).
+
+## Doing it yourself
 
 ```bash
-bimai join https://github.com/your-org/a2-knooppunt
-```
-
-The BEP and project settings are already there, so you only answer three questions: your role, what
-you want help with, and how familiar you are with VS Code. You're then given (or pick) a **position**,
-for example `modeller-structure`, and bimai proposes your team.
-
-The project appears on your desk, and you open it with:
-
-```bash
-bimai open a2-knooppunt
+bimai join --interview                       # the questions, as JSON
+bimai join --person Joris --role constructeur --tools scia --dry-run
+bimai join --person Joris --role constructeur --tools scia --yes
 ```

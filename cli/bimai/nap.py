@@ -143,8 +143,13 @@ def _norm(line: str) -> str:
 
 
 def reversed_decisions(root: Path) -> set[str]:
-    """Decision files marked `status: reversed` or `status: superseded` (relative paths)."""
+    """Decision files marked `status: reversed` or `status: superseded`, or superseded by a later decision."""
     found = set()
+    try:
+        from bimai import collab
+        found |= {d["path"] for d in collab.decisions(root) if d["status"] == "superseded"}
+    except Exception:
+        pass
     for path in sorted((root / ".bimai" / "decisions").glob("*.md")):
         text = path.read_text(encoding="utf-8")
         if text.startswith("---"):
