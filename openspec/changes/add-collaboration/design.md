@@ -22,6 +22,12 @@
 - **Agents call commands, people talk.** The Coordinator's routing and the Scribe's charter say to use
   `bimai handoff`, `bimai decide` and `bimai inbox`; the seat brief reminds the Coordinator once per session.
 
+- **Real run (Claude Code, three seats in one folder):** Anna's Claude handed "the clash at C4 in Fatima's
+  model" to `bim-modeller` with the evidence (it found the position from the brief); recorded "deck slab 300 mm"
+  with `bimai decide`; Fatima's Claude answered "what's new for me?" from her brief (the handoff and the decision,
+  by Anna) and closed the handoff with a note ("not yet re-checked"). Found and fixed on the way: the brief named
+  seat ids instead of people (Claude mixed them up), and the seat lookup now prefers the brief hook's seat.
+
 ## Risks / Trade-offs
 
 - Without sync, people still share with git themselves → the join page says so, and the next change adds

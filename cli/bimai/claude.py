@@ -49,19 +49,20 @@ def history_template(ctx: SeatContext, position: str, role: str, cat: Catalogue)
 
 
 def memory_section(ctx: SeatContext, role: str) -> str:
-    files = "\n".join(f"- `{history_path(p, role)}`" for p in ctx.positions) or "- (this seat holds no position yet)"
-    which = " of the position the work belongs to" if len(ctx.positions) > 1 else ""
+    """The same for every seat: which history to read depends on the position the work is for."""
+    who = ("the position you work for (your seat brief lists your positions)" if role == COORDINATOR
+           else "the position the Coordinator names when it hands you the work (ask if it doesn't)")
     return (
         "## Your memory\n\n"
-        f"Read your history before you start:\n\n{files}\n\n"
-        f"When you learn something lasting about this project, add it to the history{which}:\n\n"
+        f"Read your history before you start: `.bimai/positions/<position>/agents/{role}/history.md`, for {who}.\n\n"
+        "When you learn something lasting about this project, add it to that history:\n\n"
         "- Only confirmed outcomes: conventions, preferences, where things are, what worked. "
         "Not requests, intermediate steps or guesses.\n"
         "- One line per learning: `- YYYY-MM-DD: <learning> (source: <file, meeting or message>)`.\n"
         "- Never write personal remarks (health, family, reasons for absence) or secrets.\n"
         "- If a line turns out wrong or a decision is reversed, correct that line instead of adding "
         "a contradicting one.\n"
-        "- Decisions belong in `.bimai/decisions/` (one file per decision), not in history.\n"
+        "- Decisions are recorded with `bimai decide` (one file each in `.bimai/decisions/`), not in history.\n"
     )
 
 
@@ -94,6 +95,11 @@ def routing_section(ctx: SeatContext, cat: Catalogue) -> str:
         "Quick facts from the project files: answer them yourself; don't hand them to a team member.",
         "Every task has exactly one accountable team member. Tell the person who is handling it.",
         "Work no team member covers: do it yourself, and say that no team member covers it.",
+        "Work in another position's area (another person's model, calculation or responsibility): hand it over with "
+        "`bimai handoff --to <position> --title \"...\" --evidence <file>`; never fix it yourself. Your open handoffs: "
+        "`bimai inbox`.",
+        "A decision (from a meeting, a message or the person): record it with `bimai decide --title \"...\" "
+        "--decision \"...\" --source <where>`; list them with `bimai decisions`.",
         "Questions about earlier work (\"what did we do yesterday?\", \"last week?\"): run "
         "`bimai log --since yesterday` (or `7d`, or a date) and answer from its output.",
     ]
@@ -138,10 +144,11 @@ def claude_block(ctx: SeatContext, cat: Catalogue) -> str:
         f"{routing_section(ctx, cat)}\n"
         f"{connections_section(ctx, cat)}\n"
         f"{memory_section(ctx, COORDINATOR)}\n"
-        "## This seat\n\n"
-        f"You work for **{ctx.person_name}** ({ctx.title}), seat `.bimai/seats/{ctx.seat}/`. "
-        f"Goals: {', '.join(ctx.goals) or 'none chosen'}. Write documents in "
-        f"{'Dutch' if ctx.language == 'nl' else 'English'}.\n"
+        "## Your seat\n\n"
+        "Several people can work in this project, each with their own seat and team. At the start of each session "
+        "bimai's **seat brief** tells you who you work for, their positions, goals and team, and what's new since "
+        "their last session. If you didn't get one, run `bimai brief`. "
+        f"Write documents in {'Dutch' if ctx.language == 'nl' else 'English'}.\n"
         f"{BLOCK_END}\n"
     )
 
@@ -154,23 +161,55 @@ def team_md(ctx: SeatContext, cat: Catalogue) -> str:
     )
 
 
+def project_team(root: Path, ctx: SeatContext, cat: Catalogue) -> list[Member]:
+    """The combined team of every seat (this seat's members first), so shared files don't depend on the seat."""
+    members = {m.role: m for m in ctx.team}
+    for seat_file in sorted((root / ".bimai" / "seats").glob("*/seat.yaml")):
+        if seat_file.parent.name == ctx.seat:
+            continue
+        try:
+            data = yaml.safe_load(seat_file.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        for m in data.get("team") or []:
+            role = m.get("role") if isinstance(m, dict) else None
+            if role in cat.roles and role not in members:
+                members[role] = Member(role, m.get("why") or "")
+    ordered = [members.pop(COORDINATOR)] if COORDINATOR in members else []
+    return ordered + sorted(members.values(), key=lambda m: m.role)
+
+
+def project_tools(root: Path, ctx: SeatContext) -> list[str]:
+    """The tools every seat declared together, in a stable order."""
+    tools = list(ctx.tools)
+    for seat_file in sorted((root / ".bimai" / "seats").glob("*/seat.yaml")):
+        try:
+            data = yaml.safe_load(seat_file.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        tools += [t for t in data.get("tools") or [] if isinstance(t, str)]
+    return sorted(set(tools))
+
+
 def plan_claude_files(root: str | Path, ctx: SeatContext, cat: Catalogue | None = None) -> list[FileWrite]:
     root = Path(root).resolve()
     cat = cat or load_catalogue()
-    members = {m.role for m in ctx.team}
+    team = project_team(root, ctx, cat)
+    members = {m.role for m in team}
+    shared = SeatContext(**{**ctx.__dict__, "team": team, "tools": project_tools(root, ctx)})   # alike for every seat
     plan = [plan_write(root, f".bimai/seats/{ctx.seat}/team.md", team_md(ctx, cat), owned=True)]
 
-    for m in ctx.team:
+    for m in team:
         if m.role != COORDINATOR:
             plan.append(plan_write(root, f".claude/agents/{m.role}.md", subagent(ctx, m.role, cat), owned=True))
     agents = root / ".claude" / "agents"
     for f in sorted(agents.glob("*.md")) if agents.is_dir() else []:
         if f.stem not in members and GENERATED in f.read_text(encoding="utf-8"):
-            plan.append(FileWrite(f".claude/agents/{f.name}", "", "delete", "no longer on the team; history kept"))
+            plan.append(FileWrite(f".claude/agents/{f.name}", "", "delete", "no longer on any seat's team; history kept"))
 
     claude_md = root / "CLAUDE.md"
     current = claude_md.read_text(encoding="utf-8") if claude_md.exists() else None
-    plan.append(plan_write(root, "CLAUDE.md", with_block(current, claude_block(ctx, cat)),
+    plan.append(plan_write(root, "CLAUDE.md", with_block(current, claude_block(shared, cat)),
                            merge_note="bimai block added or refreshed; your content is kept"))
 
     local = root / ".claude" / "settings.local.json"

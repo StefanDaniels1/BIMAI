@@ -2,7 +2,7 @@
 
 import { Check, ClipboardCopy } from 'lucide-react';
 import { useState } from 'react';
-import { startPrompt } from '@/lib/prompts';
+import { joinPrompt, startPrompt } from '@/lib/prompts';
 
 /** Copy text, also on plain-http pages where navigator.clipboard is unavailable. */
 async function copyText(text: string): Promise<boolean> {
@@ -120,4 +120,9 @@ export function StartPrompt({ variant = 'card' }: { variant?: 'card' | 'hero' })
   ) : (
     <CopyPrompt prompt={startPrompt} />
   );
+}
+
+/** The join prompt: installs bimai and adds you to a colleague's project. On the join page. */
+export function JoinPrompt() {
+  return <CopyPrompt prompt={joinPrompt} label="Copy prompt to join" hint="Paste it into Claude Code; it adds you to the project with your own team." />;
 }

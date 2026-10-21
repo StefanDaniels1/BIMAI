@@ -57,7 +57,8 @@ def slug(text: str) -> str:
 
 def check_not_initialised(root: Path) -> None:
     if (root / ".bimai" / "project.yaml").exists():
-        raise AlreadyInitialised(f"{root} is already a bimai project (.bimai/project.yaml exists)")
+        raise AlreadyInitialised(f"{root} is already a bimai project (.bimai/project.yaml exists). To join it as "
+                                 "another person: bimai join --interview (or bimai join)")
 
 
 def suggested_tools(scan: Scan, cat: Catalogue | None = None) -> dict[str, str]:

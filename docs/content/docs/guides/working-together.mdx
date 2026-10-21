@@ -3,36 +3,46 @@ title: Working together
 description: Several people, each with their own team, on one project without getting in each other's way.
 ---
 
-<Status state="planned" />
+<Status state="available">Seats, joining, handoffs, decisions and the seat brief work today. Sharing your changes still goes through git; bimai doing that for you comes next.</Status>
 
-## Shared rules, personal teams
+A viaduct project with three people:
 
-Everyone on a project shares its agreements, decisions and knowledge. Each person has their own
-**seat**: their team, tasks, journal and outputs.
+| Person | Role | Their team |
+|---|---|---|
+| Anna | BIM coordinator | Coordinator, Issue Manager, Scribe |
+| Joris | Constructeur | Coordinator, Structural Analyst (SCIA) |
+| Fatima | BIM modeller | Coordinator, Model Checker |
 
-## Positions: jobs, not people
+Anna started the project; Joris and Fatima [joined](/docs/start/join). Each has a **seat** (their team and
+settings) and a **position**: the job on the project, such as `constructeur`. What the agents learn stays with
+the position, so a colleague who takes over starts with everything that was done.
 
-A **position** is a job on the project, for example `modeller-structure` or `bim-coordinator`.
-People hold positions. What the agents learn in a job stays with the position, so a colleague who takes
-over starts with everything that was done.
+## You say it, bimai does it
 
-- **More modellers or coordinators?** Add positions split by discipline, zone or model.
-- **Someone ill or on holiday?** `bimai cover modeller-structure --by bob --until 2026-10-14`. Work
-  goes to Bob and switches back automatically.
-- **Someone leaves?** `bimai transfer modeller-structure --to fatima`. Fatima inherits the job.
+| You say | bimai does |
+|---|---|
+| *"Hand this clash to the modeller, with the BCF file."* | `bimai handoff --to bim-modeller`: one file in Fatima's inbox, with the evidence |
+| *"What's new for me?"* | reads your **seat brief**: open handoffs, new decisions, the team's activity |
+| *"Record that we chose a 300 mm deck slab, from today's meeting."* | `bimai decide`: one decision file, with who decided and the source |
+| *"That replaces the 250 mm decision."* | `bimai decide --supersedes <id>`: the old one is marked superseded, never edited |
+| *"The duct is moved, close the handoff."* | `bimai handoff --done <id>`, only by the person it was handed to |
+| *"What did the team do last week?"* | `bimai log --team --since 7d`, when your project shares the log |
 
-## Every responsibility has one owner
+Your team does the typing. You can run the same commands yourself: `bimai inbox`, `bimai decisions`,
+`bimai brief`.
 
-Each responsibility belongs to exactly one position. Other teams can read it but not act on it. When an
-agent finds work in someone else's area, it **hands it over**: the work appears in that person's tasks
-with the evidence attached.
+## Rules that keep it calm
 
-## Nobody loses context
+- **Your work stays yours, theirs stays theirs.** When your team finds something in another position's area,
+  for example a clash in Fatima's model, it hands it over instead of fixing it.
+- **One file per record.** Handoffs and decisions are each their own file, so two people never edit the same
+  file. A decision is never changed afterwards; a new one supersedes it.
+- **The shared files are the same for everyone.** `CLAUDE.md` and the team members in `.claude/agents/` don't
+  name anyone; what is personal comes from your own seat brief.
+- **The session log is yours** unless your project shares it (`log: { share: true }` in `.bimai/project.yaml`).
 
-After every session a short journal entry is written: what was asked, what was done, decisions and
-handoffs, and what's still open. Ask "what did the team do this week on the viaduct?" and you get the
-answer with links. The journal describes work, never time spent.
+## Sharing your changes
 
-```bash
-bimai graph project      # all positions, who holds them, each person's team, open handoffs
-```
+For now, share the project folder through your project's git (or let IT set that up). bimai's files are laid
+out so that two people working at the same time normally never touch the same file. Next, bimai will save and
+share for you, without git commands.

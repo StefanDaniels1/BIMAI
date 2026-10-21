@@ -55,7 +55,10 @@ def step_one(root: Path, git_user: str | None, cat: Catalogue) -> dict:
         login = ""
     # Roles whose typical tools the folder shows come first; the question names the ones that don't fit.
     found = set(suggested_tools(scan(root), cat))
-    ranked = sorted(cat.presets.values(), key=lambda p: not (found & set(p.typical_tools)))
+    # A found tool counts more when fewer roles use it (SCIA points to the constructeur; Revit fits several roles).
+    users = {tool: sum(tool in p.typical_tools for p in cat.presets.values()) for tool in found}
+    score = {p.id: sum(1 / users[tool] for tool in found if tool in p.typical_tools) for p in cat.presets.values()}
+    ranked = sorted(cat.presets.values(), key=lambda p: -score[p.id])
     roles = [_option(p.label, p.description, p.label) for p in ranked]
     hidden = [p.label for p in ranked[MAX_OPTIONS:]]
     role_question = "What is your role on this project?" + (
