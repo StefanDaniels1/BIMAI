@@ -1,6 +1,6 @@
 # Tools and data a project can use, and the capabilities each provides (ARCHITECTURE.md §7, §13).
 # A role joins a team only when every capability it `requires` is provided by one of these.
-goals: [requirements, risks, planning, reporting, issues, model-checks, delivery, meetings]
+goals: [requirements, risks, planning, reporting, issues, model-checks, calculations, delivery, meetings]
 
 # How goals are shown in the onboarding interview.
 goal_labels:
@@ -10,6 +10,7 @@ goal_labels:
   reporting: { label: Progress reports, description: Weekly design progress reports }
   issues: { label: Issues, description: Triage and follow up issues (ACC, BCF) }
   model-checks: { label: Model checks, description: Check models - naming, properties, coordinates }
+  calculations: { label: Structural results, description: Internal forces, deformations and reactions from SCIA }
   delivery: { label: Deliveries, description: Check deliveries against the BEP and EIR }
   meetings: { label: Meetings, description: Minutes, decisions and actions from meeting transcripts }
 
@@ -32,11 +33,13 @@ capabilities:
   surface.query: query surfaces and elevations
   corridor.query: query corridors
   pipes.query: query pipe networks
+  analysis.results: read structural analysis results
 
 tools:
   revit:      { label: Revit, provides: [model.query] }
   civil3d:    { label: Civil 3D, provides: [model.query] }
   openroads:  { label: OpenRoads Designer, provides: [model.query] }
+  scia:       { label: SCIA Engineer, provides: [analysis.results] }
   navisworks: { label: Navisworks, provides: [model.query, clashes.read] }
   bonsai:     { label: Blender / Bonsai, provides: [model.query] }
   ifc:        { label: IFC models, provides: [model.query] }
@@ -56,6 +59,7 @@ suggests:
   .nwd: navisworks
   .nwc: navisworks
   .dgn: openroads
+  .esa: scia
   .dwg: autocad
   .bcf: bcf
   .bcfzip: bcf

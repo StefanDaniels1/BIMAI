@@ -27,7 +27,7 @@ saving and SHALL never write to the original file.
 Result tools SHALL take the case name (load case or combination; `auto` tries both) and the entity name as SCIA
 shows them, and SHALL return the magnitudes with their names: per section for members, minimum and maximum per
 magnitude (with the mesh element) for surfaces, and per magnitude for supports, naming the case, the entity and
-that values are in SCI's API units. When nothing is calculated, they SHALL say so and point to `run_calculation`.
+that values are in the units of SCIA's API. When nothing is calculated, they SHALL say so and point to `run_calculation`.
 
 #### Scenario: Member internal forces
 - **WHEN** the client asks for internal forces of member B3 in load case LC1

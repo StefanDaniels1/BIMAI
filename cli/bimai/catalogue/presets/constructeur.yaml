@@ -1,0 +1,8 @@
+id: constructeur
+label: Constructeur
+description: Designs and checks the structure (constructief ontwerp), with calculations in SCIA Engineer.
+matches: [constructeur, constructief ontwerper, constructief adviseur, structural engineer, structureel ingenieur, ingenieur constructies, rekenaar, statisch rekenaar, structural designer]
+team: [coordinator, structural-analyst, model-checker, scribe]
+goals: [calculations]
+goal_options: [calculations, model-checks, delivery, meetings]
+typical_tools: [scia, ifc, revit]

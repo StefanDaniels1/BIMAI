@@ -53,7 +53,13 @@ def step_one(root: Path, git_user: str | None, cat: Catalogue) -> dict:
         login = getpass.getuser()
     except Exception:
         login = ""
-    roles = [_option(p.label, p.description, p.label) for p in cat.presets.values()]
+    # Roles whose typical tools the folder shows come first; the question names the ones that don't fit.
+    found = set(suggested_tools(scan(root), cat))
+    ranked = sorted(cat.presets.values(), key=lambda p: not (found & set(p.typical_tools)))
+    roles = [_option(p.label, p.description, p.label) for p in ranked]
+    hidden = [p.label for p in ranked[MAX_OPTIONS:]]
+    role_question = "What is your role on this project?" + (
+        f" Not listed (for example {', '.join(hidden)})? Choose Other and type it." if hidden else "")
     return {
         "step": 1,
         "questions": [
@@ -61,7 +67,7 @@ def step_one(root: Path, git_user: str | None, cat: Catalogue) -> dict:
                            [(_pretty(folder), "Based on the folder name"), (folder, "Exactly the folder name")]),
             _text_question("person", "Your name", "What is your name? It appears in the team files.",
                            [(git_user or "", "Your name in git"), (login, "Your login name on this computer")]),
-            {"id": "role", "header": "Your role", "question": "What is your role on this project?",
+            {"id": "role", "header": "Your role", "question": role_question,
              "kind": "choice", "multi_select": False, "options": roles[:MAX_OPTIONS], "recommended": None,
              "allowed": [{"value": p.label, "label": p.label, "also": list(p.matches)} for p in cat.presets.values()]},
             {"id": "language", "header": "Language", "question": "In which language should your team write documents?",
