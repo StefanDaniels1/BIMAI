@@ -4,11 +4,11 @@
  */
 
 /** The start prompt: installs bimai and runs the onboarding interview (docs/start/install, landing page). */
-export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project folder for me. Follow these steps in order.
+export const startPrompt = `Set up bimai (https://bimai.nl) in this project folder for me. Follow these steps in order.
 
 1. Install bimai with its one-line installer (it needs no Python, git or administrator rights):
-   - on Windows: powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
-   - on macOS or Linux: curl -LsSf https://docs.bimai.nl/install.sh | sh
+   - on Windows: powershell -ExecutionPolicy ByPass -c "irm https://bimai.nl/install.ps1 | iex"
+   - on macOS or Linux: curl -LsSf https://bimai.nl/install.sh | sh
    If the bimai command isn't found afterwards, use the full path the installer printed (in the
    .local/bin folder in my user folder). Check it worked with: bimai --version
 
@@ -16,7 +16,7 @@ export const startPrompt = `Set up bimai (https://docs.bimai.nl) in this project
    It prints the questions as JSON, made for your AskUserQuestion tool. It also shows what bimai found
    in this folder through the suggested options.
    If it says this folder is already a bimai project, a colleague started it: follow the steps of the
-   join prompt (https://docs.bimai.nl/docs/start/join) instead, with bimai join in place of bimai init.
+   join prompt (https://bimai.nl/docs/start/join) instead, with bimai join in place of bimai init.
 
 3. Ask me step 1 with the AskUserQuestion tool, in one call. Use each question's header, question text
    and options exactly as given, in the given order, and put "(Recommended)" after the recommended
@@ -53,11 +53,11 @@ files by hand.`;
 
 
 /** The join prompt: installs bimai and adds the person to a project a colleague started (docs/start/join). */
-export const joinPrompt = `Add me to the bimai project (https://docs.bimai.nl) a colleague started. Follow these steps in order.
+export const joinPrompt = `Add me to the bimai project (https://bimai.nl) a colleague started. Follow these steps in order.
 
 1. Install bimai with its one-line installer (it needs no Python, git or administrator rights):
-   - on Windows: powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
-   - on macOS or Linux: curl -LsSf https://docs.bimai.nl/install.sh | sh
+   - on Windows: powershell -ExecutionPolicy ByPass -c "irm https://bimai.nl/install.ps1 | iex"
+   - on macOS or Linux: curl -LsSf https://bimai.nl/install.sh | sh
    If the bimai command isn't found afterwards, use the full path the installer printed (in the
    .local/bin folder in my user folder). Check it worked with: bimai --version
 

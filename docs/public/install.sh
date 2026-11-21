@@ -1,5 +1,5 @@
 #!/bin/sh
-# bimai installer for macOS and Linux.  Usage:  curl -LsSf https://docs.bimai.nl/install.sh | sh
+# bimai installer for macOS and Linux.  Usage:  curl -LsSf https://bimai.nl/install.sh | sh
 #
 # What it does, for the current user only (no administrator rights, no Python or git needed):
 #   1. installs uv (Astral's Python tool manager) into ~/.local/bin if it isn't there yet

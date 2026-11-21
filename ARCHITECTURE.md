@@ -75,7 +75,7 @@ bimai/
 ├── registry/index.json        # catalog of connectors and packs with maturity
 ├── evals/                     # scenarios, fixtures, graders
 ├── scripts/check_docs.py      # documentation coverage and link checks (§12.9)
-└── docs/                      # documentation site (Fumadocs), published to docs.bimai.nl (§12.9)
+└── docs/                      # documentation site (Fumadocs), published to bimai.nl (§12.9)
 ```
 
 Project workspace, created by `bimai init` in a project's own repo:
@@ -1258,7 +1258,7 @@ Rules that keep it working everywhere:
 - **Connectors declare platforms** in their manifest (`platforms: [windows]`). On other systems the gateway marks their tools unavailable with a clear message, and `bimai doctor` explains the alternative (e.g. Revit Public MCP on a Windows machine, or open formats).
 - **Corporate networks:** the kit uses the OS certificate store and system proxy settings, so company proxies and TLS inspection work without extra setup; `bimai doctor` tests connectivity per connector.
 - **Synced folders:** `bimai doctor` warns when a workspace sits in OneDrive/SharePoint sync, which conflicts with git.
-- **One installer per platform:** a one-line install script (`install.ps1`, `install.sh` on docs.bimai.nl) that installs uv and then bimai from PyPI per user, without Python, git or administrator rights; `bimai update` updates it. winget and Homebrew packages later.
+- **One installer per platform:** a one-line install script (`install.ps1`, `install.sh` on bimai.nl) that installs uv and then bimai from PyPI per user, without Python, git or administrator rights; `bimai update` updates it. winget and Homebrew packages later.
 - **CI runs on all three:** every pull request is tested on Windows, macOS and Linux runners.
 
 ### 12.6 Language
@@ -1286,7 +1286,7 @@ door, and a feature without documentation isn't finished.
 **The public site** lives in `docs/`: a Fumadocs (Next.js) site exported as static files, with local
 search, Mermaid diagrams in the bimai colours, light and dark mode, and self-hosted fonts (so builds
 also work offline and behind company proxies). It's published by `.github/workflows/docs.yml` to
-GitHub Pages at **docs.bimai.nl** (DNS: a `CNAME` record for `docs` pointing to the GitHub Pages host;
+GitHub Pages at **bimai.nl** (DNS: `A` records for the apex pointing to GitHub Pages and a `CNAME` for `www`;
 the `docs/public/CNAME` file is already in place). Any static host works as an alternative.
 
 It's organized by reader:
@@ -1345,14 +1345,14 @@ The IFC/USD enrichment engine with assertion provenance becomes a file connector
 - the gate and evidence hooks work, and roles run on their default model tiers
 - one daily automation runs on the native scheduler, and the Planner produces a morning plan across projects
 - `bimai validate`, `bimai graph` and `bimai new --demo` work
-- the documentation site is live at docs.bimai.nl, every command and pack has a page, and `bimai site open` shows a project's site locally
+- the documentation site is live at bimai.nl, every command and pack has a page, and `bimai site open` shows a project's site locally
 - at least 10 eval scenarios pass in CI on Windows, macOS and Linux
 
 Build order (each step usable on its own):
 
 1. CLI core: workspace, schemas + `bimai validate` ✅, workflow engine (sequential, parallel, fan-out, gates, resume), evidence, lint, `bimai graph`; CI on Windows, macOS and Linux
 2. First install loop ✅ started: `bimai init` scans the folder, runs a short interview, picks a preset, applies the team rules and writes the workspace and the Claude Code team (one seat, no BEP reading yet); steps 4–7 deepen it
-3. Documentation site ✅ started: Fumadocs site, docs CI checks, publishing to docs.bimai.nl; project-site generator ✅ prototype
+3. Documentation site ✅ started: Fumadocs site, docs CI checks, publishing to bimai.nl; project-site generator ✅ prototype
 4. Plugin: role catalogue, hooks, ceremony commands
 5. Onboarding: interview, presets, team rules, `bimai team review`
 6. BEP intake: Word/PDF conversion, extraction into `agreements.yaml` with sources, review, apply, `bimai bep diff`, version checks in `bimai doctor`

@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://docs.bimai.nl"><strong>Documentation</strong></a> ·
-  <a href="https://docs.bimai.nl/docs/why">For managers and directors</a> ·
-  <a href="https://docs.bimai.nl/docs/example-project">Example project</a>
+  <a href="https://bimai.nl"><strong>Documentation</strong></a> ·
+  <a href="https://bimai.nl/docs/why">For managers and directors</a> ·
+  <a href="https://bimai.nl/docs/example-project">Example project</a>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@ Every agent works from files in your project repo, follows a workflow you define
 
 - **🧑‍🤝‍🧑 A team that fits your role:** a short interview at `bimai init` picks a small team from a catalogue (Coordinator, Requirements & Risk Manager, Planning Analyst, Information Manager, Model Checker, Issue Manager, Scribe, and more). A design coordinator gets a different team than a BIM modeller, and no one gets members they don't need.
 - **📄 Your BEP becomes the configuration:** drop the BIM execution plan (Word or PDF) at onboarding. bimai extracts naming rules, tools and versions, responsibilities, coordination rhythm and milestones, each with its page reference, and sets up the project from what was actually agreed after you review it.
-- **🌐 A site for every project:** a private website, generated from the project files, that explains the people, their AI teams, the BEP agreements, decisions, meetings and this week's work. Made for new colleagues, managers, directors and clients who never open VS Code. [See the example](https://docs.bimai.nl/docs/example-project).
+- **🌐 A site for every project:** a private website, generated from the project files, that explains the people, their AI teams, the BEP agreements, decisions, meetings and this week's work. Made for new colleagues, managers, directors and clients who never open VS Code. [See the example](https://bimai.nl/docs/example-project).
 - **👀 Open by default, so no context is lost:** each session leaves a short journal entry in the project, and project tasks are shared, so anyone can ask "what did the team do this week?" and a colleague covering for you knows where you left off. Your desk (plans, preferences, other clients' projects) stays private.
 - **🤝 Work together, each with your own team:** a modeller, a coordinator and a design manager share one project: the same rules, context and decisions, but each with their own team. Every responsibility has one owner, and agents hand work to each other instead of getting in each other's way. Add more modellers or coordinators per discipline or zone, and hand over or cover a job when someone leaves or is ill; the agents' knowledge stays with the job.
 - **🙈 No git or programming needed:** bimai saves, shares, updates and restores your work automatically, in plain language. Git runs underneath for history and safety; you never see it.
@@ -120,16 +120,16 @@ One line, no Python, git or administrator rights needed:
 
 ```powershell
 # Windows
-powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://bimai.nl/install.ps1 | iex"
 ```
 
 ```bash
 # macOS and Linux
-curl -LsSf https://docs.bimai.nl/install.sh | sh
+curl -LsSf https://bimai.nl/install.sh | sh
 ```
 
 Then run `bimai init` in your project folder. Update any time with `bimai update`.
-More: [Install bimai](https://docs.bimai.nl/docs/start/install).
+More: [Install bimai](https://bimai.nl/docs/start/install).
 
 ## Quick start (target for v0.1)
 

@@ -1,6 +1,6 @@
 # bimai documentation
 
-The source of [docs.bimai.nl](https://docs.bimai.nl): a [Fumadocs](https://fumadocs.dev) site,
+The source of [bimai.nl](https://bimai.nl): a [Fumadocs](https://fumadocs.dev) site,
 exported as static files.
 
 ```bash

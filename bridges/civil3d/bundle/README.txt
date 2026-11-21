@@ -17,5 +17,5 @@ Install (once, needs administrator rights)
 Remove
   powershell -ExecutionPolicy Bypass -File .\uninstall.ps1   (as administrator)
 
-Help and troubleshooting: https://docs.bimai.nl/docs/guides/civil3d-bridge
+Help and troubleshooting: https://bimai.nl/docs/guides/civil3d-bridge
 Log file: %LOCALAPPDATA%\bimai\civil3d-bridge.log

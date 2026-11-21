@@ -61,7 +61,7 @@ jobs:
 
           SHA-256 of bimai-civil3d-bridge.zip: ``$hash``
 
-          Guide: https://docs.bimai.nl/docs/guides/civil3d-bridge
+          Guide: https://bimai.nl/docs/guides/civil3d-bridge
           "@
           gh release create $tag bridges/civil3d/dist/bimai-civil3d-bridge.zip bridges/civil3d/dist/SHA256SUMS.txt `
             --title "Civil 3D bridge $($tag -replace 'civil3d-bridge-v','')" --notes $notes --prerelease

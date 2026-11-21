@@ -12,7 +12,7 @@ context: |
   Stack:
   - Python 3.11+ for everything that runs (CLI, packs, scripts). Dependencies kept minimal:
     pyyaml, jsonschema; stdlib first. Tests with pytest.
-  - docs/ is a Fumadocs (Next.js) static site, published to docs.bimai.nl.
+  - docs/ is a Fumadocs (Next.js) static site, published to bimai.nl.
   - Cross-platform: Windows, macOS, Linux. pathlib only, no shell scripts in the product.
 
   Principles that constrain every change:

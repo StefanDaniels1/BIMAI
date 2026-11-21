@@ -2,7 +2,7 @@ bimai OpenRoads bridge (beta)
 =============================
 
 A read-only add-in for Bentley OpenRoads Designer (2023 or newer, Windows) that lets Claude Code read the
-open drawing: alignments, profiles, corridors and terrains. https://docs.bimai.nl/docs/guides/openroads-bridge
+open drawing: alignments, profiles, corridors and terrains. https://bimai.nl/docs/guides/openroads-bridge
 
 Install it with bimai, which builds it on your PC against your OpenRoads Designer:
 

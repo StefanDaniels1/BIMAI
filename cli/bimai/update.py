@@ -75,4 +75,4 @@ def run_update(method: str, run: Callable | None = None, which: Callable | None 
         return (run or subprocess.run)(command).returncode
     except OSError as exc:
         raise UpdateError(f"Couldn't run {command[0]} ({exc}). Reinstall bimai with the one-line installer: "
-                          "https://docs.bimai.nl/docs/start/install") from exc
+                          "https://bimai.nl/docs/start/install") from exc

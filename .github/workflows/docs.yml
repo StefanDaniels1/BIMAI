@@ -1,4 +1,4 @@
-# Builds the documentation site and publishes it to GitHub Pages (docs.bimai.nl).
+# Builds the documentation site and publishes it to GitHub Pages (bimai.nl).
 # Pull requests get the same checks without publishing: documentation is part of done.
 name: docs
 
@@ -51,7 +51,7 @@ jobs:
       - run: npm run build
         working-directory: docs
         env:
-          NEXT_PUBLIC_SITE_URL: https://docs.bimai.nl
+          NEXT_PUBLIC_SITE_URL: https://bimai.nl
           BIMAI_GITHUB_REPO: ${{ github.repository }}
 
       - name: No broken internal links

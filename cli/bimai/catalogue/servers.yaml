@@ -38,7 +38,7 @@ revit:
 pyrevit:
   label: pyRevit (Revit, read-only)
   vendor: pyRevit Labs
-  docs: https://docs.bimai.nl/docs/guides/pyrevit
+  docs: https://bimai.nl/docs/guides/pyrevit
   auth: none
   access: read-only
   platforms: [windows]
@@ -137,7 +137,7 @@ hydraulic-modeling:
 civil3d:
   label: Civil 3D (bimai bridge, read-only)
   vendor: bimai
-  docs: https://docs.bimai.nl/docs/guides/civil3d-bridge
+  docs: https://bimai.nl/docs/guides/civil3d-bridge
   auth: none
   access: read-only
   platforms: [windows]
@@ -161,7 +161,7 @@ civil3d:
 openroads:
   label: OpenRoads Designer (bimai bridge, read-only, beta)
   vendor: bimai
-  docs: https://docs.bimai.nl/docs/guides/openroads-bridge
+  docs: https://bimai.nl/docs/guides/openroads-bridge
   auth: none
   access: read-only
   platforms: [windows]
@@ -196,7 +196,7 @@ microstation:
 scia:
   label: SCIA Engineer (bimai bridge, read-only, beta)
   vendor: bimai
-  docs: https://docs.bimai.nl/docs/guides/scia-bridge
+  docs: https://bimai.nl/docs/guides/scia-bridge
   auth: none
   access: read-only
   platforms: [windows]

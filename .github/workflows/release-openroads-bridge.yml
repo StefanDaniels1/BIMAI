@@ -62,7 +62,7 @@ jobs:
 
           SHA-256 of bimai-openroads-bridge.zip: ``$hash``
 
-          Guide: https://docs.bimai.nl/docs/guides/openroads-bridge
+          Guide: https://bimai.nl/docs/guides/openroads-bridge
           "@
           gh release create $tag bridges/openroads/dist/bimai-openroads-bridge.zip bridges/openroads/dist/SHA256SUMS.txt `
             --title "OpenRoads bridge $($tag -replace 'openroads-bridge-v','') (beta)" --notes $notes --prerelease

@@ -17,7 +17,7 @@ Publishing, without stored credentials.
 - **THEN** the workflow fails and nothing is published
 
 ### Requirement: One-line install
-`docs.bimai.nl/install.ps1` (Windows PowerShell) and `docs.bimai.nl/install.sh` (macOS and Linux) SHALL
+`bimai.nl/install.ps1` (Windows PowerShell) and `bimai.nl/install.sh` (macOS and Linux) SHALL
 install bimai for the current user without administrator rights and without Python or git present:
 install uv into the user's folder if it is missing, run `uv tool install --upgrade bimai` (uv downloads
 a suitable Python when none is found), make sure the tool folder is on the PATH, and print the version

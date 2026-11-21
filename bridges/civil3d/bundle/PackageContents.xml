@@ -17,8 +17,8 @@
     Author="bimai"
     ProductCode="{D876E159-A3BF-4265-B8C6-06DC061533FC}"
     UpgradeCode="{2803912E-17AF-4B6D-9B13-5B573AED931E}"
-    Helpfile="https://docs.bimai.nl/docs/guides/civil3d-bridge">
-  <CompanyDetails Name="bimai" Url="https://docs.bimai.nl" />
+    Helpfile="https://bimai.nl/docs/guides/civil3d-bridge">
+  <CompanyDetails Name="bimai" Url="https://bimai.nl" />
 
   <Components Description="Civil 3D 2025 and 2026 (.NET 8)">
     <RuntimeRequirements OS="Win64" Platform="Civil3D" SeriesMin="R25.0" SeriesMax="R25.1" />

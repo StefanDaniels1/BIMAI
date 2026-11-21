@@ -6,7 +6,7 @@ export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
 
 /** Where the docs are published. Override per deployment, e.g. a project site. */
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://docs.bimai.nl';
+export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bimai.nl';
 
 /** The public bimai repository. Set BIMAI_GITHUB_REPO=org/repo when publishing. */
 const [user, repo] = (process.env.BIMAI_GITHUB_REPO ?? 'bimai-nl/bimai').split('/');

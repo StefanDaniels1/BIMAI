@@ -71,5 +71,5 @@ jobs:
           else
             gh release create "${GITHUB_REF_NAME}" dist/* --repo "${GITHUB_REPOSITORY}" \
               --title "bimai ${GITHUB_REF_NAME#v}" \
-              --notes "Install or update: see https://docs.bimai.nl/docs/start/install, or \`uv tool install bimai\`."
+              --notes "Install or update: see https://bimai.nl/docs/start/install, or \`uv tool install bimai\`."
           fi

@@ -1,5 +1,5 @@
-# bimai installer for Windows.  Usage (PowerShell):  irm https://docs.bimai.nl/install.ps1 | iex
-#   or from Command Prompt:  powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
+# bimai installer for Windows.  Usage (PowerShell):  irm https://bimai.nl/install.ps1 | iex
+#   or from Command Prompt:  powershell -ExecutionPolicy ByPass -c "irm https://bimai.nl/install.ps1 | iex"
 #
 # What it does, for the current user only (no administrator rights, no Python or git needed):
 #   1. installs uv (Astral's Python tool manager) into %USERPROFILE%\.local\bin if it isn't there yet

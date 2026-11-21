@@ -76,8 +76,8 @@ def test_catalogue_is_complete_and_consistent():
             "civil3d"} <= set(servers)
     for s in servers.values():
         assert s.label and s.vendor, s.name
-        official = {"Autodesk": "https://help.autodesk.com/", "bimai": "https://docs.bimai.nl/",
-                    "pyRevit Labs": "https://docs.bimai.nl/", "Bentley": "https://www.bentley.com/"}
+        official = {"Autodesk": "https://help.autodesk.com/", "bimai": "https://bimai.nl/",
+                    "pyRevit Labs": "https://bimai.nl/", "Bentley": "https://www.bentley.com/"}
         assert s.docs.startswith(official[s.vendor]), s.name
         assert set(s.provides) <= known, s.name
         if s.unavailable:
@@ -474,7 +474,7 @@ def test_connect_civil3d_not_installed_explains(project, monkeypatch, capsys):
     monkeypatch.setattr(conn.os, "environ", {**WINDOWS_ENV})
     monkeypatch.setattr(conn.os.path, "exists", lambda p: False)
     assert connect(project, "civil3d", "--yes") == 2
-    assert "docs.bimai.nl/docs/guides/civil3d-bridge" in capsys.readouterr().err
+    assert "bimai.nl/docs/guides/civil3d-bridge" in capsys.readouterr().err
     assert "civil3d" not in mcp(project)["mcpServers"]
 
 

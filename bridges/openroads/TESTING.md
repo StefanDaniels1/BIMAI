@@ -13,7 +13,7 @@ nearby).
 Close OpenRoads Designer. Open **PowerShell** (not as administrator) and run:
 
 ```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://docs.bimai.nl/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://bimai.nl/install.ps1 | iex"
 ```
 
 Close and reopen PowerShell, then:

@@ -69,7 +69,7 @@ def target_dir(inst: Installation, environ=None) -> str:
 
 def cfg_text(dll_dir: str) -> str:
     folder = dll_dir.rstrip("\\/") + "\\"
-    return (f"# bimai OpenRoads bridge, read-only. https://docs.bimai.nl/docs/guides/openroads-bridge\n"
+    return (f"# bimai OpenRoads bridge, read-only. https://bimai.nl/docs/guides/openroads-bridge\n"
             f"# Written by `bimai bridge install openroads`. To stop loading it: bimai bridge uninstall openroads\n"
             f"_BIMAI_OPENROADS_={folder}\n"
             f"%if exists ($(_BIMAI_OPENROADS_){DLL})\n"

@@ -35,8 +35,8 @@ dev = ["pytest", "python-docx"]
 bimai = "bimai._entry:main"
 
 [project.urls]
-Homepage = "https://docs.bimai.nl"
-Documentation = "https://docs.bimai.nl"
+Homepage = "https://bimai.nl"
+Documentation = "https://bimai.nl"
 Source = "https://github.com/StefanDaniels1/BIMAI"
 Issues = "https://github.com/StefanDaniels1/BIMAI/issues"
 
